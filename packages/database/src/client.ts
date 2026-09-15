@@ -10,8 +10,50 @@ import {
   users,
   verifications,
 } from "@tulocal/database/schema/authentication";
+import { comparables } from "@tulocal/database/schema/comparables";
+import { conversations } from "@tulocal/database/schema/conversations";
+import { escalations } from "@tulocal/database/schema/escalations";
+import { images } from "@tulocal/database/schema/images";
+import { messages } from "@tulocal/database/schema/messages";
+import { products } from "@tulocal/database/schema/products";
+import { questions } from "@tulocal/database/schema/questions";
+import {
+  comparablesRelations,
+  conversationsRelations,
+  escalationsRelations,
+  imagesRelations,
+  messagesRelations,
+  productsRelations,
+  questionsRelations,
+  storesRelations,
+  usersRelations,
+} from "@tulocal/database/schema/relations";
+import { stores } from "@tulocal/database/schema/stores";
 
-const schema = { users, sessions, accounts, verifications, rateLimits };
+const schema = {
+  users,
+  sessions,
+  accounts,
+  verifications,
+  rateLimits,
+  stores,
+  products,
+  images,
+  comparables,
+  conversations,
+  messages,
+  questions,
+  escalations,
+  usersRelations,
+  storesRelations,
+  productsRelations,
+  imagesRelations,
+  comparablesRelations,
+  conversationsRelations,
+  messagesRelations,
+  questionsRelations,
+  escalationsRelations,
+};
 
 export const database = drizzle(neon(databaseEnvironment.DATABASE_URL), { schema });
 

@@ -5,7 +5,17 @@
   "type": "module",
   "exports": {
     "./client": "./src/client.ts",
-    "./schema/authentication": "./src/schema/authentication.ts"
+    "./schema/authentication": "./src/schema/authentication.ts",
+    "./schema/columns": "./src/schema/columns.ts",
+    "./schema/comparables": "./src/schema/comparables.ts",
+    "./schema/conversations": "./src/schema/conversations.ts",
+    "./schema/escalations": "./src/schema/escalations.ts",
+    "./schema/images": "./src/schema/images.ts",
+    "./schema/messages": "./src/schema/messages.ts",
+    "./schema/products": "./src/schema/products.ts",
+    "./schema/questions": "./src/schema/questions.ts",
+    "./schema/relations": "./src/schema/relations.ts",
+    "./schema/stores": "./src/schema/stores.ts"
   },
   "scripts": {
     "check:types": "tsc --noEmit",
