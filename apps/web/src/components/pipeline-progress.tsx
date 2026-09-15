@@ -40,7 +40,7 @@ export function PipelineProgress({
   images: {
     id: string;
     url: string;
-    kind: "original" | "studio" | "lifestyle" | "enhanced" | "hero";
+    kind: "original" | "studio" | "lifestyle" | "hero";
     fidelityPassed: boolean | null;
   }[];
   onRetry: () => void;

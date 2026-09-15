@@ -3,15 +3,13 @@ import {
   checkImageFidelity,
   generateProductImages,
   researchPrices,
+  suggestPrices,
   type ImageInput,
-  type ProductAnalysis,
 } from "@tulocal/ai";
 import type { Database } from "@tulocal/db";
 import { product, productImage, type PipelineSteps } from "@tulocal/db/schema/index";
 import { put } from "@vercel/blob";
 import { asc, eq } from "drizzle-orm";
-
-const roundTo = (value: number, step: number) => Math.round(value / step) * step;
 
 async function fetchImage(url: string): Promise<ImageInput> {
   const response = await fetch(url);
@@ -34,16 +32,19 @@ export async function runPriceResearch({
   const current = await db.query.product.findFirst({ where: eq(product.id, productId) });
   if (!current) throw new Error("Producto no encontrado");
   if (!current.searchQuery) throw new Error("El producto todavía no fue analizado");
+
   const research = await researchPrices({
     query: current.searchQuery,
     tavilyApiKey: env.TAVILY_API_KEY,
     condition: current.condition,
   });
-  const suggested = suggestPrices(
-    { qualityPercent: current.qualityPercent ?? 70 },
-    research.minPrice,
-    research.maxPrice,
-  );
+
+  const suggested = suggestPrices({
+    qualityPercent: current.qualityPercent,
+    marketMin: research.minPrice,
+    marketMax: research.maxPrice,
+  });
+
   await db
     .update(product)
     .set({
@@ -57,27 +58,10 @@ export async function runPriceResearch({
       pipelineError: null,
     })
     .where(eq(product.id, productId));
+
   return research;
 }
 
-function suggestPrices(
-  analysis: Pick<ProductAnalysis, "qualityPercent">,
-  marketMin: number | null,
-  marketMax: number | null,
-) {
-  if (marketMin === null && marketMax === null) return null;
-  const min = marketMin ?? marketMax!;
-  const max = marketMax ?? marketMin!;
-  const quality = (analysis.qualityPercent ?? 70) / 100;
-  const step = max >= 100_000 ? 1000 : 100;
-  const listPrice = roundTo(min + (max - min) * quality, step);
-  return { listPrice, minPrice: roundTo(listPrice * 0.8, step) };
-}
-
-/**
- * Runs the whole AI pipeline for one product, writing progress to the row so
- * the dashboard can poll it. Never throws: failures land in `pipelineError`.
- */
 export async function runProductPipeline({
   db,
   productId,
@@ -111,7 +95,6 @@ export async function runProductPipeline({
 
     const originalImages = await Promise.all(originalRows.map((row) => fetchImage(row.url)));
 
-    // 1. Vision analysis
     const analysis = await analyzeProduct({
       images: originalImages,
       hint: current.hint ?? undefined,
@@ -119,6 +102,7 @@ export async function runProductPipeline({
     steps.analyze = "done";
     steps.images = "running";
     steps.prices = "running";
+
     await save({
       title: analysis.title,
       description: analysis.description,
@@ -129,6 +113,8 @@ export async function runProductPipeline({
       qualityPercent: analysis.qualityPercent,
       conditionNotes: analysis.conditionNotes,
       attributes: analysis.attributes,
+      dominantColor: analysis.dominantColor,
+      sellingPoints: analysis.sellingPoints,
       searchQuery: analysis.searchQuery,
       pipelineStage: "generating",
       pipelineSteps: { ...steps },
@@ -136,54 +122,69 @@ export async function runProductPipeline({
 
     const source = originalImages[analysis.bestImageIndex] ?? originalImages[0]!;
 
-    // 2a. Image variants + fidelity guard, each inserted as soon as it finishes
     const imagesTask = (async () => {
+      const variantPromises = generateProductImages({
+        source,
+        category: analysis.category,
+        dominantColor: analysis.dominantColor,
+        conditionNotes: analysis.conditionNotes,
+      });
+
       const results = await Promise.all(
-        generateProductImages({ source, category: analysis.category }).map(
-          async (variantPromise, index) => {
-            const variant = await variantPromise;
-            if (!variant.ok)
-              return { ok: false as const, kind: variant.kind, error: variant.error };
-            const fidelity = await checkImageFidelity({
-              original: source,
-              candidate: { data: variant.data, mediaType: variant.mediaType },
-              conditionNotes: analysis.conditionNotes,
-            });
-            const extension = variant.mediaType.split("/")[1]?.replace("jpeg", "jpg") ?? "png";
-            const blob = await put(
-              `products/${productId}/${variant.kind}-${Date.now()}.${extension}`,
-              Buffer.from(variant.data),
-              { access: "public", contentType: variant.mediaType },
-            );
-            await db.insert(productImage).values({
-              productId,
-              url: blob.url,
-              kind: variant.kind,
-              fidelityPassed: fidelity.passes,
-              fidelityIssues: fidelity.issues,
-              visible: fidelity.passes,
-              sortOrder: index,
-            });
-            return { ok: true as const, kind: variant.kind };
-          },
-        ),
+        variantPromises.map(async (variantPromise, sortOrder) => {
+          const variant = await variantPromise;
+          if (!variant.ok) {
+            return { ok: false as const, kind: variant.kind, error: variant.error };
+          }
+
+          const fidelity = await checkImageFidelity({
+            original: source,
+            candidate: { data: variant.data, mediaType: variant.mediaType },
+            conditionNotes: analysis.conditionNotes,
+          });
+
+          const extension = variant.mediaType.split("/")[1]?.replace("jpeg", "jpg") ?? "png";
+          const blob = await put(
+            `products/${productId}/${variant.kind}-${Date.now()}.${extension}`,
+            Buffer.from(variant.data),
+            { access: "public", contentType: variant.mediaType },
+          );
+
+          await db.insert(productImage).values({
+            productId,
+            url: blob.url,
+            kind: variant.kind,
+            fidelityPassed: fidelity.passes,
+            fidelityIssues: fidelity.issues,
+            visible: fidelity.passes,
+            sortOrder,
+          });
+
+          return { ok: true as const, kind: variant.kind };
+        }),
       );
-      const failures = results.filter((r) => !r.ok);
+
+      const failures = results.filter((variantResult) => !variantResult.ok);
       steps.images = failures.length === results.length ? "failed" : "done";
       await save({ pipelineSteps: { ...steps } });
+
       if (failures.length === results.length) {
-        throw new Error(failures.map((f) => `${f.kind}: ${f.error}`).join(" | "));
+        throw new Error(failures.map((failure) => `${failure.kind}: ${failure.error}`).join(" | "));
       }
     })();
 
-    // 2b. Market prices
     const pricesTask = (async () => {
       const research = await researchPrices({
         query: analysis.searchQuery,
         tavilyApiKey: env.TAVILY_API_KEY,
         condition: analysis.condition,
       });
-      const suggested = suggestPrices(analysis, research.minPrice, research.maxPrice);
+      const suggested = suggestPrices({
+        qualityPercent: analysis.qualityPercent,
+        marketMin: research.minPrice,
+        marketMax: research.maxPrice,
+      });
+
       steps.prices = "done";
       await save({
         marketMinPrice: research.minPrice,
@@ -202,18 +203,25 @@ export async function runProductPipeline({
       await save({ pipelineSteps: { ...steps } });
     }
 
-    // 3. Cover selection
     const images = await db.query.productImage.findMany({
       where: eq(productImage.productId, productId),
     });
-    const priority = ["studio", "hero", "enhanced", "lifestyle", "original"] as const;
-    const cover = priority
+
+    const coverPriority = ["studio", "hero", "lifestyle", "original"] as const;
+    const cover = coverPriority
       .map((kind) => images.find((image) => image.kind === kind && image.fidelityPassed !== false))
       .find(Boolean);
 
     const errors = [imagesResult, pricesResult]
-      .filter((r): r is PromiseRejectedResult => r.status === "rejected")
-      .map((r) => (r.reason instanceof Error ? r.reason.message : String(r.reason)));
+      .filter(
+        (settledResult): settledResult is PromiseRejectedResult =>
+          settledResult.status === "rejected",
+      )
+      .map((rejectedResult) =>
+        rejectedResult.reason instanceof Error
+          ? rejectedResult.reason.message
+          : String(rejectedResult.reason),
+      );
 
     await save({
       status: "ready",

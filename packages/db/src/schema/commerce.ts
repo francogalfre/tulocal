@@ -15,13 +15,7 @@ import { user } from "./auth";
 
 export const productStatus = pgEnum("product_status", ["processing", "ready", "failed"]);
 export const productCondition = pgEnum("product_condition", ["new", "used"]);
-export const imageKind = pgEnum("image_kind", [
-  "original",
-  "studio",
-  "lifestyle",
-  "enhanced",
-  "hero",
-]);
+export const imageKind = pgEnum("image_kind", ["original", "studio", "lifestyle", "hero"]);
 export const conversationStatus = pgEnum("conversation_status", ["open", "deal", "closed"]);
 export const messageRole = pgEnum("message_role", ["user", "assistant", "system"]);
 
@@ -73,6 +67,8 @@ export const product = pgTable(
     qualityPercent: integer("quality_percent"),
     conditionNotes: jsonb("condition_notes").$type<string[]>().default([]).notNull(),
     attributes: jsonb("attributes").$type<Record<string, string>>().default({}).notNull(),
+    dominantColor: text("dominant_color"),
+    sellingPoints: jsonb("selling_points").$type<string[]>().default([]).notNull(),
     hint: text("hint"),
     searchQuery: text("search_query"),
     listPrice: integer("list_price"),

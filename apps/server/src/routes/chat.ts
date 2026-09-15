@@ -1,7 +1,14 @@
-import { createNegotiationAgent, type NegotiationContext } from "@tulocal/ai";
-import { conversation, message, product } from "@tulocal/db/schema/index";
+import {
+  containsSubFloorPrice,
+  createNegotiationAgent,
+  negotiationSeedMessages,
+  pricingStep,
+  roundTo,
+  type NegotiationContext,
+} from "@tulocal/ai";
+import { conversation, message, product, productImage } from "@tulocal/db/schema/index";
 import { createAgentUIStreamResponse, type UIMessage } from "ai";
-import { and, eq } from "drizzle-orm";
+import { and, asc, eq } from "drizzle-orm";
 import { Hono } from "hono";
 import { z } from "zod";
 
@@ -14,10 +21,18 @@ const bodySchema = z.object({
   visitorId: z.string().min(8).max(64),
 });
 
-/** Streaming negotiation chat for storefront visitors. */
+const DEFAULT_MIN_PRICE_RATIO = 0.8;
+
+function inferMediaType(url: string): string {
+  if (url.endsWith(".png")) return "image/png";
+  if (url.endsWith(".webp")) return "image/webp";
+  return "image/jpeg";
+}
+
 export const chatRoute = new Hono().post("/", async (c) => {
   const parsed = bodySchema.safeParse(await c.req.json());
   if (!parsed.success) return c.json({ error: "Body inválido" }, 400);
+
   const { messages, productId, visitorId } = parsed.data;
   const db = getDb();
 
@@ -50,7 +65,23 @@ export const chatRoute = new Hono().post("/", async (c) => {
     });
   }
 
-  const step = item.listPrice >= 100_000 ? 1000 : 100;
+  const images = await db.query.productImage.findMany({
+    where: eq(productImage.productId, productId),
+    orderBy: asc(productImage.sortOrder),
+  });
+
+  const studioShot = images.find(
+    (image) => image.kind === "studio" && image.fidelityPassed !== false,
+  );
+  const originalShot = images.find((image) => image.kind === "original");
+
+  const photos = [studioShot, originalShot]
+    .filter((image): image is NonNullable<typeof image> => image !== undefined)
+    .map((image) => ({ url: image.url, mediaType: inferMediaType(image.url) }));
+
+  const roundingStep = pricingStep(item.listPrice);
+  const minPrice = item.minPrice ?? roundTo(item.listPrice * DEFAULT_MIN_PRICE_RATIO, roundingStep);
+
   const ctx: NegotiationContext = {
     product: {
       id: item.id,
@@ -63,8 +94,9 @@ export const chatRoute = new Hono().post("/", async (c) => {
       qualityPercent: item.qualityPercent,
       conditionNotes: item.conditionNotes,
       attributes: item.attributes,
+      sellingPoints: item.sellingPoints,
       listPrice: item.listPrice,
-      minPrice: item.minPrice ?? Math.round((item.listPrice * 0.8) / step) * step,
+      minPrice,
       marketMinPrice: item.marketMinPrice,
       marketMaxPrice: item.marketMaxPrice,
       marketSummary: item.marketSummary,
@@ -77,6 +109,7 @@ export const chatRoute = new Hono().post("/", async (c) => {
       status: convo.status,
       agreedPrice: convo.agreedPrice,
     },
+    photos,
     productUrl: `${env.APP_URL}/s/${item.store.slug}/p/${item.id}`,
   };
 
@@ -99,8 +132,20 @@ export const chatRoute = new Hono().post("/", async (c) => {
 
   return createAgentUIStreamResponse({
     agent,
-    uiMessages: messages.slice(-24),
+    uiMessages: [...negotiationSeedMessages(ctx), ...messages.slice(-24)],
     onFinish: async ({ responseMessage }) => {
+      const replyText = responseMessage.parts
+        .filter((part): part is Extract<typeof part, { type: "text" }> => part.type === "text")
+        .map((part) => part.text)
+        .join(" ");
+
+      if (containsSubFloorPrice(replyText, minPrice)) {
+        console.error("negotiation reply mentions a sub-floor price", {
+          conversationId,
+          productId,
+        });
+      }
+
       await db.insert(message).values({
         conversationId,
         role: "assistant",
