@@ -1,30 +1,18 @@
-# Dependencies
 node_modules
-
-# Build outputs
 dist
 build
 .next
 out
 *.tsbuildinfo
 next-env.d.ts
-
-# Environment
 .env*
 !.env.example
-
-# Tooling
 .turbo
 .vercel
 coverage
 *.log
-
-# Editors / OS
+.idea
 .vscode/*
 !.vscode/settings.json
 !.vscode/extensions.json
-.idea
 .DS_Store
-
-# impeccable review captures (surface briefs stay tracked)
-**/.impeccable/review/

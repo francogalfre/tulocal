@@ -5,58 +5,33 @@
     "packages": [
       "apps/*",
       "packages/*"
-    ],
-    "catalog": {
-      "zod": "^4.5.4",
-      "typescript": "^6.0.3",
-      "@types/bun": "^1.4.2",
-      "@types/node": "^26.4.1",
-      "@trpc/server": "^11.18.0",
-      "better-auth": "1.7.3",
-      "lucide-react": "^1.41.0",
-      "next-themes": "^0.4.6",
-      "react": "^19.2.8",
-      "react-dom": "^19.2.8",
-      "sonner": "^2.0.8",
-      "@trpc/client": "^11.18.0",
-      "@tailwindcss/postcss": "^4.3.3",
-      "@types/react": "^19.2.18",
-      "@types/react-dom": "^19.2.7",
-      "tailwindcss": "^4.3.3",
-      "ai": "^6",
-      "@ai-sdk/react": "^3"
-    }
+    ]
   },
   "type": "module",
   "scripts": {
     "dev": "turbo run dev",
     "build": "turbo run build",
-    "check-types": "turbo run check-types",
-    "dev:web": "turbo run dev -F web --",
-    "dev:server": "turbo run dev -F server --",
-    "db:push": "turbo run db:push -F @tulocal/db --",
-    "db:studio": "turbo run db:studio -F @tulocal/db --",
-    "db:generate": "turbo run db:generate -F @tulocal/db --",
-    "db:migrate": "turbo run db:migrate -F @tulocal/db --",
-    "deploy:setup": "vercel link",
-    "dev:vercel": "vercel dev -L",
-    "env:preview": "bun scripts/sync-vercel-env.ts preview",
-    "env:production": "bun scripts/sync-vercel-env.ts production",
-    "deploy": "vercel deploy",
-    "deploy:prod": "vercel deploy --prod",
-    "deploy:check": "vercel deploy --dry",
-    "check": "oxlint && oxfmt --write"
+    "lint": "oxlint --deny-warnings",
+    "format": "oxfmt --write",
+    "check:types": "turbo run check:types",
+    "test": "turbo run test",
+    "check:format": "oxfmt --check",
+    "database:generate": "bun run --filter @tulocal/database generate",
+    "database:migrate": "bun run --filter @tulocal/database migrate",
+    "database:push": "bun run --filter @tulocal/database push",
+    "database:studio": "bun run --filter @tulocal/database studio"
   },
   "devDependencies": {
-    "@tulocal/config": "workspace:*",
-    "@types/bun": "catalog:",
-    "@types/node": "catalog:",
+    "@commitlint/cli": "^21.2.2",
+    "@commitlint/config-conventional": "^21.2.2",
+    "@oxlint/plugins": "^1.82.0",
+    "@tulocal/configuration": "workspace:*",
+    "@types/node": "^26.5.0",
     "lefthook": "^2.1.12",
-    "oxfmt": "^0.66.0",
-    "oxlint": "^1.81.0",
+    "oxfmt": "^0.67.0",
+    "oxlint": "^1.82.0",
     "turbo": "^2.10.12",
-    "typescript": "catalog:",
-    "vercel": "^59.11.7"
+    "typescript": "^7.0.2"
   },
-  "packageManager": "bun@1.4.2"
+  "packageManager": "bun@1.4.0"
 }

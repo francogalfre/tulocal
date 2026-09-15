@@ -1,0 +1,31 @@
+{
+  "name": "@tulocal/authentication",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    "./server": "./src/server.ts",
+    "./session": "./src/session.ts",
+    "./handler": "./src/handler.ts",
+    "./nextjs": "./src/nextjs.ts",
+    "./client": "./src/client.ts",
+    "./limits": "./src/limits.ts",
+    "./providers": "./src/providers.ts"
+  },
+  "scripts": {
+    "check:types": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@tulocal/database": "workspace:*",
+    "@tulocal/environment": "workspace:*",
+    "better-auth": "^1.7.3"
+  },
+  "devDependencies": {
+    "@tulocal/configuration": "workspace:*",
+    "@types/react": "^19.2.18",
+    "react": "^19.2.8"
+  },
+  "peerDependencies": {
+    "react": "^19.2.8"
+  }
+}

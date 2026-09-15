@@ -1,12 +1,31 @@
-# Lefthook configuration
-# https://github.com/evilmartians/lefthook
-
 pre-commit:
   parallel: true
+  exclude:
+    - '.agents/**'
+    - '.cursor/**'
+    - 'tools/oxlint/anti-slop/**'
   jobs:
-    - name: oxlint
-      run: bun oxlint --fix {staged_files}
+    - name: format
+      glob:
+        - '*.ts'
+        - '*.tsx'
+        - '*.js'
+        - '*.jsx'
+        - '*.mjs'
+        - '*.cjs'
+      run: bunx oxfmt --write {staged_files}
       stage_fixed: true
-    - name: oxfmt
-      run: bun oxfmt --write {staged_files}
-      stage_fixed: true
+    - name: lint
+      glob:
+        - '*.ts'
+        - '*.tsx'
+        - '*.js'
+        - '*.jsx'
+        - '*.mjs'
+        - '*.cjs'
+      run: bunx oxlint --deny-warnings {staged_files}
+
+commit-msg:
+  jobs:
+    - name: commitlint
+      run: bunx commitlint --edit {1}

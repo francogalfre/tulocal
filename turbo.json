@@ -1,56 +1,25 @@
 {
   "$schema": "https://turbo.build/schema.json",
   "ui": "tui",
+  "globalDependencies": ["packages/configuration/tsconfig.base.json"],
   "tasks": {
+    "transit": {
+      "dependsOn": ["^transit"]
+    },
     "build": {
       "dependsOn": ["^build"],
-      "inputs": ["$TURBO_DEFAULT$", ".env*"],
-      "outputs": ["dist/**", ".next/**", "!.next/cache/**"]
+      "outputs": ["dist/**"]
     },
-    "lint": {
-      "dependsOn": ["^lint"]
+    "check:types": {
+      "dependsOn": ["transit"],
+      "outputs": []
     },
-    "check-types": {
-      "dependsOn": ["^check-types"]
+    "test": {
+      "dependsOn": ["transit"]
     },
     "dev": {
       "cache": false,
       "persistent": true
-    },
-    "db:push": {
-      "cache": false,
-      "interactive": true
-    },
-    "db:generate": {
-      "cache": false,
-      "interactive": true
-    },
-    "db:migrate": {
-      "cache": false,
-      "interactive": true
-    },
-    "db:studio": {
-      "cache": false,
-      "persistent": true
     }
-  },
-  "globalEnv": [
-    "APP_URL",
-    "BETTER_AUTH_SECRET",
-    "BETTER_AUTH_URL",
-    "BLOB_READ_WRITE_TOKEN",
-    "CI",
-    "CORS_ORIGIN",
-    "DATABASE_URL",
-    "NEXT_PUBLIC_APP_URL",
-    "NEXT_PUBLIC_SERVER_URL",
-    "NODE_ENV",
-    "OPENROUTER_API_KEY",
-    "TAVILY_API_KEY",
-    "VERCEL",
-    "VERCEL_ENV",
-    "VERCEL_PROJECT_PRODUCTION_URL",
-    "VERCEL_URL"
-  ],
-  "globalDependencies": [".env*", "apps/*/.env*", "packages/*/.env*"]
+  }
 }

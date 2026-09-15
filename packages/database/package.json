@@ -1,0 +1,26 @@
+{
+  "name": "@tulocal/database",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    "./client": "./src/client.ts",
+    "./schema/authentication": "./src/schema/authentication.ts"
+  },
+  "scripts": {
+    "check:types": "tsc --noEmit",
+    "push": "bun --env-file=../../apps/core/.env drizzle-kit push",
+    "generate": "bun --env-file=../../apps/core/.env drizzle-kit generate",
+    "migrate": "bun --env-file=../../apps/core/.env drizzle-kit migrate",
+    "studio": "bun --env-file=../../apps/core/.env drizzle-kit studio"
+  },
+  "dependencies": {
+    "@neondatabase/serverless": "^1.1.0",
+    "@tulocal/environment": "workspace:*",
+    "drizzle-orm": "^0.45.2"
+  },
+  "devDependencies": {
+    "@tulocal/configuration": "workspace:*",
+    "drizzle-kit": "^0.31.10"
+  }
+}

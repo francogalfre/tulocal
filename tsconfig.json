@@ -1,3 +1,3 @@
 {
-  "extends": "@tulocal/config/tsconfig.base.json"
+  "extends": "@tulocal/configuration/tsconfig.base.json"
 }
