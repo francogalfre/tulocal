@@ -29,14 +29,10 @@ export async function getOwnedProduct(ctx: AuthedContext, productId: string) {
   return { store: ownedStore, product: found };
 }
 
-export function slugify(name: string) {
-  const base = name
-    .normalize("NFD")
-    .replaceAll(/[̀-ͯ]/g, "")
-    .toLowerCase()
-    .replaceAll(/[^a-z0-9]+/g, "-")
-    .replaceAll(/^-+|-+$/g, "")
-    .slice(0, 40);
-  const suffix = Math.random().toString(36).slice(2, 6);
-  return `${base || "tienda"}-${suffix}`;
+export async function isHandleTaken(ctx: AuthedContext, handle: string) {
+  const found = await ctx.db.query.store.findFirst({
+    where: eq(store.slug, handle),
+    columns: { id: true },
+  });
+  return found !== undefined;
 }

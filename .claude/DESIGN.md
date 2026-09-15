@@ -23,18 +23,19 @@ One accent (green), one warm neutral base. No extra colors without a functional 
 ```css
 :root {
   /* brand */
-  --color-accent: #22C55E;       /* pasto green — actions, price, positive states */
-  --color-accent-deep: #15803D;  /* secondary green — text on accent, solid buttons */
+  --color-accent: #22c55e; /* pasto green — actions, price, positive states */
+  --color-accent-deep: #15803d; /* secondary green — text on accent, solid buttons */
 
   /* base */
-  --color-ink: #14231A;          /* primary text */
-  --color-paper: #F6F4EC;        /* background */
-  --color-paper-2: #EFEBDD;      /* secondary surface, the only "card" allowed */
-  --color-muted: #6B7566;        /* secondary text, metadata */
+  --color-ink: #14231a; /* primary text */
+  --color-paper: #f6f4ec; /* background */
+  --color-paper-2: #efebdd; /* secondary surface, the only "card" allowed */
+  --color-muted: #616b5c; /* secondary text, metadata (5:1 on paper) */
   --color-line: rgba(20, 35, 26, 0.12); /* borders, always subtle */
 
   /* state, used sparingly */
-  --color-warning: #C6674B;      /* scam alerts, floor price */
+  --color-warning: #c6674b; /* scam alerts, floor price, invalid borders */
+  --color-warning-deep: #ad5236; /* warning text at small sizes (4.7:1 on paper) */
 }
 ```
 
@@ -45,23 +46,26 @@ Usage rule: `--color-accent` for anything the user can act on or that's happenin
 **Outfit** for headings, price, and any important number. **Plus Jakarta Sans** for everything else: paragraphs, labels, inputs, the agent's chat.
 
 ```html
-<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<link
+  href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600&display=swap"
+  rel="stylesheet"
+/>
 ```
 
 ```css
---font-display: 'Outfit', sans-serif;
---font-body: 'Plus Jakarta Sans', sans-serif;
+--font-display: "Outfit", sans-serif;
+--font-body: "Plus Jakarta Sans", sans-serif;
 ```
 
 Size scale, no invented in-between values:
 
-| role | font | size | weight |
-|---|---|---|---|
-| featured price | outfit | 40–56px | 600 |
-| page title | outfit | 28–34px | 600 |
-| section title | outfit | 18–20px | 600 |
-| body | plus jakarta | 15–16px | 400 |
-| label / metadata | plus jakarta | 13px | 500 |
+| role             | font         | size    | weight |
+| ---------------- | ------------ | ------- | ------ |
+| featured price   | outfit       | 40–56px | 600    |
+| page title       | outfit       | 28–34px | 600    |
+| section title    | outfit       | 18–20px | 600    |
+| body             | plus jakarta | 15–16px | 400    |
+| label / metadata | plus jakarta | 13px    | 500    |
 
 Equivalent peers (two prices, two product titles) always share size and weight, even if one string is shorter than the other.
 
@@ -101,12 +105,12 @@ Usage: `space-2` to `space-4` inside a group (label → value). `space-6` to `sp
 
 **The product's copy stays in Rioplatense Spanish.** These rules are about tone, not translation, when an agent generates UI copy, error states, or the sales agent's replies.
 
-| do | don't |
-|---|---|
-| "listo, ya está publicado" | "¡bienvenido a tu nueva plataforma!" |
-| "te llegó un comprador en serio" | "optimizá tus ventas con IA" |
-| "¿cuánto pedís por esto?" | "asistente virtual inteligente" |
-| "eso no lo sé, le pregunto al dueño" | "solución integral de e-commerce" |
+| do                                   | don't                                |
+| ------------------------------------ | ------------------------------------ |
+| "listo, ya está publicado"           | "¡bienvenido a tu nueva plataforma!" |
+| "te llegó un comprador en serio"     | "optimizá tus ventas con IA"         |
+| "¿cuánto pedís por esto?"            | "asistente virtual inteligente"      |
+| "eso no lo sé, le pregunto al dueño" | "solución integral de e-commerce"    |
 
 Short sentences, active verbs, zero corporate language. A button that says "publicar" is followed by a message that says "publicado", never "¡tu producto fue enviado exitosamente!".
 

@@ -6,16 +6,12 @@ import { Toaster } from "@tulocal/ui/components/sonner";
 
 import { queryClient } from "@/utils/trpc";
 
-import { ThemeProvider } from "./theme-provider";
-
 export default function Providers({ children }: { children: React.ReactNode }) {
   return (
-    <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
-      <QueryClientProvider client={queryClient}>
-        {children}
-        <ReactQueryDevtools />
-      </QueryClientProvider>
-      <Toaster richColors />
-    </ThemeProvider>
+    <QueryClientProvider client={queryClient}>
+      {children}
+      <ReactQueryDevtools />
+      <Toaster />
+    </QueryClientProvider>
   );
 }

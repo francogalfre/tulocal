@@ -25,3 +25,6 @@ coverage
 !.vscode/extensions.json
 .idea
 .DS_Store
+
+# impeccable review captures (surface briefs stay tracked)
+**/.impeccable/review/
