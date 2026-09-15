@@ -12,6 +12,7 @@ The repo was reset on 2026-09-15 to rebuild the MVP from a clean base. What exis
 - `packages/database`: Drizzle client on the Neon HTTP driver, schema, migrations, see below.
 - `packages/database`: Drizzle client over Neon plus the schema, starting with the Better Auth tables.
 - `packages/authentication`: Better Auth server instance, session helpers, request handlers, and the React client.
+- `packages/storage`: Redis client, typed cache on top of it, and the Vercel Blob wrapper, see below.
 - `tools/oxlint/anti-slop`: a vendored Oxlint plugin with the anti-slop rules described in [code.md](./code.md).
 - Root tooling: Bun, Turborepo, Oxlint, Oxfmt, Lefthook, commitlint.
 
@@ -33,7 +34,8 @@ Bun-managed, Turborepo-orchestrated monorepo.
 | ui                        | Tailwind CSS v4, shadcn/ui primitives shared via `packages/ui` |
 | ai                        | Vercel AI SDK with OpenRouter as the provider                |
 | price research            | Tavily                                                       |
-| file storage              | Vercel Blob                                                  |
+| cache                     | Redis over `ioredis`, wrapped by `@tulocal/storage/cache`   |
+| file storage              | Vercel Blob, wrapped by `@tulocal/storage/blob`             |
 | lint / format             | Oxlint / Oxfmt, plus the vendored anti-slop plugin           |
 | git hooks                 | Lefthook, commitlint                                         |
 | deploy                    | Vercel (web and server as separate services)                 |
@@ -49,6 +51,7 @@ packages/
   environment/    t3-env schemas, the only module that reads process.env
   database/       Drizzle schema, Neon client, migrations
   authentication/ Better Auth server, session helpers, handlers, React client
+  storage/        Redis client, typed cache, Vercel Blob wrapper
   api/            tRPC routers and business logic, organized by feature
   auth/           Better Auth configuration
   database/       Drizzle schema, client, migrations
@@ -95,16 +98,25 @@ Workspace package names are short technical nouns (`api`, `database`, `ui`, `ai`
 - The Better Auth tables (`users`, `sessions`, `accounts`, `verifications`, `rate_limits`) live in `packages/database/src/schema/authentication.ts` and are passed to the Drizzle adapter with `usePlural`.
 - Google OAuth needs `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET`, with `<BETTER_AUTH_URL>/api/auth/callback/google` registered as the authorized redirect URI in Google Cloud.
 
+## Storage
+
+`@tulocal/storage` owns every byte that is not in Postgres: the Redis cache and the Vercel Blob store. Nothing else imports `ioredis` or `@vercel/blob`.
+
+- `@tulocal/storage/redis` exports `redis`, one `ioredis` instance created at module load from `storageEnvironment.REDIS_URL`, with `lazyConnect` so importing the module never opens a socket, and the `tulocal:` key prefix applied to every command. Reach for it directly only when the cache module does not cover the command (counters, sets, locks).
+- `@tulocal/storage/cache` exports `CacheEntry<Value>` and four functions over it: `readCache`, `writeCache`, `removeCache`, `rememberCache`. A `CacheEntry` bundles the key, the zod schema of the stored value, and `timeToLiveInSeconds`. Values are stored as JSON and parsed with the schema on the way out. A stored value that no longer matches its schema is deleted and treated as a miss, so a deploy that changes a schema never serves stale data. Every write carries a TTL; there are no keys without expiry. Features define their entries next to the code that uses them, with the key namespaced by feature (`price-research:<productId>`).
+- `@tulocal/storage/blob` exports `uploadBlob(input)` and `removeBlob(url)`. Uploads are public, get a random suffix so two sellers never collide on a pathname, and return a `StoredBlob` with `url`, `pathname`, and `contentType`. The token comes from `storageEnvironment`, never from `process.env`.
+- Both modules read `storageEnvironment` from `@tulocal/environment/storage`, which validates `REDIS_URL` (a `redis` or `rediss` URL) and `BLOB_READ_WRITE_TOKEN`. `serverEnvironment` extends it.
+
 ## Environment variables
 
 - Plain `.env` files, loaded natively by Bun (server) and Next.js (web). `packages/environment/.env.example` lists every variable with a placeholder.
-- `@tulocal/environment` is the only place that reads `process.env`. It validates with t3-env and zod at startup and exports three typed objects: `databaseEnvironment` from `@tulocal/environment/database` (only `DATABASE_URL`, validated as a postgres URL), `serverEnvironment` from `@tulocal/environment/server` (extends the database one with every other server variable), and `webEnvironment` from `@tulocal/environment/web`. Nothing else touches `process.env`. A module imports the narrowest object that covers what it reads: the database client and `drizzle.config.ts` import `databaseEnvironment`, so migrations run with only `DATABASE_URL` set.
+- `@tulocal/environment` is the only place that reads `process.env`. It validates with t3-env and zod at startup and exports four typed objects: `databaseEnvironment` from `@tulocal/environment/database` (only `DATABASE_URL`, validated as a postgres URL), `storageEnvironment` from `@tulocal/environment/storage` (`REDIS_URL` and `BLOB_READ_WRITE_TOKEN`), `serverEnvironment` from `@tulocal/environment/server` (extends the database and storage ones with every other server variable), and `webEnvironment` from `@tulocal/environment/web`. Nothing else touches `process.env`. A module imports the narrowest object that covers what it reads: the database client and `drizzle.config.ts` import `databaseEnvironment`, so migrations run with only `DATABASE_URL` set.
 - Set `SKIP_ENVIRONMENT_VALIDATION=true` only for lint or build steps that run without secrets, never in a running app.
 - Real secrets stay in ignored `.env` files or in Vercel.
 
 | app    | variables                                                                                                                          |
 | ------ | ---------------------------------------------------------------------------------------------------------------------------------- |
-| server | `DATABASE_URL`, `BETTER_AUTH_SECRET`, `BETTER_AUTH_URL`, `CORS_ORIGIN`, `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `OPENROUTER_API_KEY`, `TAVILY_API_KEY`, `BLOB_READ_WRITE_TOKEN` |
+| server | `DATABASE_URL`, `REDIS_URL`, `BLOB_READ_WRITE_TOKEN`, `BETTER_AUTH_SECRET`, `BETTER_AUTH_URL`, `CORS_ORIGIN`, `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `OPENROUTER_API_KEY`, `TAVILY_API_KEY` |
 | web    | `NEXT_PUBLIC_SERVER_URL`, optionally `NEXT_PUBLIC_APP_URL` (share links and QR codes)                                              |
 
 ## Locked decisions
@@ -114,7 +126,7 @@ Decided during planning on 2026-09-15. Do not re-open them; extend what exists.
 - **AI provider is OpenRouter** through `@openrouter/ai-sdk-provider`, on the Vercel AI SDK. Not Vercel AI Gateway. Model identifiers live in one module inside `packages/ai`; image output needs `extraBody.modalities`.
 - **Price research uses Tavily**, not Perplexity or Gemini grounding.
 - **The listing pipeline is a synchronous tRPC mutation** (`product.runPipeline`) and the dashboard polls every 2 seconds. No Vercel Workflow, no queues.
-- **Uploads go through a multipart Hono route** (`POST /upload`) that calls Vercel Blob server-side, because the client-side Blob token fetch does not send cookies cross-origin in local development.
+- **Uploads go through a multipart Hono route** (`POST /upload`) that calls `uploadBlob` from `@tulocal/storage/blob` server-side, because the client-side Blob token fetch does not send cookies cross-origin in local development.
 - **Generated product images must never fake the product.** Backgrounds and framing change; the item does not.
 
 ## Next.js

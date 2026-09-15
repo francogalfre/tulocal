@@ -24,7 +24,7 @@ Scope lint and format to source folders when the whole tree is noisy: `bunx oxli
 - The web app runs on port 3001, the server on port 3000.
 - Turborepo runs both as one unit. Killing one child kills the other; restart both with `bun run dev`.
 - The server runs with `--hot`, which does not reload changes made inside `packages/*`. After editing a package, restart the dev process.
-- Copy each app's `.env.example` to `.env` before the first run. Keys still to be provisioned per developer: `OPENROUTER_API_KEY`, `TAVILY_API_KEY`, `BLOB_READ_WRITE_TOKEN`.
+- Copy each app's `.env.example` to `.env` before the first run. Keys still to be provisioned per developer: `OPENROUTER_API_KEY`, `TAVILY_API_KEY`, `BLOB_READ_WRITE_TOKEN`, `REDIS_URL`.
 
 ## Git hooks
 
