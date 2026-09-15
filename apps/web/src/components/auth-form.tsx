@@ -10,6 +10,7 @@ import {
 } from "@tulocal/ui/components/card";
 import { Input } from "@tulocal/ui/components/input";
 import { Label } from "@tulocal/ui/components/label";
+import { Separator } from "@tulocal/ui/components/separator";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
@@ -17,9 +18,12 @@ import { toast } from "sonner";
 
 import { authClient } from "@/lib/auth-client";
 
+import { GoogleIcon } from "./google-icon";
+
 export function AuthForm({ mode }: { mode: "login" | "signup" }) {
   const router = useRouter();
   const [pending, setPending] = useState(false);
+  const [googlePending, setGooglePending] = useState(false);
   const isSignup = mode === "signup";
 
   async function onSubmit(event: React.FormEvent<HTMLFormElement>) {
@@ -40,6 +44,18 @@ export function AuthForm({ mode }: { mode: "login" | "signup" }) {
     router.push("/dashboard");
   }
 
+  async function onGoogleSignIn() {
+    setGooglePending(true);
+    const result = await authClient.signIn.social({
+      provider: "google",
+      callbackURL: "/dashboard",
+    });
+    if (result.error) {
+      setGooglePending(false);
+      toast.error(result.error.message ?? "No pudimos conectar con Google. Probá de nuevo.");
+    }
+  }
+
   return (
     <main className="flex min-h-svh items-center justify-center px-4">
       <Card className="w-full max-w-sm">
@@ -50,7 +66,23 @@ export function AuthForm({ mode }: { mode: "login" | "signup" }) {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <form onSubmit={onSubmit} className="flex flex-col gap-4">
+          <div className="flex flex-col gap-4">
+            <Button
+              type="button"
+              variant="outline"
+              disabled={googlePending}
+              onClick={onGoogleSignIn}
+            >
+              <GoogleIcon className="size-4" data-icon="inline-start" />
+              {googlePending ? "Conectando…" : "Continuar con Google"}
+            </Button>
+            <div className="flex items-center gap-3">
+              <Separator className="flex-1" />
+              <span className="text-xs text-muted-foreground">o</span>
+              <Separator className="flex-1" />
+            </div>
+          </div>
+          <form onSubmit={onSubmit} className="mt-4 flex flex-col gap-4">
             {isSignup && (
               <div className="flex flex-col gap-1.5">
                 <Label htmlFor="name">Nombre</Label>

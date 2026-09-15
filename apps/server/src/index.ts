@@ -16,6 +16,7 @@ console.log("[tulocal] env:", {
   openrouter: env.OPENROUTER_API_KEY ? "ok" : "MISSING",
   tavily: env.TAVILY_API_KEY ? "ok" : "MISSING",
   blob: env.BLOB_READ_WRITE_TOKEN ? "ok" : "MISSING",
+  google: env.GOOGLE_CLIENT_ID && env.GOOGLE_CLIENT_SECRET ? "ok" : "MISSING",
   appUrl: env.APP_URL,
 });
 
