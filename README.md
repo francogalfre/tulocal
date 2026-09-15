@@ -27,7 +27,7 @@ Web: http://localhost:3001 · API: http://localhost:3000
 
 ## Environment
 
-Plain `.env` files, loaded natively by Bun (server) and Next.js (web). The server reads `DATABASE_URL`, `BETTER_AUTH_SECRET`, `BETTER_AUTH_URL` and `CORS_ORIGIN`; the web app reads `NEXT_PUBLIC_SERVER_URL`. Drizzle Kit scripts load `apps/server/.env`.
+Plain `.env` files, loaded natively by Bun (server) and Next.js (web). The server reads `DATABASE_URL`, `BETTER_AUTH_SECRET`, `BETTER_AUTH_URL`, `CORS_ORIGIN`, plus `OPENROUTER_API_KEY` (OpenRouter, for the vision, image and negotiation models), `TAVILY_API_KEY` (price research) and `BLOB_READ_WRITE_TOKEN` (Vercel Blob for product images). The web app reads `NEXT_PUBLIC_SERVER_URL` and optionally `NEXT_PUBLIC_APP_URL` (share links and QR codes). Drizzle Kit scripts load `apps/server/.env`.
 
 ## Scripts
 

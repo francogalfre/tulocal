@@ -1,5 +1,5 @@
 import { QueryCache, QueryClient } from "@tanstack/react-query";
-import { createTRPCClient, httpBatchLink } from "@trpc/client";
+import { createTRPCClient, httpBatchLink, httpLink, splitLink } from "@trpc/client";
 import { createTRPCOptionsProxy } from "@trpc/tanstack-react-query";
 import type { AppRouter } from "@tulocal/api/routers/index";
 import { toast } from "sonner";
@@ -11,7 +11,7 @@ export const queryClient = new QueryClient({
     onError: (error, query) => {
       toast.error(error.message, {
         action: {
-          label: "Retry",
+          label: "Reintentar",
           onClick: () => {
             query.invalidate();
           },
@@ -21,13 +21,19 @@ export const queryClient = new QueryClient({
   }),
 });
 
+const url = `${getServerUrl()}/trpc`;
+const fetchWithCredentials: typeof fetch = (input, init) =>
+  fetch(input, { ...init, credentials: "include" });
+
+/** Long-running procedures go through a plain link so they never block a batch. */
+const LONG_RUNNING = new Set(["product.runPipeline"]);
+
 const trpcClient = createTRPCClient<AppRouter>({
   links: [
-    httpBatchLink({
-      url: `${getServerUrl()}/trpc`,
-      fetch(url, options) {
-        return fetch(url, { ...options, credentials: "include" });
-      },
+    splitLink({
+      condition: (op) => LONG_RUNNING.has(op.path),
+      true: httpLink({ url, fetch: fetchWithCredentials }),
+      false: httpBatchLink({ url, fetch: fetchWithCredentials }),
     }),
   ],
 });

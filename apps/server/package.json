@@ -9,10 +9,14 @@
   "dependencies": {
     "@hono/trpc-server": "^0.4.2",
     "@trpc/server": "catalog:",
+    "@tulocal/ai": "workspace:*",
     "@tulocal/api": "workspace:*",
     "@tulocal/auth": "workspace:*",
     "@tulocal/db": "workspace:*",
+    "@vercel/blob": "^2",
+    "ai": "catalog:",
     "better-auth": "catalog:",
+    "drizzle-orm": "^0.45.2",
     "hono": "^4.13.7",
     "zod": "catalog:"
   },

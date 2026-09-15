@@ -15,8 +15,12 @@
   "dependencies": {
     "@trpc/client": "catalog:",
     "@trpc/server": "catalog:",
+    "@tulocal/ai": "workspace:*",
     "@tulocal/auth": "workspace:*",
     "@tulocal/db": "workspace:*",
+    "@vercel/blob": "^2",
+    "ai": "catalog:",
+    "drizzle-orm": "^0.45.2",
     "zod": "catalog:"
   },
   "devDependencies": {

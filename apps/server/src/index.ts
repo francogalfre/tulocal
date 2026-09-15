@@ -6,9 +6,18 @@ import { logger } from "hono/logger";
 
 import { createContext } from "./context";
 import { env } from "./env";
+import { chatRoute } from "./routes/chat";
+import { uploadRoute } from "./routes/upload";
 import { auth } from "./services";
 
 const app = new Hono();
+
+console.log("[tulocal] env:", {
+  openrouter: env.OPENROUTER_API_KEY ? "ok" : "MISSING",
+  tavily: env.TAVILY_API_KEY ? "ok" : "MISSING",
+  blob: env.BLOB_READ_WRITE_TOKEN ? "ok" : "MISSING",
+  appUrl: env.APP_URL,
+});
 
 app.use(logger());
 app.use(
@@ -32,6 +41,9 @@ app.use(
     },
   }),
 );
+
+app.route("/upload", uploadRoute);
+app.route("/chat", chatRoute);
 
 app.get("/", (c) => {
   return c.text("OK");
