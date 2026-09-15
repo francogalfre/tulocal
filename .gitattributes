@@ -1,0 +1,4 @@
+# Third-party agent skills, vendored as-is. Keep them out of GitHub's
+# language stats and out of the default diff/file-finder view.
+.agents/skills/** linguist-vendored
+.claude/skills/** linguist-vendored

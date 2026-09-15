@@ -10,20 +10,20 @@ tutienda lets anyone open an online shop by taking photos of a product with thei
 
 Better-T-Stack monorepo, Bun-managed, Turborepo-orchestrated.
 
-| layer | choice |
-|---|---|
-| runtime / package manager | Bun |
-| monorepo | Turborepo, bun workspaces |
-| frontend | Next.js 16 (App Router) |
-| backend | Hono |
-| api | tRPC |
-| database | PostgreSQL (Neon), Drizzle ORM |
-| auth | Better-Auth |
-| ui | Tailwind CSS v4, shadcn/ui (shared via `packages/ui`) |
-| env | Varlock |
-| lint / format | Oxlint / Oxfmt |
-| git hooks | Lefthook |
-| deploy | Vercel (web + server as separate services) |
+| layer                     | choice                                                |
+| ------------------------- | ----------------------------------------------------- |
+| runtime / package manager | Bun                                                   |
+| monorepo                  | Turborepo, bun workspaces                             |
+| frontend                  | Next.js 16 (App Router)                               |
+| backend                   | Hono                                                  |
+| api                       | tRPC                                                  |
+| database                  | PostgreSQL (Neon), Drizzle ORM                        |
+| auth                      | Better-Auth                                           |
+| ui                        | Tailwind CSS v4, shadcn/ui (shared via `packages/ui`) |
+| env                       | Varlock                                               |
+| lint / format             | Oxlint / Oxfmt                                        |
+| git hooks                 | Lefthook                                              |
+| deploy                    | Vercel (web + server as separate services)            |
 
 ## Layout
 
@@ -72,7 +72,7 @@ Generic engineering rules. They apply to every package and app in this repo, reg
 - **Errors are handled, never swallowed.** No empty `catch` blocks. Either handle the error meaningfully, rethrow it, or let it propagate. Never catch-and-ignore just to silence a type checker or linter.
 - **Types are real.** Avoid `any`, prefer `unknown` with narrowing or a proper type. Don't cast to silence an error you haven't understood.
 - **No magic values.** A number or string with meaning gets a named constant, not a bare literal repeated across files.
-- **No comments in code.** Names and structure carry the meaning. Don't add comments explaining what code does or why, if it needs explaining, rename or restructure it instead.
+- **Never write comments in code.** Not a single one, under any circumstance, no exceptions for "complex" logic, TODOs, or explaining why. Names and structure must carry the meaning; if something needs explaining, rename or restructure it instead of commenting it.
 - **Alias imports, no deep relatives.** Inside `apps/web` and `apps/server`, import from your own app's `src/` with the `@/` alias (`@/components/header`, not `../../components/header`). `packages/*` don't have this alias configured yet, keep those imports relative until it's added, but never write a `../../../` chain, restructure the folder instead.
 - **300 lines per file, max.** When a file is about to cross ~300 lines, split it, either a new file next to it or a new folder if it's really a new sub-concern. Don't keep growing one file because it's convenient.
 - **Organize by feature, not by layer.** Inside a package or app, group a feature's files together (e.g. a `products/` folder holding its schema, router, and logic) rather than splitting into global `schemas/`, `routers/`, `services/` buckets. `lib/` and `utils/` folders are fine for genuinely shared, cross-feature helpers, not as a dumping ground for feature-specific code.
