@@ -1,0 +1,44 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "bunVersion": "1.x",
+  "services": {
+    "web": {
+      "root": "apps/web",
+      "framework": "nextjs",
+      "installCommand": "cd ../.. && bun install",
+      "buildCommand": "NEXT_PUBLIC_SERVER_URL=/api bun run build"
+    },
+    "server": {
+      "root": "apps/server",
+      "framework": "hono",
+      "entrypoint": "src/index.ts",
+      "installCommand": "cd ../.. && bun install",
+      "routes": [
+        {
+          "src": "/api/((?!auth(?:/|$)).*)",
+          "transforms": [
+            {
+              "type": "request.path",
+              "op": "set",
+              "args": "/$1"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "rewrites": [
+    {
+      "source": "/api/(.*)",
+      "destination": {
+        "service": "server"
+      }
+    },
+    {
+      "source": "/(.*)",
+      "destination": {
+        "service": "web"
+      }
+    }
+  ]
+}
