@@ -1,7 +1,7 @@
 import { createAuth } from "@tulocal/auth";
 import { type Database, createDb } from "@tulocal/db";
 
-import { env } from "./env.server";
+import { env } from "./env";
 
 const db = createDb(env);
 

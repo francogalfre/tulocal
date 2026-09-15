@@ -11,11 +11,10 @@
   },
   "scripts": {
     "check-types": "tsc --noEmit",
-    "db:push": "drizzle-kit push",
-    "db:generate": "drizzle-kit generate",
-    "db:migrate:deploy": "drizzle-kit migrate",
-    "db:studio": "drizzle-kit studio",
-    "db:migrate": "drizzle-kit migrate"
+    "db:push": "bun --env-file=../../apps/server/.env drizzle-kit push",
+    "db:generate": "bun --env-file=../../apps/server/.env drizzle-kit generate",
+    "db:migrate": "bun --env-file=../../apps/server/.env drizzle-kit migrate",
+    "db:studio": "bun --env-file=../../apps/server/.env drizzle-kit studio"
   },
   "dependencies": {
     "@neondatabase/serverless": "^1.1.0",
@@ -25,7 +24,6 @@
   "devDependencies": {
     "@tulocal/config": "workspace:*",
     "drizzle-kit": "^0.31.10",
-    "typescript": "catalog:",
-    "varlock": "catalog:"
+    "typescript": "catalog:"
   }
 }

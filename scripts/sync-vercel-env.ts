@@ -7,12 +7,7 @@ const VALID_ENVIRONMENTS = new Set(["development", "preview", "production"]);
 const VERCEL_COMMAND = ["bunx", "vercel"] as const;
 const DEFAULT_FILES = ["apps/web/.env", "apps/server/.env"];
 const SKIP_KEYS = new Set(["BETTER_AUTH_URL", "CORS_ORIGIN", "NODE_ENV"]);
-const OVERRIDE_KEYS = new Map([
-  ["NEXT_PUBLIC_SERVER_URL", "/api"],
-  ["NUXT_PUBLIC_SERVER_URL", "/api"],
-  ["PUBLIC_SERVER_URL", "/api"],
-  ["VITE_SERVER_URL", "/api"],
-]);
+const OVERRIDE_KEYS = new Map([["NEXT_PUBLIC_SERVER_URL", "/api"]]);
 
 const args = process.argv.slice(2);
 const separatorIndex = args.indexOf("--");
