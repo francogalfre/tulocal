@@ -50,9 +50,6 @@ export function QRCode({
   ];
 
   const finderSize = 7 * moduleSize;
-  const innerPadding = moduleSize;
-  const innerWhiteSize = 5 * moduleSize;
-  const innerBlackSize = 3 * moduleSize;
 
   const circles: { cx: number; cy: number }[] = [];
 
@@ -84,31 +81,24 @@ export function QRCode({
         return (
           <g key={`${r}-${c}`}>
             <rect
-              x={x}
-              y={y}
-              width={finderSize}
-              height={finderSize}
-              fill={fgColor}
-              rx="12"
-              ry="12"
+              x={x + moduleSize / 2}
+              y={y + moduleSize / 2}
+              width={finderSize - moduleSize}
+              height={finderSize - moduleSize}
+              fill="none"
+              stroke={fgColor}
+              strokeWidth={moduleSize}
+              rx={moduleSize * 1.75}
+              ry={moduleSize * 1.75}
             />
             <rect
-              x={x + innerPadding}
-              y={y + innerPadding}
-              width={innerWhiteSize}
-              height={innerWhiteSize}
-              fill={bgColor}
-              rx="8"
-              ry="8"
-            />
-            <rect
-              x={x + innerPadding * 2}
-              y={y + innerPadding * 2}
-              width={innerBlackSize}
-              height={innerBlackSize}
+              x={x + moduleSize * 2}
+              y={y + moduleSize * 2}
+              width={moduleSize * 3}
+              height={moduleSize * 3}
               fill={fgColor}
-              rx="3"
-              ry="3"
+              rx={moduleSize}
+              ry={moduleSize}
             />
           </g>
         );

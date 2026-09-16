@@ -1,57 +1,66 @@
-import { Camera, Sparkles, Store } from "lucide-react";
-import { redirect } from "next/navigation";
+import Link from "next/link";
 
-import { Screen } from "@/components/screen";
+import { Logo } from "@/components/logo";
+import { Button } from "@/components/ui/button";
+import { Features } from "@/features/landing/features";
+import { Footer } from "@/features/landing/footer";
 import { GoogleSignIn } from "@/features/landing/google";
+import { Hero } from "@/features/landing/hero";
+import { SmoothScroll } from "@/features/landing/scroll";
+import { Sponsors } from "@/features/landing/sponsors";
 import { findStoreByOwner, hasAnyProduct } from "@/features/store/find";
 import { findCurrentSession } from "@/lib/session";
 
-const STEPS = [
-  { icon: Camera, title: "Sacás una foto", detail: "Hasta tres, desde el celular." },
-  {
-    icon: Sparkles,
-    title: "La IA arma la publicación",
-    detail: "Fotos mejoradas, texto y precio sugerido.",
-  },
-  { icon: Store, title: "Compartís tu tienda", detail: "Un link y un QR. Sin comisión." },
-];
+async function findSignedInStorePath(ownerId: string): Promise<string> {
+  const store = await findStoreByOwner(ownerId);
+
+  if (store === null) {
+    return "/new";
+  }
+
+  const hasProducts = await hasAnyProduct(store.id);
+
+  return hasProducts ? `/${store.handle}` : "/new";
+}
 
 export default async function LandingPage() {
   const session = await findCurrentSession();
-
-  if (session !== null) {
-    const store = await findStoreByOwner(session.user.id);
-    const hasProducts = store !== null && (await hasAnyProduct(store.id));
-
-    redirect(hasProducts && store !== null ? `/${store.handle}` : "/new");
-  }
+  const signedInStorePath = session !== null ? await findSignedInStorePath(session.user.id) : null;
 
   return (
-    <Screen>
-      <div className="flex flex-1 flex-col justify-center gap-10">
-        <div className="flex flex-col gap-4">
-          <h1 className="text-[2.5rem] leading-[1.05]">Una foto y ya estás vendiendo</h1>
-          <p className="text-lg leading-relaxed text-muted-foreground">
-            Entrás con Google y tu tienda ya existe. Subís la foto de lo que vendés y la IA hace el
-            resto.
-          </p>
-        </div>
-        <ol className="flex flex-col gap-5">
-          {STEPS.map((step) => (
-            <li key={step.title} className="flex items-start gap-4">
-              <step.icon className="mt-0.5 size-5 shrink-0 text-brand-deep" aria-hidden="true" />
-              <div className="flex flex-col gap-0.5">
-                <span className="font-medium">{step.title}</span>
-                <span className="text-sm text-muted-foreground">{step.detail}</span>
-              </div>
-            </li>
-          ))}
-        </ol>
+    <SmoothScroll>
+      <div className="mx-auto flex w-full max-w-4xl flex-1 flex-col lg:border-x">
+        <main className="flex flex-1 flex-col pt-6">
+          <header className="flex h-12 items-center justify-between px-6 mb-6">
+            <Logo />
+            {signedInStorePath !== null ? (
+              <Button
+                size="lg"
+                className="px-4"
+                render={<Link href={signedInStorePath} />}
+                nativeButton={false}
+              >
+                Mi tienda
+              </Button>
+            ) : (
+              <GoogleSignIn
+                label="Entrar con Google"
+                variant="outline"
+                size="lg"
+                className="px-4"
+              />
+            )}
+          </header>
+
+          <div className="flex flex-1 flex-col motion-safe:animate-in motion-safe:fade-in motion-safe:slide-in-from-bottom-2 motion-safe:duration-500 motion-safe:ease-out">
+            <Hero signedInStorePath={signedInStorePath} />
+            <Features />
+            <Sponsors />
+          </div>
+        </main>
+
+        <Footer />
       </div>
-      <div className="flex flex-col gap-3">
-        <GoogleSignIn />
-        <p className="text-center text-sm text-muted-foreground">Gratis, sin comisión.</p>
-      </div>
-    </Screen>
+    </SmoothScroll>
   );
 }

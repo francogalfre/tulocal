@@ -1,13 +1,14 @@
 "use client";
 
+import type { VariantProps } from "class-variance-authority";
 import { useState } from "react";
 
 import { signInWithGoogle } from "@tulocal/authentication/client";
 
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
 
-const AFTER_SIGN_IN_PATH = "/";
+const AFTER_SIGN_IN_PATH = "/new";
 
 function GoogleMark() {
   return (
@@ -32,7 +33,19 @@ function GoogleMark() {
   );
 }
 
-export function GoogleSignIn() {
+type GoogleSignInProps = VariantProps<typeof buttonVariants> & {
+  label: string;
+  showsGoogleMark?: boolean;
+  className?: string;
+};
+
+export function GoogleSignIn({
+  label,
+  showsGoogleMark = true,
+  variant,
+  size,
+  className,
+}: GoogleSignInProps) {
   const [isRedirecting, setIsRedirecting] = useState(false);
 
   function handleClick(): void {
@@ -41,13 +54,16 @@ export function GoogleSignIn() {
   }
 
   return (
-    <Button size="xl" className="w-full" disabled={isRedirecting} onClick={handleClick}>
-      {isRedirecting ? (
-        <Spinner data-icon="inline-start" />
-      ) : (
-        <GoogleMark data-icon="inline-start" />
-      )}
-      Entrar con Google
+    <Button
+      variant={variant}
+      size={size}
+      className={className}
+      disabled={isRedirecting}
+      onClick={handleClick}
+    >
+      {isRedirecting && <Spinner data-icon="inline-start" />}
+      {!isRedirecting && showsGoogleMark && <GoogleMark data-icon="inline-start" />}
+      {label}
     </Button>
   );
 }

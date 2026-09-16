@@ -132,3 +132,13 @@
 @utility animate-scan {
   animation: scan 2.4s ease-in-out infinite alternate;
 }
+
+@theme {
+  --animate-marquee: marquee var(--duration, 40s) linear infinite;
+
+  @keyframes marquee {
+    to {
+      transform: translateX(calc(-100% - var(--gap, 1rem)));
+    }
+  }
+}
