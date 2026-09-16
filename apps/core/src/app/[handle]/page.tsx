@@ -94,7 +94,7 @@ export default async function StorePage({ params, searchParams }: StorePageProps
       <header className="flex h-9 items-center justify-between">
         <Logo />
         <div className="flex items-center gap-2">
-          <StoreShare url={storeUrl} title={store.name} />
+          <StoreShare url={storeUrl} title={store.name} isOwner={isOwner} />
           {isOwner ? (
             <>
               <Button
