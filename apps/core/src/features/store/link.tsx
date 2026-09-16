@@ -17,7 +17,7 @@ export function StoreLink({ handle }: StoreLinkProps) {
       nativeButton={false}
     >
       <Store data-icon="inline-start" />
-      Mi tienda
+      Mi local
     </Button>
   );
 }

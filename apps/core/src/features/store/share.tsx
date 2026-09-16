@@ -31,7 +31,7 @@ export function StoreShare({ url, title, isOwner }: StoreShareProps) {
     ? "Mostrales el código o mandales el link directo a tu catálogo."
     : "Mostrales el código o mandale el link directo a la tienda.";
   const shareMessage = isOwner
-    ? "Mirá mi tienda en tulocal"
+    ? "Mirá mi local en tulocal"
     : `Mirá los productos de la tienda de ${title} en tulocal`;
   const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(`${shareMessage}: ${url}`)}`;
   const twitterUrl = `https://twitter.com/intent/tweet?url=${encodeURIComponent(url)}&text=${encodeURIComponent(shareMessage)}`;

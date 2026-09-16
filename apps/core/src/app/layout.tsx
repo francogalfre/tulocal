@@ -14,6 +14,12 @@ export const metadata: Metadata = {
   title: { default: "tulocal", template: "%s | tulocal" },
   description: SITE_DESCRIPTION,
   applicationName: "tulocal",
+  icons: {
+    icon: [
+      { url: "/favicon-dark.ico", media: "(prefers-color-scheme: light)" },
+      { url: "/favicon-light.ico", media: "(prefers-color-scheme: dark)" },
+    ],
+  },
   openGraph: { siteName: "tulocal", locale: "es_AR", type: "website" },
   twitter: { card: "summary_large_image" },
 };

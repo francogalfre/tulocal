@@ -42,10 +42,10 @@ export function Hero({ signedInStorePath }: HeroProps) {
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
             {signedInStorePath !== null ? (
               <Button size="xl" render={<Link href={signedInStorePath} />} nativeButton={false}>
-                Ir a mi tienda
+                Ir a mi local
               </Button>
             ) : (
-              <GoogleSignIn label="Crear mi tienda" size="xl" showsGoogleMark={false} />
+              <GoogleSignIn label="Comenzá a vender" size="xl" showsGoogleMark={false} />
             )}
             <Button
               variant="outline"

@@ -45,7 +45,7 @@ export default async function LandingPage() {
                 render={<Link href={signedInStorePath} />}
                 nativeButton={false}
               >
-                Mi tienda
+                Mi local
               </Button>
             ) : (
               <GoogleSignIn

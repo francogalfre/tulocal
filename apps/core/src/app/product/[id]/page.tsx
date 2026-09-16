@@ -135,7 +135,7 @@ function Celebration({ product }: ProductViewProps) {
           render={<Link href={`/${product.store.handle}`} />}
           nativeButton={false}
         >
-          Ver mi tienda
+          Ver mi local
           <ArrowUpRight data-icon="inline-end" />
         </Button>
         <Button size="xl" variant="ghost" render={<Link href="/new" />} nativeButton={false}>
