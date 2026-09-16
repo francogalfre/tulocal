@@ -9,6 +9,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
 import { createProduct } from "@/features/product/create";
+import { compressPhoto } from "@/features/product/upload/compress";
 import { Hint } from "@/features/product/upload/hint";
 import { MAX_PHOTOS } from "@/features/product/upload/limits";
 import { Photo } from "@/features/product/upload/photo";
@@ -30,8 +31,23 @@ const CELL_CLASSES = ["col-span-2 row-span-2", "aspect-square", "aspect-square"]
 
 const SLOT_INDEXES = Array.from({ length: MAX_PHOTOS }, (_, index) => index);
 
+async function submitCompressedProduct(
+  previousState: CreateProductState,
+  formData: FormData,
+): Promise<CreateProductState> {
+  const photos = formData.getAll("photos").filter((entry) => entry instanceof File);
+  const compressedPhotos = await Promise.all(photos.map((photo) => compressPhoto(photo)));
+  const compressedFormData = new FormData();
+
+  for (const photo of compressedPhotos) {
+    compressedFormData.append("photos", photo);
+  }
+
+  return createProduct(previousState, compressedFormData);
+}
+
 export function Dropzone() {
-  const [state, submit, isPending] = useActionState(createProduct, INITIAL_STATE);
+  const [state, submit, isPending] = useActionState(submitCompressedProduct, INITIAL_STATE);
   const [photos, setPhotos] = useState<SelectedPhoto[]>([]);
   const [rejectedMessage, setRejectedMessage] = useState<string | null>(null);
   const [isDragging, setIsDragging] = useState(false);
