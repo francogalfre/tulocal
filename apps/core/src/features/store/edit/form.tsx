@@ -46,7 +46,6 @@ export function StoreEditForm({ store }: StoreEditFormProps) {
             id="description"
             name="description"
             rows={5}
-            className="min-h-24 resize-none"
             placeholder="Qué vendés, de dónde sos, cómo entregás."
             defaultValue={store.description ?? ""}
           />
