@@ -15,6 +15,13 @@
       "when": 1789516057556,
       "tag": "0001_clumsy_newton_destine",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1789520191853,
+      "tag": "0002_keen_amphibian",
+      "breakpoints": true
     }
   ]
 }

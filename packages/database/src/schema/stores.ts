@@ -21,7 +21,7 @@ export const stores = pgTable(
     name: text("name").notNull(),
     handle: text("handle").notNull(),
     color: text("color").notNull(),
-    whatsappPhone: text("whatsapp_phone").notNull(),
+    whatsappPhone: text("whatsapp_phone"),
     notifyByWhatsapp: boolean("notify_by_whatsapp").default(true).notNull(),
     notifyByEmail: boolean("notify_by_email").default(true).notNull(),
     agentName: text("agent_name").notNull(),

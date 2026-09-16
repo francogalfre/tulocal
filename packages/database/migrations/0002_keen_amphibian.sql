@@ -1,0 +1,1 @@
+ALTER TABLE "stores" ALTER COLUMN "whatsapp_phone" DROP NOT NULL;
