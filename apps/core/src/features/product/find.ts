@@ -17,6 +17,7 @@ async function queryProduct(productId: string) {
       comparables: true,
       questions: { orderBy: [desc(questions.createdAt)] },
       escalations: { orderBy: [desc(escalations.createdAt)] },
+      scenes: true,
     },
   });
 }

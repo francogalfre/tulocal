@@ -25,10 +25,12 @@ import {
   messagesRelations,
   productsRelations,
   questionsRelations,
+  scenesRelations,
   storesRelations,
   usersRelations,
   visitsRelations,
 } from "@tulocal/database/schema/relations";
+import { scenes } from "@tulocal/database/schema/scenes";
 import { stores } from "@tulocal/database/schema/stores";
 import { visits } from "@tulocal/database/schema/visits";
 
@@ -47,6 +49,7 @@ const schema = {
   questions,
   escalations,
   visits,
+  scenes,
   usersRelations,
   storesRelations,
   productsRelations,
@@ -57,6 +60,7 @@ const schema = {
   questionsRelations,
   escalationsRelations,
   visitsRelations,
+  scenesRelations,
 };
 
 export const database = drizzle(neon(databaseEnvironment.DATABASE_URL), { schema });

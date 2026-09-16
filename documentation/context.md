@@ -81,12 +81,13 @@ Behavior at a glance:
 2. Secret floor price that the agent respects.
 3. Self-completing product record (unanswered questions get saved back to the listing).
 4. Printable A5 flyer with QR code.
+5. Export to Instagram: a story and a three slide carousel composed from the listing, an optional AI scene, and a caption ready to paste.
 
 **v2 (support features)**
 
 - Scam detector.
 - "The nudge": the agent suggests a price drop if a product has been unsold for 15 days.
-- Copy generation for Marketplace, Mercado Libre, and Instagram stories.
+- Copy generation for Marketplace and Mercado Libre.
 
 **Later (high impact, optional)**
 

@@ -38,6 +38,17 @@ export function ProductActions({ productId, isSold }: ProductActionsProps) {
         </Button>
       )}
       {isSold ? null : (
+        <Button
+          size="xl"
+          variant="outline"
+          render={<Link href={`/product/${productId}/export`} />}
+          nativeButton={false}
+        >
+          <tulocalIcons.instagram data-icon="inline-start" />
+          Exportar a Instagram
+        </Button>
+      )}
+      {isSold ? null : (
         <form action={markProductSold}>
           <input type="hidden" name="productId" value={productId} />
           <Button type="submit" size="xl" variant="outline" className="w-full">
