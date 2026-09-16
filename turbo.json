@@ -2,6 +2,20 @@
   "$schema": "https://turbo.build/schema.json",
   "ui": "tui",
   "globalDependencies": ["packages/configuration/tsconfig.base.json"],
+  "globalEnv": [
+    "DATABASE_URL",
+    "REDIS_URL",
+    "BLOB_READ_WRITE_TOKEN",
+    "BETTER_AUTH_SECRET",
+    "BETTER_AUTH_URL",
+    "CORS_ORIGIN",
+    "GOOGLE_CLIENT_ID",
+    "GOOGLE_CLIENT_SECRET",
+    "OPENROUTER_API_KEY",
+    "TAVILY_API_KEY",
+    "NEXT_PUBLIC_SERVER_URL",
+    "NEXT_PUBLIC_APP_URL"
+  ],
   "tasks": {
     "transit": {
       "dependsOn": ["^transit"]
