@@ -50,6 +50,13 @@
       "when": 1789530761557,
       "tag": "0006_dazzling_mad_thinker",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1789534538552,
+      "tag": "0007_soft_boomer",
+      "breakpoints": true
     }
   ]
 }

@@ -22,13 +22,7 @@ export async function findConversationByToken(
   return conversation ?? null;
 }
 
-export async function findOrCreateConversation(input: ConversationLookup): Promise<Conversation> {
-  const existing = await findConversationByToken(input.productId, input.buyerToken);
-
-  if (existing !== null) {
-    return existing;
-  }
-
+export async function createConversation(input: ConversationLookup): Promise<Conversation> {
   const [created] = await database
     .insert(conversations)
     .values({

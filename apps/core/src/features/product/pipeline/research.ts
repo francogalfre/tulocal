@@ -1,7 +1,11 @@
+import { createHash } from "node:crypto";
+
 import { generateText, Output } from "ai";
 import { z } from "zod";
 
 import { serverEnvironment } from "@tulocal/environment/server";
+import { rememberCache } from "@tulocal/storage/cache";
+import type { CacheEntry } from "@tulocal/storage/cache";
 
 import { CATEGORY_LABELS } from "@/features/product/category";
 import { CONDITION_LABELS } from "@/features/product/condition";
@@ -12,6 +16,10 @@ import type { ProductCondition } from "@/features/product/condition";
 const TAVILY_SEARCH_URL = "https://api.tavily.com/search";
 
 const TAVILY_MAX_RESULTS = 10;
+
+const SEARCH_CACHE_PREFIX = "price-research";
+
+const SEARCH_CACHE_TIME_TO_LIVE_IN_SECONDS = 60 * 60 * 24;
 
 const TAVILY_CHUNKS_PER_SOURCE = 3;
 
@@ -34,9 +42,11 @@ const CONDITION_SEARCH_WORDS: Record<ProductCondition, string> = {
   worn: "usado",
 };
 
-const tavilyResponseSchema = z.object({
-  results: z.array(z.object({ title: z.string(), url: z.url(), content: z.string() })),
-});
+const searchResultSchema = z.object({ title: z.string(), url: z.url(), content: z.string() });
+
+const tavilyResponseSchema = z.object({ results: z.array(searchResultSchema) });
+
+const cachedResultsSchema = z.array(searchResultSchema);
 
 export type Comparable = {
   title: string;
@@ -64,7 +74,7 @@ type SearchInput = {
   country: string | null;
 };
 
-type SearchResult = z.infer<typeof tavilyResponseSchema>["results"][number];
+type SearchResult = z.infer<typeof searchResultSchema>;
 
 type TavilySearchBody = {
   query: string;
@@ -100,14 +110,24 @@ function buildSearchBody(input: SearchInput): string {
   return JSON.stringify(body);
 }
 
-async function searchListings(input: SearchInput): Promise<SearchResult[]> {
+function buildSearchCacheEntry(body: string): CacheEntry<SearchResult[]> {
+  const digest = createHash("sha256").update(body).digest("hex");
+
+  return {
+    key: `${SEARCH_CACHE_PREFIX}:${digest}`,
+    schema: cachedResultsSchema,
+    timeToLiveInSeconds: SEARCH_CACHE_TIME_TO_LIVE_IN_SECONDS,
+  };
+}
+
+async function fetchListings(body: string): Promise<SearchResult[]> {
   const response = await fetch(TAVILY_SEARCH_URL, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
       Authorization: `Bearer ${serverEnvironment.TAVILY_API_KEY}`,
     },
-    body: buildSearchBody(input),
+    body,
   });
 
   if (!response.ok) {
@@ -115,6 +135,12 @@ async function searchListings(input: SearchInput): Promise<SearchResult[]> {
   }
 
   return tavilyResponseSchema.parse(await response.json()).results;
+}
+
+async function searchListings(input: SearchInput): Promise<SearchResult[]> {
+  const body = buildSearchBody(input);
+
+  return rememberCache(buildSearchCacheEntry(body), () => fetchListings(body));
 }
 
 function isArgentineResult(result: SearchResult): boolean {

@@ -2,11 +2,20 @@ import "@/styles/globals.css";
 
 import type { Metadata } from "next";
 
+import { MotionProvider } from "@/components/motion/provider";
+import { appOrigin } from "@/lib/origin";
 import { fontBody, fontDisplay } from "@/styles/fonts";
 
+const SITE_DESCRIPTION =
+  "Armá tu tienda con una foto. La IA escribe la publicación y negocia por vos.";
+
 export const metadata: Metadata = {
-  title: "tulocal",
-  description: "Armá tu tienda con una foto. La IA escribe la publicación y negocia por vos.",
+  metadataBase: new URL(appOrigin),
+  title: { default: "tulocal", template: "%s | tulocal" },
+  description: SITE_DESCRIPTION,
+  applicationName: "tulocal",
+  openGraph: { siteName: "tulocal", locale: "es_AR", type: "website" },
+  twitter: { card: "summary_large_image" },
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
@@ -15,7 +24,9 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       lang="es-AR"
       className={`${fontDisplay.variable} ${fontBody.variable} h-full antialiased`}
     >
-      <body className="flex min-h-full flex-col">{children}</body>
+      <body className="flex min-h-full flex-col">
+        <MotionProvider>{children}</MotionProvider>
+      </body>
     </html>
   );
 }

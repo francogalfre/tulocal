@@ -1,8 +1,8 @@
 "use server";
 
 import { eq } from "drizzle-orm";
+import { updateTag } from "next/cache";
 import { redirect } from "next/navigation";
-import { z } from "zod";
 
 import { database } from "@tulocal/database/client";
 import { products } from "@tulocal/database/schema/products";
@@ -11,15 +11,9 @@ import { stores } from "@tulocal/database/schema/stores";
 import { findOwnedProduct } from "@/features/product/find";
 import { PRODUCT_DETAILS_ERROR, readProductDetails } from "@/features/product/schema";
 import { logEvent } from "@/lib/logger";
+import { argentinePhoneSchema } from "@/lib/phone/schema";
 import { requireCurrentSession } from "@/lib/session";
-
-const WHATSAPP_DIGITS_PATTERN = /^\+?\d{8,15}$/;
-
-const whatsappSchema = z
-  .string()
-  .trim()
-  .transform((phone) => phone.replaceAll(/[\s-]/g, ""))
-  .pipe(z.string().regex(WHATSAPP_DIGITS_PATTERN));
+import { buildStoreTag } from "@/lib/tags";
 
 export type PublishProductState = {
   error: string | null;
@@ -32,7 +26,7 @@ function readWhatsapp(formData: FormData): string | null {
     return null;
   }
 
-  const parsed = whatsappSchema.safeParse(entry);
+  const parsed = argentinePhoneSchema.safeParse(entry);
 
   return parsed.success ? parsed.data : null;
 }
@@ -79,5 +73,6 @@ export async function publishProduct(
     database.update(stores).set({ whatsappPhone }).where(eq(stores.id, product.store.id)),
   ]);
   logEvent({ event: "product.published", productId: product.id, storeId: product.store.id });
+  updateTag(buildStoreTag(product.store.handle));
   redirect(`/product/${product.id}?celebrate=1`);
 }

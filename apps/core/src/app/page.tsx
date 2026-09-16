@@ -1,4 +1,5 @@
 import Link from "next/link";
+import type { Metadata } from "next";
 
 import { Logo } from "@/components/logo";
 import { Button } from "@/components/ui/button";
@@ -8,19 +9,23 @@ import { GoogleSignIn } from "@/features/landing/google";
 import { Hero } from "@/features/landing/hero";
 import { SmoothScroll } from "@/features/landing/scroll";
 import { Sponsors } from "@/features/landing/sponsors";
-import { findStoreByOwner, hasAnyProduct } from "@/features/store/find";
+import { findStoreEntry } from "@/features/store/find";
 import { findCurrentSession } from "@/lib/session";
 
-async function findSignedInStorePath(ownerId: string): Promise<string> {
-  const store = await findStoreByOwner(ownerId);
+export const metadata: Metadata = {
+  title: { absolute: "tulocal" },
+  description:
+    "Una foto y ya estás vendiendo. Entrás con Google, subís la foto y la IA arma la publicación, la publica y negocia por vos.",
+};
 
-  if (store === null) {
+async function findSignedInStorePath(ownerId: string): Promise<string> {
+  const entry = await findStoreEntry(ownerId);
+
+  if (entry === null || !entry.hasProducts) {
     return "/new";
   }
 
-  const hasProducts = await hasAnyProduct(store.id);
-
-  return hasProducts ? `/${store.handle}` : "/new";
+  return `/${entry.handle}`;
 }
 
 export default async function LandingPage() {

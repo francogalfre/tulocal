@@ -14,10 +14,7 @@ export function Screen({ children, aside }: ScreenProps) {
         <Logo />
         {aside}
       </header>
-
-      <div className="flex flex-1 flex-col gap-10 motion-safe:animate-in motion-safe:fade-in motion-safe:slide-in-from-bottom-2 motion-safe:duration-500 motion-safe:ease-out">
-        {children}
-      </div>
+      <div className="flex flex-1 flex-col gap-10">{children}</div>
     </main>
   );
 }

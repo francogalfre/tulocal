@@ -2,12 +2,14 @@ import { ChartNoAxesColumn, Plus, Settings2 } from "lucide-react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { after } from "next/server";
+import type { Metadata } from "next";
+
+import type { Session } from "@tulocal/authentication/server";
 
 import { Button } from "@/components/ui/button";
 import { Empty, EmptyDescription, EmptyHeader, EmptyTitle } from "@/components/ui/empty";
 import { Logo } from "@/components/logo";
 import { recordStoreVisit } from "@/features/metrics/record";
-import { ProductCard } from "@/features/store/card";
 import {
   arrangeCatalog,
   parseCatalogFilters,
@@ -15,51 +17,58 @@ import {
   summarizeCategories,
 } from "@/features/store/catalog";
 import { findOwnerCatalog } from "@/features/store/find";
+import { CatalogGrid } from "@/features/store/grid";
 import { StoreHeader } from "@/features/store/header";
+import { readPublicPlace } from "@/features/store/location/place";
+import { LocationSection } from "@/features/store/location/section";
 import { findPublicStore } from "@/features/store/public";
+import type { PublicStore } from "@/features/store/public";
 import { StoreShare } from "@/features/store/share";
 import { CatalogToolbar } from "@/features/store/toolbar";
 import type { CatalogProduct } from "@/features/store/catalog";
 import type { StoreProfile } from "@/features/store/header";
+import type { PublicPlaceColumns } from "@/features/store/location/place";
 import { findCurrentSession } from "@/lib/session";
 import { buildStoreUrl } from "@/lib/url";
 
 type StorePageProps = PageProps<"/[handle]">;
 
 type StoreView = {
-  store: StoreProfile & { id: string; handle: string };
+  store: StoreProfile & PublicPlaceColumns & { id: string };
   products: CatalogProduct[];
   isOwner: boolean;
 };
 
-async function loadStoreView(handle: string, ownerId: string | null): Promise<StoreView | null> {
-  if (ownerId !== null) {
-    const catalog = await findOwnerCatalog(ownerId);
+type StoreViewInput = {
+  handle: string;
+  session: Session | null;
+  publicStore: PublicStore | null;
+};
 
-    if (catalog !== null && catalog.handle === handle) {
-      return {
-        store: catalog,
-        isOwner: true,
-        products: catalog.products.map((product) => ({
-          id: product.id,
-          title: product.title,
-          category: product.category,
-          listPriceInArs: product.listPriceInArs,
-          condition: product.condition,
-          status: product.status,
-          coverUrl: selectCoverUrl(product.images),
-          createdAt: product.createdAt,
-        })),
-      };
-    }
-  }
+async function loadOwnerView(handle: string, ownerId: string): Promise<StoreView | null> {
+  const catalog = await findOwnerCatalog(ownerId);
 
-  const store = await findPublicStore(handle);
-
-  if (store === null) {
+  if (catalog === null || catalog.handle !== handle) {
     return null;
   }
 
+  return {
+    store: catalog,
+    isOwner: true,
+    products: catalog.products.map((product) => ({
+      id: product.id,
+      title: product.title,
+      category: product.category,
+      listPriceInArs: product.listPriceInArs,
+      condition: product.condition,
+      status: product.status,
+      coverUrl: selectCoverUrl(product.images),
+      createdAt: product.createdAt,
+    })),
+  };
+}
+
+function buildPublicView(store: PublicStore): StoreView {
   return {
     store,
     isOwner: false,
@@ -76,11 +85,48 @@ async function loadStoreView(handle: string, ownerId: string | null): Promise<St
   };
 }
 
+async function resolveStoreView(input: StoreViewInput): Promise<StoreView | null> {
+  if (input.session !== null) {
+    const ownerView = await loadOwnerView(input.handle, input.session.user.id);
+
+    if (ownerView !== null) {
+      return ownerView;
+    }
+  }
+
+  if (input.publicStore === null) {
+    return null;
+  }
+
+  return buildPublicView(input.publicStore);
+}
+
+export async function generateMetadata({ params }: StorePageProps): Promise<Metadata> {
+  const { handle } = await params;
+  const store = await findPublicStore(handle);
+
+  if (store === null) {
+    return { title: "Tienda no encontrada" };
+  }
+
+  const description =
+    store.description === null || store.description.length === 0
+      ? `Lo que vende ${store.name}, en un solo link. Preguntá y negociá con ${store.agentName}.`
+      : store.description;
+
+  return {
+    title: store.name,
+    description,
+    alternates: { canonical: `/${store.handle}` },
+    openGraph: { title: store.name, description, url: `/${store.handle}` },
+  };
+}
+
 export default async function StorePage({ params, searchParams }: StorePageProps) {
   const { handle } = await params;
   const filters = parseCatalogFilters(await searchParams);
-  const session = await findCurrentSession();
-  const view = await loadStoreView(handle, session?.user.id ?? null);
+  const [session, publicStore] = await Promise.all([findCurrentSession(), findPublicStore(handle)]);
+  const view = await resolveStoreView({ handle, session, publicStore });
 
   if (view === null) {
     notFound();
@@ -95,6 +141,7 @@ export default async function StorePage({ params, searchParams }: StorePageProps
   const arranged = arrangeCatalog(products, filters);
   const categories = summarizeCategories(products);
   const storeUrl = buildStoreUrl(store.handle);
+  const place = readPublicPlace(store);
 
   return (
     <main className="mx-auto flex w-full max-w-2xl flex-1 flex-col gap-8 px-5 pt-6 pb-16">
@@ -181,19 +228,11 @@ export default async function StorePage({ params, searchParams }: StorePageProps
               </EmptyHeader>
             </Empty>
           ) : (
-            <ul className="grid grid-cols-2 gap-x-4 gap-y-8 sm:gap-x-6">
-              {arranged.map((product) => (
-                <ProductCard
-                  key={product.id}
-                  product={product}
-                  href={isOwner ? `/product/${product.id}` : `/${store.handle}/${product.id}`}
-                  showStatus={isOwner}
-                />
-              ))}
-            </ul>
+            <CatalogGrid products={arranged} handle={store.handle} isOwner={isOwner} />
           )}
         </div>
       )}
+      {place !== null ? <LocationSection place={place} /> : null}
     </main>
   );
 }

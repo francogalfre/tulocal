@@ -1,15 +1,19 @@
+import { MapPin } from "lucide-react";
 import Image from "next/image";
 import type { ReactNode } from "react";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Count } from "@/components/count";
+import { SocialLinks } from "@/features/store/social/links";
+import type { SocialHandles } from "@/features/store/social/networks";
 
-export type StoreProfile = {
+export type StoreProfile = SocialHandles & {
   name: string;
   handle: string;
   description: string | null;
   avatarUrl: string | null;
   bannerUrl: string | null;
+  locationName: string | null;
 };
 
 type StoreHeaderProps = {
@@ -46,13 +50,19 @@ export function StoreHeader({ store, productCount, actions }: StoreHeaderProps) 
       <div className="flex flex-col gap-1.5 pt-3 sm:px-5">
         <h1 className="text-3xl">{store.name}</h1>
         <p className="text-sm text-muted-foreground">
-          tulocal/{store.handle} · <Count count={productCount} />{" "}
-          {productCount === 1 ? "producto" : "productos"}
+          <Count count={productCount} /> {productCount === 1 ? "producto" : "productos"}
         </p>
+        {store.locationName !== null ? (
+          <p className="flex items-center gap-1.5 text-sm text-muted-foreground">
+            <MapPin className="size-4" aria-hidden="true" />
+            {store.locationName}
+          </p>
+        ) : null}
 
         {store.description !== null ? (
           <p className="max-w-prose whitespace-pre-line pt-1">{store.description}</p>
         ) : null}
+        <SocialLinks handles={store} />
       </div>
     </section>
   );

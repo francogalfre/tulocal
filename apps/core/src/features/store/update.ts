@@ -3,7 +3,7 @@
 import { randomUUID } from "node:crypto";
 
 import { eq } from "drizzle-orm";
-import { revalidatePath } from "next/cache";
+import { updateTag } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 
@@ -12,8 +12,13 @@ import { stores } from "@tulocal/database/schema/stores";
 import { uploadBlob } from "@tulocal/storage/blob";
 
 import { findStoreByOwner } from "@/features/store/find";
+import { placeFormSchema } from "@/features/store/location/place";
+import { derivePublicPlace } from "@/features/store/location/privacy";
+import { socialHandleSchema } from "@/features/store/social/handle";
 import { logEvent } from "@/lib/logger";
+import { argentinePhoneSchema } from "@/lib/phone/schema";
 import { requireCurrentSession } from "@/lib/session";
+import { buildStoreTag } from "@/lib/tags";
 
 const NAME_MAX_LENGTH = 60;
 
@@ -21,21 +26,23 @@ const DESCRIPTION_MAX_LENGTH = 300;
 
 const MAX_IMAGE_SIZE_IN_BYTES = 8 * 1024 * 1024;
 
-const WHATSAPP_DIGITS_PATTERN = /^\+?\d{8,15}$/;
-
 const storeInputSchema = z.object({
   name: z.string().trim().min(1).max(NAME_MAX_LENGTH),
   description: z.string().trim().max(DESCRIPTION_MAX_LENGTH),
-  whatsappPhone: z
-    .string()
-    .trim()
-    .transform((phone) => phone.replaceAll(/[\s-]/g, ""))
-    .pipe(z.string().regex(WHATSAPP_DIGITS_PATTERN).or(z.literal(""))),
+  whatsappPhone: z.literal("").or(argentinePhoneSchema),
+  instagramHandle: socialHandleSchema,
+  tiktokHandle: socialHandleSchema,
+  facebookHandle: socialHandleSchema,
+  xHandle: socialHandleSchema,
 });
 
 export type UpdateStoreState = {
   error: string | null;
 };
+
+function toNullableText(text: string): string | null {
+  return text.length === 0 ? null : text;
+}
 
 function readImage(formData: FormData, key: string): File | null {
   const entry = formData.get(key);
@@ -76,10 +83,26 @@ export async function updateStore(
     name: formData.get("name"),
     description: formData.get("description"),
     whatsappPhone: formData.get("whatsappPhone") ?? "",
+    instagramHandle: formData.get("instagramHandle") ?? "",
+    tiktokHandle: formData.get("tiktokHandle") ?? "",
+    facebookHandle: formData.get("facebookHandle") ?? "",
+    xHandle: formData.get("xHandle") ?? "",
   });
 
   if (!parsed.success) {
-    return { error: "Revisá el nombre, la descripción y el WhatsApp." };
+    return { error: "Revisá el nombre, la descripción, el WhatsApp y las redes." };
+  }
+
+  const parsedPlace = placeFormSchema.safeParse({
+    addressLine: formData.get("addressLine") ?? "",
+    areaName: formData.get("areaName") ?? "",
+    latitude: formData.get("latitude") ?? "",
+    longitude: formData.get("longitude") ?? "",
+    isAddress: formData.get("isAddress") ?? "",
+  });
+
+  if (!parsedPlace.success) {
+    return { error: "Elegí la ubicación de la lista." };
   }
 
   const avatar = readImage(formData, "avatar");
@@ -96,15 +119,33 @@ export async function updateStore(
     avatar === null ? store.avatarUrl : await uploadStoreImage(store.id, "avatar", avatar);
   const bannerUrl =
     banner === null ? store.bannerUrl : await uploadStoreImage(store.id, "banner", banner);
-  const description = parsed.data.description.length === 0 ? null : parsed.data.description;
+  const description = toNullableText(parsed.data.description);
   const whatsappPhone =
     parsed.data.whatsappPhone.length === 0 ? store.whatsappPhone : parsed.data.whatsappPhone;
+  const place = parsedPlace.data;
+  const publicPlace = place === null ? null : derivePublicPlace(place);
 
   await database
     .update(stores)
-    .set({ name: parsed.data.name, description, avatarUrl, bannerUrl, whatsappPhone })
+    .set({
+      name: parsed.data.name,
+      description,
+      avatarUrl,
+      bannerUrl,
+      whatsappPhone,
+      instagramHandle: toNullableText(parsed.data.instagramHandle),
+      tiktokHandle: toNullableText(parsed.data.tiktokHandle),
+      facebookHandle: toNullableText(parsed.data.facebookHandle),
+      xHandle: toNullableText(parsed.data.xHandle),
+      addressLine: place === null || !place.isAddress ? null : place.addressLine,
+      addressLatitude: place === null || !place.isAddress ? null : place.latitude,
+      addressLongitude: place === null || !place.isAddress ? null : place.longitude,
+      locationName: publicPlace === null ? null : publicPlace.name,
+      locationLatitude: publicPlace === null ? null : publicPlace.latitude,
+      locationLongitude: publicPlace === null ? null : publicPlace.longitude,
+    })
     .where(eq(stores.id, store.id));
   logEvent({ event: "store.updated", storeId: store.id });
-  revalidatePath(`/${store.handle}`);
+  updateTag(buildStoreTag(store.handle));
   redirect(`/${store.handle}`);
 }

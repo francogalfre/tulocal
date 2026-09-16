@@ -1,16 +1,19 @@
 "use client";
 
-import { Camera } from "lucide-react";
-import { useActionState, useState } from "react";
-import type { ChangeEvent } from "react";
+import { useActionState } from "react";
 
+import { Phone } from "@/components/phone";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Field, FieldDescription, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
+import { Separator } from "@/components/ui/separator";
 import { Spinner } from "@/components/ui/spinner";
 import { Textarea } from "@/components/ui/textarea";
+import { StoreImagesFields } from "@/features/store/edit/images";
+import { LocationPicker } from "@/features/store/location/picker";
+import { readStoredPlace } from "@/features/store/location/place";
+import { SocialFields } from "@/features/store/social/fields";
 import { updateStore } from "@/features/store/update";
 import type { Store } from "@/features/store/find";
 import type { UpdateStoreState } from "@/features/store/update";
@@ -21,68 +24,16 @@ type StoreEditFormProps = {
   store: Store;
 };
 
-function readPreviewUrl(event: ChangeEvent<HTMLInputElement>): string | null {
-  const file = event.target.files?.[0];
-
-  if (file === undefined) {
-    return null;
-  }
-
-  return URL.createObjectURL(file);
-}
-
 export function StoreEditForm({ store }: StoreEditFormProps) {
   const [state, submit, isPending] = useActionState(updateStore, INITIAL_STATE);
-  const [bannerPreview, setBannerPreview] = useState(store.bannerUrl);
-  const [avatarPreview, setAvatarPreview] = useState(store.avatarUrl);
 
   return (
     <form action={submit} className="flex flex-col gap-8">
-      <div className="flex flex-col">
-        <label
-          htmlFor="banner"
-          className="group relative flex aspect-[3/1] cursor-pointer items-center justify-center overflow-hidden rounded-2xl bg-secondary text-sm font-medium transition-colors hover:bg-muted focus-within:ring-3 focus-within:ring-ring/50"
-        >
-          {bannerPreview !== null ? (
-            <img src={bannerPreview} alt="" className="absolute inset-0 size-full object-cover" />
-          ) : null}
-          <span className="relative inline-flex items-center gap-2 rounded-full border border-input bg-background/90 px-4 py-2 text-sm font-medium backdrop-blur transition-colors group-hover:bg-background">
-            <Camera className="size-4" aria-hidden="true" />
-            {bannerPreview === null ? "Agregar portada" : "Cambiar portada"}
-          </span>
-          <input
-            id="banner"
-            name="banner"
-            type="file"
-            accept="image/*"
-            className="sr-only"
-            onChange={(event) => setBannerPreview(readPreviewUrl(event) ?? bannerPreview)}
-          />
-        </label>
-        <label
-          htmlFor="avatar"
-          className="group -mt-10 ml-4 w-fit cursor-pointer rounded-full focus-within:ring-3 focus-within:ring-ring/50"
-        >
-          <Avatar className="size-20 border-4 border-background">
-            {avatarPreview !== null ? <AvatarImage src={avatarPreview} alt="" /> : null}
-            <AvatarFallback className="bg-brand-deep font-heading text-2xl font-semibold text-white">
-              {store.name.slice(0, 1).toUpperCase()}
-            </AvatarFallback>
-          </Avatar>
-          <span className="sr-only">Cambiar foto de perfil</span>
-          <input
-            id="avatar"
-            name="avatar"
-            type="file"
-            accept="image/*"
-            className="sr-only"
-            onChange={(event) => setAvatarPreview(readPreviewUrl(event) ?? avatarPreview)}
-          />
-        </label>
-        <p className="px-4 pt-2 text-sm text-muted-foreground">
-          Tocá la portada o la foto para cambiarlas.
-        </p>
-      </div>
+      <StoreImagesFields
+        name={store.name}
+        avatarUrl={store.avatarUrl}
+        bannerUrl={store.bannerUrl}
+      />
       <FieldGroup className="gap-6">
         <Field>
           <FieldLabel htmlFor="name">Nombre de la tienda</FieldLabel>
@@ -101,21 +52,16 @@ export function StoreEditForm({ store }: StoreEditFormProps) {
         </Field>
         <Field>
           <FieldLabel htmlFor="whatsappPhone">WhatsApp</FieldLabel>
-          <Input
-            id="whatsappPhone"
-            name="whatsappPhone"
-            type="tel"
-            inputMode="tel"
-            autoComplete="tel"
-            className="h-11"
-            placeholder="11 2345 6789"
-            defaultValue={store.whatsappPhone ?? ""}
-          />
+          <Phone id="whatsappPhone" name="whatsappPhone" defaultValue={store.whatsappPhone} />
           <FieldDescription>
             Te avisamos acá cuando aparezca un comprador en serio.
           </FieldDescription>
         </Field>
       </FieldGroup>
+      <Separator />
+      <SocialFields handles={store} />
+      <Separator />
+      <LocationPicker initialPlace={readStoredPlace(store)} />
       {state.error !== null ? (
         <Alert variant="destructive">
           <AlertDescription>{state.error}</AlertDescription>

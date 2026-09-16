@@ -1,5 +1,8 @@
+"use client";
+
 import Image from "next/image";
 
+import { Develop } from "@/components/motion/develop";
 import { Skeleton } from "@/components/ui/skeleton";
 import type { OwnedProduct } from "@/features/product/find";
 
@@ -28,12 +31,12 @@ export function Preview({ images, isIdentifying }: PreviewProps) {
       {isIdentifying ? null : (
         <div className="grid grid-cols-3 gap-2">
           {generated.map((image) => (
-            <div
+            <Develop
               key={image.id}
-              className="relative aspect-square overflow-hidden rounded-xl bg-muted motion-safe:animate-in motion-safe:fade-in motion-safe:duration-500"
+              className="relative aspect-square overflow-hidden rounded-xl bg-muted"
             >
               <Image src={image.url} alt="" fill sizes="150px" className="object-cover" />
-            </div>
+            </Develop>
           ))}
           {pendingLabels.map((label) => (
             <Skeleton

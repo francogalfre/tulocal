@@ -1,10 +1,17 @@
 import { redirect } from "next/navigation";
+import type { Metadata } from "next";
 
+import { Reveal } from "@/components/motion/reveal";
 import { Screen } from "@/components/screen";
 import { StoreEditForm } from "@/features/store/edit/form";
 import { findStoreByOwner } from "@/features/store/find";
 import { StoreLink } from "@/features/store/link";
 import { requireCurrentSession } from "@/lib/session";
+
+export const metadata: Metadata = {
+  title: "Tu tienda",
+  robots: { index: false },
+};
 
 export default async function StoreEditPage() {
   const session = await requireCurrentSession();
@@ -16,8 +23,10 @@ export default async function StoreEditPage() {
 
   return (
     <Screen aside={<StoreLink handle={store.handle} />}>
-      <h1 className="text-3xl">Tu tienda</h1>
-      <StoreEditForm store={store} />
+      <Reveal className="flex flex-col gap-10">
+        <h1 className="text-3xl">Tu tienda</h1>
+        <StoreEditForm store={store} />
+      </Reveal>
     </Screen>
   );
 }

@@ -7,6 +7,11 @@ import { stores } from "@tulocal/database/schema/stores";
 
 export type Store = typeof stores.$inferSelect;
 
+export type StoreEntry = {
+  handle: string;
+  hasProducts: boolean;
+};
+
 export type OwnerCatalog = NonNullable<Awaited<ReturnType<typeof queryOwnerCatalog>>>;
 
 async function queryOwnerCatalog(ownerId: string) {
@@ -33,11 +38,16 @@ export async function findOwnerCatalog(ownerId: string): Promise<OwnerCatalog | 
   return catalog ?? null;
 }
 
-export async function hasAnyProduct(storeId: string): Promise<boolean> {
-  const product = await database.query.products.findFirst({
-    where: eq(products.storeId, storeId),
-    columns: { id: true },
+export async function findStoreEntry(ownerId: string): Promise<StoreEntry | null> {
+  const store = await database.query.stores.findFirst({
+    where: eq(stores.ownerId, ownerId),
+    columns: { handle: true },
+    with: { products: { columns: { id: true }, limit: 1 } },
   });
 
-  return product !== undefined;
+  if (store === undefined) {
+    return null;
+  }
+
+  return { handle: store.handle, hasProducts: store.products.length > 0 };
 }

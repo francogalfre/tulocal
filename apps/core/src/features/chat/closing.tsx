@@ -1,10 +1,12 @@
 "use client";
 
 import { MessageCircle } from "lucide-react";
+import { motion } from "motion/react";
 
 import { Button } from "@/components/ui/button";
 import type { ConversationClosing } from "@/features/conversation/closing";
 import { trackWhatsappClick } from "@/features/metrics/track";
+import { riseVariants } from "@/lib/motion/rise";
 import { formatArs } from "@/lib/money";
 import { buildWhatsappUrl } from "@/lib/whatsapp";
 
@@ -13,7 +15,7 @@ type ClosingProps = {
   closing: ConversationClosing;
   agentName: string;
   productTitle: string;
-  whatsappPhone: string | null;
+  whatsappPhone: string;
 };
 
 function buildClosingMessage(input: ClosingProps): string {
@@ -27,12 +29,14 @@ function buildClosingMessage(input: ClosingProps): string {
 }
 
 export function Closing(props: ClosingProps) {
-  if (!props.closing.hasBuyIntent || props.whatsappPhone === null) {
-    return null;
-  }
-
   return (
-    <div className="flex flex-col gap-2 rounded-2xl border border-border p-4">
+    <motion.div
+      variants={riseVariants}
+      initial="hidden"
+      animate="visible"
+      exit="exit"
+      className="flex flex-col gap-2 rounded-2xl border border-border p-4"
+    >
       <p className="font-heading text-lg font-semibold">Ya le avisamos al dueño</p>
       <p className="text-sm text-muted-foreground">
         Cerrá directo con él por WhatsApp. Ningún pago pasa por tulocal.
@@ -57,6 +61,6 @@ export function Closing(props: ClosingProps) {
         <MessageCircle data-icon="inline-start" />
         Cerrar con el dueño por WhatsApp
       </Button>
-    </div>
+    </motion.div>
   );
 }

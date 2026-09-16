@@ -1,7 +1,7 @@
 "use server";
 
 import { eq } from "drizzle-orm";
-import { revalidatePath } from "next/cache";
+import { revalidatePath, updateTag } from "next/cache";
 
 import { database } from "@tulocal/database/client";
 import { products } from "@tulocal/database/schema/products";
@@ -9,6 +9,7 @@ import { products } from "@tulocal/database/schema/products";
 import { findOwnedProduct } from "@/features/product/find";
 import { logEvent } from "@/lib/logger";
 import { requireCurrentSession } from "@/lib/session";
+import { buildStoreTag } from "@/lib/tags";
 
 export async function markProductSold(formData: FormData): Promise<void> {
   const session = await requireCurrentSession();
@@ -23,6 +24,6 @@ export async function markProductSold(formData: FormData): Promise<void> {
     .set({ status: "sold", soldAt: new Date() })
     .where(eq(products.id, product.id));
   logEvent({ event: "product.sold", productId: product.id, storeId: product.store.id });
+  updateTag(buildStoreTag(product.store.handle));
   revalidatePath(`/product/${product.id}`);
-  revalidatePath(`/${product.store.handle}`);
 }

@@ -1,4 +1,12 @@
-import { boolean, integer, pgEnum, pgTable, text, uniqueIndex } from "drizzle-orm/pg-core";
+import {
+  boolean,
+  doublePrecision,
+  integer,
+  pgEnum,
+  pgTable,
+  text,
+  uniqueIndex,
+} from "drizzle-orm/pg-core";
 
 import { users } from "@tulocal/database/schema/authentication";
 import { baseColumns } from "@tulocal/database/schema/columns";
@@ -25,6 +33,16 @@ export const stores = pgTable(
     bannerUrl: text("banner_url"),
     color: text("color").notNull(),
     whatsappPhone: text("whatsapp_phone"),
+    instagramHandle: text("instagram_handle"),
+    tiktokHandle: text("tiktok_handle"),
+    facebookHandle: text("facebook_handle"),
+    xHandle: text("x_handle"),
+    addressLine: text("address_line"),
+    addressLatitude: doublePrecision("address_latitude"),
+    addressLongitude: doublePrecision("address_longitude"),
+    locationName: text("location_name"),
+    locationLatitude: doublePrecision("location_latitude"),
+    locationLongitude: doublePrecision("location_longitude"),
     notifyByWhatsapp: boolean("notify_by_whatsapp").default(true).notNull(),
     notifyByEmail: boolean("notify_by_email").default(true).notNull(),
     agentName: text("agent_name").notNull(),

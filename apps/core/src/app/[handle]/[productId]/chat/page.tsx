@@ -1,6 +1,7 @@
 import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import type { Metadata } from "next";
 
 import { Button } from "@/components/ui/button";
 import { Amount } from "@/components/amount";
@@ -11,16 +12,35 @@ import { findPublicProduct } from "@/features/product/public";
 
 type ChatPageProps = PageProps<"/[handle]/[productId]/chat">;
 
-export default async function ChatPage({ params }: ChatPageProps) {
+export async function generateMetadata({ params }: ChatPageProps): Promise<Metadata> {
   const { handle, productId } = await params;
   const product = await findPublicProduct(handle, productId);
+
+  if (product === null) {
+    return { title: "Producto no encontrado" };
+  }
+
+  const title = product.title ?? "Producto";
+
+  return {
+    title: `Chat con ${product.store.agentName}`,
+    description: `Preguntá y negociá por ${title} con ${product.store.agentName}, el vendedor de ${product.store.name}.`,
+    robots: { index: false },
+  };
+}
+
+export default async function ChatPage({ params }: ChatPageProps) {
+  const { handle, productId } = await params;
+  const [product, conversation] = await Promise.all([
+    findPublicProduct(handle, productId),
+    resumeConversation(productId),
+  ]);
 
   if (product === null) {
     notFound();
   }
 
   const title = product.title ?? "Producto";
-  const conversation = await resumeConversation(product.id);
 
   return (
     <main className="mx-auto flex h-dvh w-full max-w-md flex-col gap-6 px-5 pt-6 pb-6">

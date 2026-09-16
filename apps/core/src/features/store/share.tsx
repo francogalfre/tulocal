@@ -4,6 +4,7 @@ import { Check, Copy, MessageCircle, Share2 } from "lucide-react";
 import { useState } from "react";
 
 import { XLogo } from "@/components/brand/x";
+import { Swap } from "@/components/motion/swap";
 import { QRCode } from "@/components/qr-code";
 import { Button } from "@/components/ui/button";
 import {
@@ -57,7 +58,9 @@ export function StoreShare({ url, title, isOwner }: StoreShareProps) {
           <QRCode value={url} size={200} className="justify-self-center" />
           <div className="flex w-full flex-col gap-4">
             <Button size="lg" className="h-11" onClick={handleCopy}>
-              {isCopied ? <Check data-icon="inline-start" /> : <Copy data-icon="inline-start" />}
+              <Swap activeKey={isCopied ? "copied" : "copy"} data-icon="inline-start">
+                {isCopied ? <Check /> : <Copy />}
+              </Swap>
               {isCopied ? "Link copiado" : "Copiar link"}
             </Button>
             <Button

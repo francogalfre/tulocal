@@ -4,6 +4,7 @@ import { Check, Copy, MessageCircle } from "lucide-react";
 import { useState } from "react";
 
 import { XLogo } from "@/components/brand/x";
+import { Swap } from "@/components/motion/swap";
 import { Button } from "@/components/ui/button";
 
 const COPIED_FEEDBACK_IN_MILLISECONDS = 2000;
@@ -27,7 +28,9 @@ export function Share({ url }: ShareProps) {
   return (
     <div className="flex flex-col gap-3">
       <Button size="xl" onClick={handleCopy}>
-        {isCopied ? <Check data-icon="inline-start" /> : <Copy data-icon="inline-start" />}
+        <Swap activeKey={isCopied ? "copied" : "copy"} data-icon="inline-start">
+          {isCopied ? <Check /> : <Copy />}
+        </Swap>
         {isCopied ? "Link copiado" : "Copiar link"}
       </Button>
       <Button

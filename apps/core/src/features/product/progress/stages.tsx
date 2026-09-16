@@ -1,21 +1,26 @@
 "use client";
 
 import { Check } from "lucide-react";
+import { motion } from "motion/react";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 import type { ReactNode } from "react";
 
+import { Reveal } from "@/components/motion/reveal";
 import { Spinner } from "@/components/ui/spinner";
 import { Count } from "@/components/count";
 import { CATEGORY_LABELS } from "@/features/product/category";
 import { CONDITION_LABELS } from "@/features/product/condition";
 import { useElapsedSeconds } from "@/features/product/progress/elapsed";
+import { EASE_OUT_EXPO, STATE_DURATION_IN_SECONDS } from "@/lib/motion/timing";
 import { cn } from "@/lib/utils";
 import type { OwnedProduct } from "@/features/product/find";
 
 const REFRESH_INTERVAL_IN_MILLISECONDS = 2000;
 
-const PROGRESS_WIDTHS = ["w-0", "w-1/4", "w-2/4", "w-3/4", "w-full"] as const;
+const PROGRESS_FILL_DURATION_IN_SECONDS = 0.7;
+
+const MARKER_START_SCALE = 0.5;
 
 type StageStatus = "pending" | "running" | "done";
 
@@ -96,9 +101,14 @@ function describeStages(product: OwnedProduct): Stage[] {
 function StageMarker({ status }: StageMarkerProps) {
   if (status === "done") {
     return (
-      <span className="flex size-6 items-center justify-center rounded-full bg-brand-deep text-white motion-safe:animate-in motion-safe:zoom-in-50 motion-safe:duration-300">
+      <motion.span
+        initial={{ scale: MARKER_START_SCALE, opacity: 0 }}
+        animate={{ scale: 1, opacity: 1 }}
+        transition={{ duration: STATE_DURATION_IN_SECONDS, ease: EASE_OUT_EXPO }}
+        className="flex size-6 items-center justify-center rounded-full bg-brand-deep text-white"
+      >
         <Check className="size-3.5" />
-      </span>
+      </motion.span>
     );
   }
 
@@ -137,11 +147,11 @@ export function Stages({ product }: StagesProps) {
           </span>
         </div>
         <div className="h-1 w-full overflow-hidden rounded-full bg-secondary">
-          <div
-            className={cn(
-              "h-full rounded-full bg-brand-deep transition-[width] duration-700 ease-out",
-              PROGRESS_WIDTHS[doneCount],
-            )}
+          <motion.div
+            initial={false}
+            animate={{ scaleX: doneCount / stages.length }}
+            transition={{ duration: PROGRESS_FILL_DURATION_IN_SECONDS, ease: EASE_OUT_EXPO }}
+            className="h-full origin-left rounded-full bg-brand-deep"
           />
         </div>
       </div>
@@ -174,9 +184,7 @@ export function Stages({ product }: StagesProps) {
                 <span className="text-sm text-muted-foreground">{stage.hint}</span>
               ) : null}
               {stage.status === "done" && stage.summary !== null ? (
-                <span className="truncate text-sm text-muted-foreground motion-safe:animate-in motion-safe:fade-in motion-safe:duration-500">
-                  {stage.summary}
-                </span>
+                <Reveal className="truncate text-sm text-muted-foreground">{stage.summary}</Reveal>
               ) : null}
             </div>
           </li>

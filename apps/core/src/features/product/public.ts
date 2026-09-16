@@ -1,13 +1,26 @@
 import { and, asc, eq } from "drizzle-orm";
+import { unstable_cache } from "next/cache";
+import { cache } from "react";
 
 import { database } from "@tulocal/database/client";
 import { images } from "@tulocal/database/schema/images";
 import { products } from "@tulocal/database/schema/products";
 
+import { buildStoreTag } from "@/lib/tags";
+
+const PUBLIC_PRODUCT_REVALIDATE_IN_SECONDS = 60 * 60;
+
+const PUBLIC_IMAGE_COLUMNS = {
+  id: true,
+  url: true,
+  kind: true,
+  sortOrder: true,
+} as const;
+
 export type PublicProduct = NonNullable<Awaited<ReturnType<typeof queryPublicProduct>>>;
 
 async function queryPublicProduct(productId: string) {
-  return database.query.products.findFirst({
+  const product = await database.query.products.findFirst({
     where: and(eq(products.id, productId), eq(products.status, "published")),
     columns: {
       id: true,
@@ -20,7 +33,7 @@ async function queryPublicProduct(productId: string) {
       attributes: true,
     },
     with: {
-      images: { orderBy: [asc(images.sortOrder)] },
+      images: { columns: PUBLIC_IMAGE_COLUMNS, orderBy: [asc(images.sortOrder)] },
       store: {
         columns: {
           id: true,
@@ -33,17 +46,28 @@ async function queryPublicProduct(productId: string) {
       },
     },
   });
+
+  return product ?? null;
 }
 
-export async function findPublicProduct(
+function readCachedPublicProduct(handle: string, productId: string): Promise<PublicProduct | null> {
+  return unstable_cache(() => queryPublicProduct(productId), [handle, productId], {
+    tags: [buildStoreTag(handle)],
+    revalidate: PUBLIC_PRODUCT_REVALIDATE_IN_SECONDS,
+  })();
+}
+
+async function findPublicProductOnce(
   handle: string,
   productId: string,
 ): Promise<PublicProduct | null> {
-  const product = await queryPublicProduct(productId);
+  const product = await readCachedPublicProduct(handle, productId);
 
-  if (product === undefined || product.store.handle !== handle) {
+  if (product === null || product.store.handle !== handle) {
     return null;
   }
 
   return product;
 }
+
+export const findPublicProduct = cache(findPublicProductOnce);

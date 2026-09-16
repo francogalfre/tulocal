@@ -9,7 +9,7 @@ import { negotiationMoveOutputSchema } from "@/features/agent/tools/offer";
 import { buildFallbackReply, isReplySafe } from "@/features/agent/validation/reply";
 import type { AgentChunk, AgentUIMessage } from "@/features/agent/agent";
 import type { NegotiationMoveOutput } from "@/features/agent/tools/offer";
-import { findOrCreateConversation } from "@/features/conversation/find";
+import { createConversation, findConversationByToken } from "@/features/conversation/find";
 import {
   appendConversationMessage,
   loadConversationMessages,
@@ -133,28 +133,34 @@ export async function POST(request: Request): Promise<Response> {
     return Response.json({ error: "Mensaje inválido" }, { status: 400 });
   }
 
-  const context = await loadAgentContext(body.data.productId);
+  const buyerToken = await ensureBuyerToken();
+  const [context, existingConversation] = await Promise.all([
+    loadAgentContext(body.data.productId),
+    findConversationByToken(body.data.productId, buyerToken),
+  ]);
 
   if (context === null) {
     return Response.json({ error: "Producto no disponible" }, { status: 404 });
   }
 
-  const buyerToken = await ensureBuyerToken();
-  const conversation = await findOrCreateConversation({
-    productId: context.product.id,
-    storeId: context.store.id,
-    buyerToken,
-  });
+  const conversation =
+    existingConversation === null
+      ? await createConversation({
+          productId: context.product.id,
+          storeId: context.store.id,
+          buyerToken,
+        })
+      : existingConversation;
   const buyerText = body.data.message.parts.map((part) => part.text).join("\n");
-
-  await appendConversationMessage(conversation.id, { role: "buyer", content: buyerText });
-
-  const history = await loadConversationMessages(conversation.id);
+  const [history, buyerMessage] = await Promise.all([
+    loadConversationMessages(conversation.id),
+    appendConversationMessage(conversation.id, { role: "buyer", content: buyerText }),
+  ]);
   const agentStream = await streamAgentTurn({
     conversationId: conversation.id,
     context,
     lastCounterOfferInArs: conversation.lastCounterOfferInArs,
-    history,
+    history: [...history, buyerMessage],
   });
   const [clientBranch, serverBranch] = agentStream.tee();
   const settled = settleTurn({

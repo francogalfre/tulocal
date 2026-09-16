@@ -2,12 +2,14 @@ import { ArrowLeft, ArrowUpRight } from "lucide-react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { after } from "next/server";
+import type { Metadata } from "next";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Amount } from "@/components/amount";
 import { Logo } from "@/components/logo";
 import { Launcher } from "@/features/chat/launcher";
+import { truncateForPreview } from "@/features/opengraph/truncate";
 import { Chat } from "@/features/chat/panel";
 import { resumeConversation } from "@/features/conversation/resume";
 import { recordProductVisit } from "@/features/metrics/record";
@@ -15,14 +17,51 @@ import { CATEGORY_LABELS } from "@/features/product/category";
 import { CONDITION_LABELS } from "@/features/product/condition";
 import { Gallery } from "@/features/product/gallery/grid";
 import { findPublicProduct } from "@/features/product/public";
+import type { PublicProduct } from "@/features/product/public";
+import { formatArs } from "@/lib/money";
 import { findCurrentSession } from "@/lib/session";
 
 type PublicProductPageProps = PageProps<"/[handle]/[productId]">;
 
+const DESCRIPTION_MAX_CHARACTERS = 160;
+
+function describeProduct(product: PublicProduct): string {
+  const price = formatArs(product.listPriceInArs ?? 0);
+
+  if (product.description === null || product.description.length === 0) {
+    return `${price}. Lo vende ${product.store.name} en tulocal.`;
+  }
+
+  const singleLineDescription = product.description.replace(/\s+/g, " ").trim();
+
+  return truncateForPreview(`${price}. ${singleLineDescription}`, DESCRIPTION_MAX_CHARACTERS);
+}
+
+export async function generateMetadata({ params }: PublicProductPageProps): Promise<Metadata> {
+  const { handle, productId } = await params;
+  const product = await findPublicProduct(handle, productId);
+
+  if (product === null) {
+    return { title: "Producto no encontrado" };
+  }
+
+  const title = product.title ?? "Producto";
+  const description = describeProduct(product);
+  const path = `/${product.store.handle}/${product.id}`;
+
+  return {
+    title,
+    description,
+    alternates: { canonical: path },
+    openGraph: { title, description, url: path },
+  };
+}
+
 export default async function PublicProductPage({ params }: PublicProductPageProps) {
   const { handle, productId } = await params;
-  const [product, session] = await Promise.all([
+  const [product, conversation, session] = await Promise.all([
     findPublicProduct(handle, productId),
+    resumeConversation(productId),
     findCurrentSession(),
   ]);
 
@@ -31,7 +70,6 @@ export default async function PublicProductPage({ params }: PublicProductPagePro
   }
 
   const title = product.title ?? "Producto";
-  const conversation = await resumeConversation(product.id);
 
   if (session?.user.id !== product.store.ownerId) {
     after(() => recordProductVisit(product.store.id, product.id));

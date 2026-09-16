@@ -2,13 +2,16 @@
 
 import { useChat } from "@ai-sdk/react";
 import { DefaultChatTransport } from "ai";
+import type { ChatStatus } from "ai";
 import { Sprout } from "lucide-react";
+import { AnimatePresence } from "motion/react";
 import { useEffect, useRef } from "react";
 
 import type { AgentUIMessage } from "@/features/agent/agent";
 import { Bubble } from "@/features/chat/bubble";
 import { Closing } from "@/features/chat/closing";
 import { Composer } from "@/features/chat/composer";
+import { Thinking } from "@/features/chat/thinking";
 import type { ConversationClosing } from "@/features/conversation/closing";
 import { cn } from "@/lib/utils";
 
@@ -35,6 +38,24 @@ function readMessageText(message: AgentUIMessage): string {
     .filter((part) => part.type === "text")
     .map((part) => part.text)
     .join("");
+}
+
+function isReplyPending(status: ChatStatus, messages: AgentUIMessage[]): boolean {
+  if (status === "submitted") {
+    return true;
+  }
+
+  if (status !== "streaming") {
+    return false;
+  }
+
+  const lastMessage = messages.at(-1);
+
+  return (
+    lastMessage === undefined ||
+    lastMessage.role !== "assistant" ||
+    readMessageText(lastMessage) === ""
+  );
 }
 
 function deriveClosing(
@@ -84,8 +105,9 @@ export function Chat({
     }),
   });
   const listRef = useRef<HTMLDivElement>(null);
-  const isWaiting = status === "submitted";
+  const isWaiting = isReplyPending(status, messages);
   const closing = deriveClosing(messages, initialClosing);
+  const canCloseOnWhatsapp = closing.hasBuyIntent && whatsappPhone !== null;
 
   useEffect(() => {
     const list = listRef.current;
@@ -108,37 +130,44 @@ export function Chat({
       <div
         ref={listRef}
         className={cn(
-          "flex flex-col gap-2 overflow-y-auto",
+          "relative flex flex-col gap-2 overflow-y-auto",
           isFullHeight ? "min-h-0 flex-1" : "max-h-96",
         )}
       >
         {messages.length === 0 ? (
           <p className="text-muted-foreground">Preguntale lo que quieras o hacele una oferta.</p>
         ) : null}
-        {messages.map((message) => {
-          const text = readMessageText(message);
+        <AnimatePresence initial={false} mode="popLayout">
+          {messages.map((message) => {
+            const text = readMessageText(message);
 
-          if (text === "") {
-            return null;
-          }
+            if (text === "") {
+              return null;
+            }
 
-          return (
-            <Bubble
-              key={message.id}
-              role={message.role === "user" ? "user" : "assistant"}
-              text={text}
-            />
-          );
-        })}
-        {isWaiting ? <Bubble role="assistant" text="…" /> : null}
+            return (
+              <Bubble
+                key={message.id}
+                role={message.role === "user" ? "user" : "assistant"}
+                text={text}
+              />
+            );
+          })}
+          {isWaiting ? <Thinking key="thinking" agentName={agentName} /> : null}
+        </AnimatePresence>
       </div>
-      <Closing
-        productId={productId}
-        closing={closing}
-        agentName={agentName}
-        productTitle={productTitle}
-        whatsappPhone={whatsappPhone}
-      />
+      <AnimatePresence initial={false}>
+        {canCloseOnWhatsapp ? (
+          <Closing
+            key="closing"
+            productId={productId}
+            closing={closing}
+            agentName={agentName}
+            productTitle={productTitle}
+            whatsappPhone={whatsappPhone}
+          />
+        ) : null}
+      </AnimatePresence>
       <Composer isReady={status === "ready"} onSend={(text) => sendMessage({ text })} />
     </section>
   );

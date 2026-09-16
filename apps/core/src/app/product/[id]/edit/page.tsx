@@ -1,5 +1,7 @@
 import { notFound, redirect } from "next/navigation";
+import type { Metadata } from "next";
 
+import { Reveal } from "@/components/motion/reveal";
 import { Screen } from "@/components/screen";
 import { findOwnedProduct } from "@/features/product/find";
 import { Gallery } from "@/features/product/gallery/grid";
@@ -8,6 +10,11 @@ import { StoreLink } from "@/features/store/link";
 import { requireCurrentSession } from "@/lib/session";
 
 type ProductEditPageProps = PageProps<"/product/[id]/edit">;
+
+export const metadata: Metadata = {
+  title: "Editar publicación",
+  robots: { index: false },
+};
 
 export default async function ProductEditPage({ params }: ProductEditPageProps) {
   const session = await requireCurrentSession();
@@ -24,12 +31,14 @@ export default async function ProductEditPage({ params }: ProductEditPageProps) 
 
   return (
     <Screen aside={<StoreLink handle={product.store.handle} />}>
-      <h1 className="text-3xl">Editar publicación</h1>
-      <Gallery images={product.images} ownerProductId={product.id} />
-      <p className="-mt-6 text-sm text-muted-foreground">
-        Tocá una foto para verla grande, elegir la portada o cambiar el orden.
-      </p>
-      <ReviewForm product={product} mode="edit" />
+      <Reveal className="flex flex-col gap-10">
+        <h1 className="text-3xl">Editar publicación</h1>
+        <Gallery images={product.images} ownerProductId={product.id} />
+        <p className="-mt-6 text-sm text-muted-foreground">
+          Tocá una foto para verla grande, elegir la portada o cambiar el orden.
+        </p>
+        <ReviewForm product={product} mode="edit" />
+      </Reveal>
     </Screen>
   );
 }

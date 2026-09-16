@@ -11,10 +11,20 @@ export type ConversationEntry = {
   content: string;
 };
 
+type StoredMessage = Pick<typeof messages.$inferSelect, "id" | "role" | "content">;
+
 const UI_ROLES = {
   buyer: "user",
   agent: "assistant",
 } as const;
+
+function buildUIMessage(stored: StoredMessage): AgentUIMessage {
+  return {
+    id: stored.id,
+    role: UI_ROLES[stored.role],
+    parts: [{ type: "text", text: stored.content }],
+  };
+}
 
 export async function loadConversationMessages(conversationId: string): Promise<AgentUIMessage[]> {
   const rows = await database.query.messages.findMany({
@@ -22,22 +32,28 @@ export async function loadConversationMessages(conversationId: string): Promise<
     orderBy: [asc(messages.createdAt)],
   });
 
-  return rows.map((row) => ({
-    id: row.id,
-    role: UI_ROLES[row.role],
-    parts: [{ type: "text", text: row.content }],
-  }));
+  return rows.map(buildUIMessage);
 }
 
 export async function appendConversationMessage(
   conversationId: string,
   entry: ConversationEntry,
-): Promise<void> {
-  await database.batch([
-    database.insert(messages).values({ conversationId, role: entry.role, content: entry.content }),
+): Promise<AgentUIMessage> {
+  const [insertedRows] = await database.batch([
+    database
+      .insert(messages)
+      .values({ conversationId, role: entry.role, content: entry.content })
+      .returning({ id: messages.id, role: messages.role, content: messages.content }),
     database
       .update(conversations)
       .set({ lastMessageAt: new Date() })
       .where(eq(conversations.id, conversationId)),
   ]);
+  const inserted = insertedRows[0];
+
+  if (inserted === undefined) {
+    throw new Error("No se pudo guardar el mensaje");
+  }
+
+  return buildUIMessage(inserted);
 }

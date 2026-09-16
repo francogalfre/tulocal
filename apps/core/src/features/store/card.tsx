@@ -1,3 +1,6 @@
+"use client";
+
+import { motion } from "motion/react";
 import Image from "next/image";
 import Link from "next/link";
 
@@ -5,6 +8,13 @@ import { Badge } from "@/components/ui/badge";
 import { Amount } from "@/components/amount";
 import { CONDITION_LABELS } from "@/features/product/condition";
 import type { CatalogProduct } from "@/features/store/catalog";
+import {
+  EASE_OUT_EXPO,
+  ENTRANCE_DURATION_IN_SECONDS,
+  MAX_STAGGER_STEPS,
+  STAGGER_STEP_IN_SECONDS,
+  STATE_DURATION_IN_SECONDS,
+} from "@/lib/motion/timing";
 
 const STATUS_LABELS = {
   processing: { label: "Procesando", variant: "secondary" },
@@ -14,17 +24,43 @@ const STATUS_LABELS = {
   sold: { label: "Vendido", variant: "outline" },
 } as const;
 
+const CARD_START_OFFSET_IN_PIXELS = 16;
+
+const CARD_EXIT_SCALE = 0.96;
+
 type ProductCardProps = {
   product: CatalogProduct;
   href: string;
   showStatus: boolean;
+  position: number;
 };
 
-export function ProductCard({ product, href, showStatus }: ProductCardProps) {
+function computeEntranceDelayInSeconds(position: number): number {
+  return Math.min(position, MAX_STAGGER_STEPS) * STAGGER_STEP_IN_SECONDS;
+}
+
+export function ProductCard({ product, href, showStatus, position }: ProductCardProps) {
   const status = STATUS_LABELS[product.status];
 
   return (
-    <li>
+    <motion.li
+      layout="position"
+      initial={{ opacity: 0, y: CARD_START_OFFSET_IN_PIXELS }}
+      animate={{
+        opacity: 1,
+        y: 0,
+        transition: {
+          duration: ENTRANCE_DURATION_IN_SECONDS,
+          ease: EASE_OUT_EXPO,
+          delay: computeEntranceDelayInSeconds(position),
+        },
+      }}
+      exit={{
+        opacity: 0,
+        scale: CARD_EXIT_SCALE,
+        transition: { duration: STATE_DURATION_IN_SECONDS, ease: EASE_OUT_EXPO },
+      }}
+    >
       <Link
         href={href}
         className="group flex flex-col gap-3 rounded-2xl outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
@@ -56,6 +92,6 @@ export function ProductCard({ product, href, showStatus }: ProductCardProps) {
           </div>
         </div>
       </Link>
-    </li>
+    </motion.li>
   );
 }

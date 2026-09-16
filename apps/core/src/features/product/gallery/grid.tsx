@@ -1,11 +1,13 @@
 "use client";
 
+import { motion } from "motion/react";
 import Image from "next/image";
 import { startTransition, useOptimistic, useState } from "react";
 
 import { Skeleton } from "@/components/ui/skeleton";
 import { arrangeImages } from "@/features/product/gallery/arrange";
 import { Lightbox } from "@/features/product/gallery/lightbox";
+import { EASE_OUT_EXPO, LAYOUT_DURATION_IN_SECONDS } from "@/lib/motion/timing";
 import { cn } from "@/lib/utils";
 
 export type GalleryImage = {
@@ -47,8 +49,10 @@ export function Gallery({ images, pendingSlots = 0, ownerProductId }: GalleryPro
     <>
       <div className="grid grid-cols-3 gap-2">
         {shown.map((image, index) => (
-          <button
+          <motion.button
             key={image.id}
+            layout
+            transition={{ duration: LAYOUT_DURATION_IN_SECONDS, ease: EASE_OUT_EXPO }}
             type="button"
             onClick={() => setOpenIndex(index)}
             aria-label={
@@ -71,7 +75,7 @@ export function Gallery({ images, pendingSlots = 0, ownerProductId }: GalleryPro
                 Portada
               </span>
             ) : null}
-          </button>
+          </motion.button>
         ))}
         {placeholders.map((slot) => (
           <Skeleton key={slot} className="aspect-square rounded-xl" />

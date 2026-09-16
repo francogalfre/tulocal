@@ -2,6 +2,7 @@
 
 import { useActionState, useState } from "react";
 
+import { Phone } from "@/components/phone";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Field, FieldDescription, FieldGroup, FieldLabel } from "@/components/ui/field";
@@ -100,16 +101,7 @@ export function ReviewForm({ product, mode }: ReviewFormProps) {
         {needsWhatsapp ? (
           <Field>
             <FieldLabel htmlFor="whatsappPhone">Tu WhatsApp</FieldLabel>
-            <Input
-              id="whatsappPhone"
-              name="whatsappPhone"
-              type="tel"
-              inputMode="tel"
-              autoComplete="tel"
-              className="h-11"
-              placeholder="11 2345 6789"
-              required
-            />
+            <Phone id="whatsappPhone" name="whatsappPhone" defaultValue={null} isRequired />
             <FieldDescription>
               Te escribimos ahí cuando aparezca un comprador en serio.
             </FieldDescription>

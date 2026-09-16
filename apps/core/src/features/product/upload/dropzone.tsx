@@ -4,6 +4,7 @@ import { Camera, ImagePlus } from "lucide-react";
 import { useActionState, useRef, useState } from "react";
 import type { ChangeEvent, DragEvent } from "react";
 
+import { Develop } from "@/components/motion/develop";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
@@ -98,12 +99,12 @@ export function Dropzone() {
       {hasPhotos ? (
         <div className="grid grid-cols-3 gap-2">
           {previewUrls.map((url, index) => (
-            <div
+            <Develop
               key={url}
-              className="relative aspect-square overflow-hidden rounded-xl bg-muted motion-safe:animate-in motion-safe:fade-in motion-safe:zoom-in-95 motion-safe:duration-300"
+              className="relative aspect-square overflow-hidden rounded-xl bg-muted"
             >
               <img src={url} alt={`Foto ${index + 1}`} className="size-full object-cover" />
-            </div>
+            </Develop>
           ))}
         </div>
       ) : null}

@@ -1,11 +1,16 @@
 import { ArrowUpRight } from "lucide-react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import type { Metadata } from "next";
 
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Amount } from "@/components/amount";
+import { Develop } from "@/components/motion/develop";
+import { Reveal } from "@/components/motion/reveal";
+import { Rise } from "@/components/motion/rise";
+import { Stagger } from "@/components/motion/stagger";
 import { Screen } from "@/components/screen";
 import { EscalationList } from "@/features/escalation/list";
 import { findOwnedProduct } from "@/features/product/find";
@@ -25,6 +30,14 @@ import { requireCurrentSession } from "@/lib/session";
 import { buildStoreUrl } from "@/lib/url";
 
 type ProductPageProps = PageProps<"/product/[id]">;
+
+const STATUS_TITLES = {
+  processing: "Armando la publicación",
+  failed: "No pudimos armar la publicación",
+  review: "Revisá antes de publicar",
+  published: "Publicado",
+  sold: "Vendido",
+} as const;
 
 type ProductViewProps = {
   product: OwnedProduct;
@@ -94,19 +107,28 @@ function Celebration({ product }: ProductViewProps) {
   const storeUrl = buildStoreUrl(product.store.handle);
 
   return (
-    <>
-      <div className="flex flex-col gap-3">
-        <Badge className="motion-safe:animate-in motion-safe:zoom-in-75 motion-safe:duration-300">
-          Publicado
-        </Badge>
-        <h1 className="text-3xl">Listo, ya está publicado</h1>
-        <p className="text-muted-foreground">
-          Compartí el link o imprimí el QR. Cuando alguien quiera comprar, te avisamos por WhatsApp.
-        </p>
-      </div>
-      <Qr url={storeUrl} handle={product.store.handle} />
-      <Share url={storeUrl} />
-      <div className="flex flex-col gap-1">
+    <Stagger className="flex flex-col gap-10">
+      <Rise className="flex flex-col gap-3">
+        <Rise className="w-fit">
+          <Badge>Publicado</Badge>
+        </Rise>
+        <Rise>
+          <h1 className="text-3xl">Listo, ya está publicado</h1>
+        </Rise>
+        <Rise>
+          <p className="text-muted-foreground">
+            Compartí el link o imprimí el QR. Cuando alguien quiera comprar, te avisamos por
+            WhatsApp.
+          </p>
+        </Rise>
+      </Rise>
+      <Develop>
+        <Qr url={storeUrl} handle={product.store.handle} />
+      </Develop>
+      <Rise>
+        <Share url={storeUrl} />
+      </Rise>
+      <Rise className="flex flex-col gap-1">
         <Button
           size="xl"
           variant="ghost"
@@ -119,8 +141,8 @@ function Celebration({ product }: ProductViewProps) {
         <Button size="xl" variant="ghost" render={<Link href="/new" />} nativeButton={false}>
           Subir otro producto
         </Button>
-      </div>
-    </>
+      </Rise>
+    </Stagger>
   );
 }
 
@@ -157,6 +179,21 @@ function Managed({ product }: ProductViewProps) {
   );
 }
 
+export async function generateMetadata({ params }: ProductPageProps): Promise<Metadata> {
+  const session = await requireCurrentSession();
+  const { id } = await params;
+  const product = await findOwnedProduct(id, session.user.id);
+
+  if (product === null) {
+    return { title: "Producto no encontrado", robots: { index: false } };
+  }
+
+  const statusTitle = STATUS_TITLES[product.status];
+  const title = product.title === null ? statusTitle : `${statusTitle}: ${product.title}`;
+
+  return { title, robots: { index: false } };
+}
+
 export default async function ProductPage({ params, searchParams }: ProductPageProps) {
   const session = await requireCurrentSession();
 
@@ -174,11 +211,27 @@ export default async function ProductPage({ params, searchParams }: ProductPageP
 
   return (
     <Screen aside={<StoreLink handle={product.store.handle} />}>
-      {product.status === "processing" ? <Processing product={product} /> : null}
-      {product.status === "failed" ? <Failed product={product} /> : null}
-      {product.status === "review" ? <Review product={product} /> : null}
+      {product.status === "processing" ? (
+        <Reveal key="processing" className="flex flex-col gap-10">
+          <Processing product={product} />
+        </Reveal>
+      ) : null}
+      {product.status === "failed" ? (
+        <Reveal key="failed" className="flex flex-col gap-10">
+          <Failed product={product} />
+        </Reveal>
+      ) : null}
+      {product.status === "review" ? (
+        <Reveal key="review" className="flex flex-col gap-10">
+          <Review product={product} />
+        </Reveal>
+      ) : null}
       {isCelebrating ? <Celebration product={product} /> : null}
-      {isManaged ? <Managed product={product} /> : null}
+      {isManaged ? (
+        <Reveal key="managed" className="flex flex-col gap-10">
+          <Managed product={product} />
+        </Reveal>
+      ) : null}
     </Screen>
   );
 }

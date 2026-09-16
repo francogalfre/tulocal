@@ -104,6 +104,17 @@ Usage: `space-2` to `space-4` inside a group (label to value). `space-6` to `spa
 - **Borders:** `1px solid var(--color-line)`. Never use a shadow to fake depth.
 - **Radius:** 10px for buttons and inputs, 16–20px for large surfaces (product cards, modals). Do not mix more than two radius values on one screen.
 
+## Motion
+
+Motion is built on `motion` (`motion/react`), decided on 2026-09-16. It explains state, relationship and feedback; it never decorates. shadcn/ui keeps its own `tw-animate-css` open and close transitions for dialogs, sheets and drawers, nothing else uses `animate-in` utilities.
+
+- **One vocabulary.** Easing is always `EASE_OUT_EXPO` (`cubic-bezier(0.16, 1, 0.3, 1)`) and durations come from `lib/motion/timing.ts`: 150ms feedback, 250ms state change, 400ms layout, 550ms entrance, 800ms photo reveal. No bounce, no elastic, no invented durations.
+- **Three moves, nothing else.** `Rise` (fade plus 12px upward) for text and controls, `Develop` (blur plus slight scale settling into focus, like a photo developing) for images and the QR, `Swap` (scale crossfade) for an icon that changes state. The develop move is the product's signature: it only appears where the AI produced something to look at.
+- **Choreography lives in `components/motion`.** `Stagger` orchestrates its `Rise` children at 60ms steps, `Reveal` is a standalone rise for a whole view, keyed by state so a status change animates in. Server Components compose these wrappers; feature components use `motion.*` directly when they own the state (chat bubbles, pipeline stages, catalog cards).
+- **Lists appear as lists.** Catalog cards cascade at 60ms per card, capped at eight steps, and reflow with `layout="position"` when a filter changes. Chat bubbles rise from their own corner, the thinking indicator pops out of flow so the reply takes its place.
+- **Operate screens stay fast.** Owner pages get one 550ms reveal, never a cascade. Persuade screens (landing, the published celebration) get the full stagger.
+- **Reduced motion is honored once.** `MotionProvider` wraps the app with `reducedMotion="user"`: transforms and layout moves are dropped, opacity and color changes stay, so feedback survives. CSS keyframes keep their `motion-safe:` prefix.
+
 ## Logo
 
 - Icon: four rounded squares in a checkerboard, `--color-accent` and `--color-accent-deep`.

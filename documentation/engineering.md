@@ -30,6 +30,7 @@ Bun-managed, Turborepo-orchestrated monorepo.
 | database                  | PostgreSQL (Neon), Drizzle ORM                               |
 | auth                      | Better Auth 1.7, Google sign-in only, see the authentication section |
 | ui                        | Tailwind CSS v4, shadcn/ui (Base UI, `base-nova`) installed in `apps/core/src/components/ui` |
+| motion                    | `motion` (`motion/react`), wrappers in `apps/core/src/components/motion`, timing in `lib/motion` |
 | ai                        | Vercel AI SDK with OpenRouter as the provider                |
 | price research            | Tavily                                                       |
 | cache                     | Redis over `ioredis`, wrapped by `@tulocal/storage/cache`   |
@@ -103,6 +104,18 @@ Workspace package names are short technical nouns (`database`, `storage`, `authe
 - `@tulocal/storage/blob` exports `uploadBlob(input)` and `removeBlob(url)`. Uploads are public, get a random suffix so two sellers never collide on a pathname, and return a `StoredBlob` with `url`, `pathname`, and `contentType`. The token comes from `storageEnvironment`, never from `process.env`.
 - Both modules read `storageEnvironment` from `@tulocal/environment/storage`, which validates `REDIS_URL` (a `redis` or `rediss` URL) and `BLOB_READ_WRITE_TOKEN`. `serverEnvironment` extends it.
 
+## Caching
+
+Decided on 2026-09-16. Cache Components stay off until after the demo, because every route reads the session or the buyer cookie and would need a Suspense boundary. What is cached today:
+
+- **Buyer-facing reads** (`findPublicStore`, `findPublicProduct`) wrap their Drizzle query in `unstable_cache` for one hour, tagged `store:<handle>` (built by `@/lib/tags`), and are also wrapped in React `cache()` so a page and its `generateMetadata` share one lookup. The store query serializes `createdAt` to an ISO string inside the cached function and revives it outside, because `unstable_cache` stores JSON and would otherwise return strings where the type says `Date`. Public queries select image columns explicitly for the same reason.
+- **Every action that changes what a buyer can see** calls `updateTag(buildStoreTag(handle))`: publish, update, sell, remove, arrange images, and store update. An action that forgets the tag ships a stale catalog for up to an hour. Owner pages read through `findOwnedProduct` and `findOwnerCatalog`, which are never cached.
+- **Tavily searches** go through `rememberCache` from `@tulocal/storage/cache` under `price-research:<sha256 of the request body>` for 24 hours, so a pipeline retry or a repeated upload does not pay for the same search twice.
+- **Optimized images** keep a 31 day `minimumCacheTTL`, safe because every blob URL carries a random suffix and is never rewritten in place.
+- **Session** lookups are already cached by Better Auth's encrypted cookie cache for 5 minutes, see the authentication section.
+
+Route conventions that go with this: `app/not-found.tsx` and `app/error.tsx` render the Spanish fallbacks, and `loading.tsx` exists next to the store, public product and owner product pages so `Link` prefetches those dynamic routes and navigation shows a skeleton instead of blocking.
+
 ## Environment variables
 
 - Plain `.env` files, loaded natively by Bun (server) and Next.js (web). `packages/environment/.env.example` lists every variable with a placeholder.
@@ -121,6 +134,8 @@ Decided during planning on 2026-09-15. Do not re-open them; extend what exists.
 - **The listing pipeline runs inside `after()`** of the `createProduct` Server Action (`features/product/pipeline/run.ts`): identification first, then images, copy and price research in parallel, and the product page refreshes every 2 seconds until the status leaves `processing`. No Vercel Workflow, no queues.
 - **Uploads go through the `createProduct` Server Action**, which receives the photos as `FormData` and calls `uploadBlob` from `@tulocal/storage/blob` server-side.
 - **Generated product images must never fake the product.** Backgrounds and framing change; the item does not.
+- **Store location is public only at neighborhood level, decided on 2026-09-16.** Sellers pick an address, neighborhood or city from Photon (`photon.komoot.io`, OpenStreetMap geocoding, no key) through `app/api/places/route.ts`, inside an Argentina bounding box. The exact pick lives in `address_line`, `address_latitude` and `address_longitude`, which are seller-only: **a public query must never select the address columns**, same rule as the floor price. What buyers see comes from `location_name` (district, city, state) and `location_latitude` / `location_longitude`, which `features/store/location/privacy.ts` snaps to the center of a 0.005 degree cell (about 500 m) at save time, so the public map shows a circle near the place instead of the door. Maps render with MapLibre through `@vis.gl/react-maplibre` on the OpenFreeMap `positron` style (no key, no tile limits for this scale); the map component lives in `features/store/location/map.tsx` and defers `maplibre-gl` to the client. MapLibre 6 derives its tile worker URL from `import.meta.url`, which Turbopack does not expose as an http URL, so the map would silently render no tiles: `map.tsx` calls `setWorkerUrl` with the jsdelivr copy of `maplibre-gl-worker.mjs` for the installed version (`getVersion()`), and MapLibre wraps that cross-origin file in a blob module worker itself.
+- **Social profiles are stored as handles**, one nullable column per network (`instagram_handle`, `tiktok_handle`, `facebook_handle`, `x_handle`). `features/store/social/handle.ts` normalizes a pasted URL or `@user` into the bare handle, and `features/store/social/networks.tsx` is the only place that knows each network's profile URL and logo.
 
 ## Next.js
 
