@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowLeft, ArrowRight, Star, X } from "lucide-react";
+import { Star, X } from "lucide-react";
 import Image from "next/image";
 import { useEffect, useState } from "react";
 
@@ -51,10 +51,9 @@ function moveImage(images: GalleryImage[], from: number, to: number): GalleryIma
 
 function ArrangeActions({ images, currentIndex, onArrange }: ArrangeActionsProps) {
   const isCover = currentIndex === 0;
-  const isLast = currentIndex === images.length - 1;
 
   return (
-    <div className="flex shrink-0 items-center justify-between gap-3 px-4 pt-4 pb-[max(1rem,env(safe-area-inset-bottom))]">
+    <div className="flex shrink-0 items-center px-4 pt-4 pb-[max(1rem,env(safe-area-inset-bottom))]">
       <Button
         variant="outline"
         size="xl"
@@ -64,26 +63,6 @@ function ArrangeActions({ images, currentIndex, onArrange }: ArrangeActionsProps
         <Star data-icon="inline-start" />
         {isCover ? "Es la portada" : "Usar de portada"}
       </Button>
-      <div className="flex gap-2">
-        <Button
-          variant="outline"
-          size="icon-lg"
-          aria-label="Mover antes"
-          disabled={isCover}
-          onClick={() => onArrange(moveImage(images, currentIndex, currentIndex - 1))}
-        >
-          <ArrowLeft />
-        </Button>
-        <Button
-          variant="outline"
-          size="icon-lg"
-          aria-label="Mover después"
-          disabled={isLast}
-          onClick={() => onArrange(moveImage(images, currentIndex, currentIndex + 1))}
-        >
-          <ArrowRight />
-        </Button>
-      </div>
     </div>
   );
 }
@@ -144,8 +123,8 @@ function Slides({ images, startIndex, onArrange }: SlidesProps) {
             </CarouselItem>
           ))}
         </CarouselContent>
-        <CarouselPrevious className="left-4 hidden sm:inline-flex" aria-label="Anterior" />
-        <CarouselNext className="right-4 hidden sm:inline-flex" aria-label="Siguiente" />
+        <CarouselPrevious className="left-8 hidden sm:inline-flex" aria-label="Anterior" />
+        <CarouselNext className="right-8 hidden sm:inline-flex" aria-label="Siguiente" />
       </Carousel>
       {onArrange === null ? (
         <div className="h-14 shrink-0" />
