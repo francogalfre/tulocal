@@ -2,12 +2,7 @@ import { database } from "@tulocal/database/client";
 import { stores } from "@tulocal/database/schema/stores";
 import type { AuthenticatedUser } from "@tulocal/authentication/server";
 
-import {
-  DEFAULT_AGENT_COLOR,
-  DEFAULT_AGENT_MASCOT,
-  DEFAULT_AGENT_NAME,
-  DEFAULT_STORE_COLOR,
-} from "@/features/store/defaults";
+import { DEFAULT_AGENT_NAME, DEFAULT_STORE_COLOR } from "@/features/store/defaults";
 import { findStoreByOwner } from "@/features/store/find";
 import { deriveHandle } from "@/features/store/handle";
 import type { Store } from "@/features/store/find";
@@ -47,8 +42,6 @@ async function insertStoreWithHandle(
       handle,
       color: DEFAULT_STORE_COLOR,
       agentName: DEFAULT_AGENT_NAME,
-      agentMascot: DEFAULT_AGENT_MASCOT,
-      agentColor: DEFAULT_AGENT_COLOR,
     })
     .onConflictDoNothing()
     .returning();

@@ -20,6 +20,8 @@ const PUBLIC_STORE_COLUMNS = {
   bannerUrl: true,
   whatsappPhone: true,
   agentName: true,
+  agentSeed: true,
+  agentVoice: true,
   instagramHandle: true,
   tiktokHandle: true,
   facebookHandle: true,

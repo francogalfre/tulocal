@@ -62,7 +62,12 @@ export function StoreEditForm({ store }: StoreEditFormProps) {
       <Separator />
       <SocialFields handles={store} />
       <Separator />
-      <AgentFields agentName={store.agentName} />
+      <AgentFields
+        agentName={store.agentName}
+        agentSeed={store.agentSeed}
+        agentVoice={store.agentVoice}
+        agentOpensNegotiation={store.agentOpensNegotiation}
+      />
       <Separator />
       <LocationPicker initialPlace={readStoredPlace(store)} />
       {state.error !== null ? (

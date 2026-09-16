@@ -1,3 +1,4 @@
+import { sql } from "drizzle-orm";
 import {
   boolean,
   doublePrecision,
@@ -17,7 +18,7 @@ const DEFAULT_FIRST_CONCESSION_PERCENT = 40;
 
 const DEFAULT_SUBSEQUENT_CONCESSION_PERCENT = 50;
 
-export const agentTone = pgEnum("agent_tone", ["formal", "casual", "terse"]);
+export const agentVoice = pgEnum("agent_voice", ["cordial", "playful", "direct"]);
 
 export const stores = pgTable(
   "stores",
@@ -46,9 +47,11 @@ export const stores = pgTable(
     notifyByWhatsapp: boolean("notify_by_whatsapp").default(true).notNull(),
     notifyByEmail: boolean("notify_by_email").default(true).notNull(),
     agentName: text("agent_name").notNull(),
-    agentMascot: text("agent_mascot").notNull(),
-    agentColor: text("agent_color").notNull(),
-    agentTone: agentTone("agent_tone").default("casual").notNull(),
+    agentSeed: text("agent_seed")
+      .default(sql`gen_random_uuid()`)
+      .notNull(),
+    agentVoice: agentVoice("agent_voice").default("cordial").notNull(),
+    agentOpensNegotiation: boolean("agent_opens_negotiation").default(false).notNull(),
     agentContext: text("agent_context"),
     maxCounterOffers: integer("max_counter_offers").default(DEFAULT_MAX_COUNTER_OFFERS).notNull(),
     firstConcessionPercent: integer("first_concession_percent")

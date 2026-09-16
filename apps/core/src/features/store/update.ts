@@ -8,7 +8,7 @@ import { redirect } from "next/navigation";
 import { z } from "zod";
 
 import { database } from "@tulocal/database/client";
-import { stores } from "@tulocal/database/schema/stores";
+import { agentVoice, stores } from "@tulocal/database/schema/stores";
 import { uploadBlob } from "@tulocal/storage/blob";
 
 import { findStoreByOwner } from "@/features/store/find";
@@ -26,6 +26,8 @@ const DESCRIPTION_MAX_LENGTH = 300;
 
 const AGENT_NAME_MAX_LENGTH = 30;
 
+const AGENT_SEED_MAX_LENGTH = 64;
+
 const MAX_IMAGE_SIZE_IN_BYTES = 8 * 1024 * 1024;
 
 const storeInputSchema = z.object({
@@ -37,6 +39,12 @@ const storeInputSchema = z.object({
   facebookHandle: socialHandleSchema,
   xHandle: socialHandleSchema,
   agentName: z.string().trim().min(1).max(AGENT_NAME_MAX_LENGTH),
+  agentSeed: z.string().trim().min(1).max(AGENT_SEED_MAX_LENGTH),
+  agentVoice: z.enum(agentVoice.enumValues),
+  agentOpensNegotiation: z
+    .literal("on")
+    .or(z.literal(""))
+    .transform((value) => value === "on"),
 });
 
 export type UpdateStoreState = {
@@ -91,11 +99,15 @@ export async function updateStore(
     facebookHandle: formData.get("facebookHandle") ?? "",
     xHandle: formData.get("xHandle") ?? "",
     agentName: formData.get("agentName"),
+    agentSeed: formData.get("agentSeed"),
+    agentVoice: formData.get("agentVoice"),
+    agentOpensNegotiation: formData.get("agentOpensNegotiation") ?? "",
   });
 
   if (!parsed.success) {
     return {
-      error: "Revisá el nombre, la descripción, el WhatsApp, las redes y el nombre de tu vendedor.",
+      error:
+        "Revisá el nombre, la descripción, el WhatsApp, las redes y cómo configuraste a tu vendedor.",
     };
   }
 
@@ -144,6 +156,9 @@ export async function updateStore(
       facebookHandle: toNullableText(parsed.data.facebookHandle),
       xHandle: toNullableText(parsed.data.xHandle),
       agentName: parsed.data.agentName,
+      agentSeed: parsed.data.agentSeed,
+      agentVoice: parsed.data.agentVoice,
+      agentOpensNegotiation: parsed.data.agentOpensNegotiation,
       addressLine: place === null || !place.isAddress ? null : place.addressLine,
       addressLatitude: place === null || !place.isAddress ? null : place.latitude,
       addressLongitude: place === null || !place.isAddress ? null : place.longitude,

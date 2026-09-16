@@ -42,6 +42,8 @@ async function queryPublicProduct(productId: string) {
           handle: true,
           whatsappPhone: true,
           agentName: true,
+          agentSeed: true,
+          agentVoice: true,
         },
       },
     },
