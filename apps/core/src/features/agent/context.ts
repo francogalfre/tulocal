@@ -4,18 +4,23 @@ import { database } from "@tulocal/database/client";
 import { products } from "@tulocal/database/schema/products";
 
 import type { NegotiationSettings } from "@/features/agent/negotiation/move";
+import type { ProductCategory } from "@/features/product/category";
 import type { ProductCondition } from "@/features/product/condition";
+
+const MAX_AGENT_COMPARABLES = 8;
 
 export type AgentProduct = {
   id: string;
   title: string;
   description: string | null;
+  category: ProductCategory | null;
   brand: string | null;
   model: string | null;
   condition: ProductCondition | null;
   conditionNotes: string | null;
   attributes: string[];
   sellerNotes: string | null;
+  facts: string[];
   listPriceInArs: number;
   floorPriceInArs: number;
 };
@@ -31,6 +36,11 @@ export type AgentStore = {
   settings: NegotiationSettings;
 };
 
+export type AgentComparable = {
+  title: string;
+  priceInArs: number;
+};
+
 export type AgentQuestion = {
   question: string;
   answer: string | null;
@@ -41,6 +51,7 @@ export type AgentContext = {
   product: AgentProduct;
   store: AgentStore;
   questions: AgentQuestion[];
+  comparables: AgentComparable[];
 };
 
 export async function loadAgentContext(productId: string): Promise<AgentContext | null> {
@@ -50,12 +61,14 @@ export async function loadAgentContext(productId: string): Promise<AgentContext 
       id: true,
       title: true,
       description: true,
+      category: true,
       brand: true,
       model: true,
       condition: true,
       conditionNotes: true,
       attributes: true,
       sellerNotes: true,
+      facts: true,
       listPriceInArs: true,
       floorPriceInArs: true,
       status: true,
@@ -76,6 +89,10 @@ export async function loadAgentContext(productId: string): Promise<AgentContext 
         },
       },
       questions: { columns: { question: true, answer: true, status: true } },
+      comparables: {
+        columns: { title: true, priceInArs: true },
+        limit: MAX_AGENT_COMPARABLES,
+      },
     },
   });
 
@@ -94,12 +111,14 @@ export async function loadAgentContext(productId: string): Promise<AgentContext 
       id: product.id,
       title: product.title,
       description: product.description,
+      category: product.category,
       brand: product.brand,
       model: product.model,
       condition: product.condition,
       conditionNotes: product.conditionNotes,
       attributes: product.attributes,
       sellerNotes: product.sellerNotes,
+      facts: product.facts,
       listPriceInArs: product.listPriceInArs,
       floorPriceInArs: product.floorPriceInArs,
     },
@@ -118,5 +137,6 @@ export async function loadAgentContext(productId: string): Promise<AgentContext 
       },
     },
     questions: product.questions,
+    comparables: product.comparables,
   };
 }

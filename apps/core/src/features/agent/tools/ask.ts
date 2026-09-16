@@ -11,7 +11,7 @@ const QUESTION_MAX_LENGTH = 500;
 
 export const askSeller = tool({
   description:
-    "Usala cuando el comprador pregunte algo que no está en la publicación, en la info de la tienda ni en las respuestas anteriores del dueño. Registra la pregunta para que el dueño la conteste. No inventes la respuesta.",
+    "Registra una pregunta del comprador sobre esta unidad para que el dueño la conteste. Llamala en el mismo turno, antes de escribir la respuesta, cada vez que le vayas a decir al comprador que eso se lo preguntás al dueño. Va solo la duda puntual que no está en la publicación, en la info de la tienda, en lo general del modelo ni en las respuestas anteriores del dueño. No inventes la respuesta.",
   inputSchema: z.object({
     question: z
       .string()

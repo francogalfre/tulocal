@@ -22,6 +22,7 @@ import { Qr } from "@/features/product/published/qr";
 import { Share } from "@/features/product/published/share";
 import { retryPipeline } from "@/features/product/retry";
 import { Comparables } from "@/features/product/review/comparables";
+import { Facts } from "@/features/product/review/facts";
 import { ReviewForm } from "@/features/product/review/form";
 import { Inbox } from "@/features/question/inbox";
 import { StoreLink } from "@/features/store/link";
@@ -98,6 +99,7 @@ function Review({ product }: ProductViewProps) {
         Tocá una foto para verla grande, elegir la portada o cambiar el orden.
       </p>
       <ReviewForm product={product} mode="publish" />
+      <Facts facts={product.facts} />
       <Comparables comparables={product.comparables} />
     </>
   );

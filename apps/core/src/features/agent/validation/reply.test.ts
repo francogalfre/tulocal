@@ -16,6 +16,10 @@ describe("extractPricesInArs", () => {
     expect(extractPricesInArs("Tiene 3 fotos, es modelo 2019 y rodado 29")).toEqual([]);
   });
 
+  test("ignores quantities followed by a unit", () => {
+    expect(extractPricesInArs("batería de 5.000 mAh, pantalla de 1.000 Hz y 500 GB")).toEqual([]);
+  });
+
   test("handles a comma decimal with a multiplier", () => {
     expect(extractPricesInArs("serían 72,5 lucas")).toEqual([72_500]);
   });

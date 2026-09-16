@@ -1,27 +1,13 @@
-import { createHash } from "node:crypto";
-
 import { generateText, Output } from "ai";
 import { z } from "zod";
-
-import { serverEnvironment } from "@tulocal/environment/server";
-import { rememberCache } from "@tulocal/storage/cache";
-import type { CacheEntry } from "@tulocal/storage/cache";
 
 import { CATEGORY_LABELS } from "@/features/product/category";
 import { CONDITION_LABELS } from "@/features/product/condition";
 import { researchModel } from "@/features/product/pipeline/models";
+import { searchWeb } from "@/features/product/pipeline/search";
 import type { ProductCategory } from "@/features/product/category";
 import type { ProductCondition } from "@/features/product/condition";
-
-const TAVILY_SEARCH_URL = "https://api.tavily.com/search";
-
-const TAVILY_MAX_RESULTS = 10;
-
-const SEARCH_CACHE_PREFIX = "price-research";
-
-const SEARCH_CACHE_TIME_TO_LIVE_IN_SECONDS = 60 * 60 * 24;
-
-const TAVILY_CHUNKS_PER_SOURCE = 3;
+import type { SearchResult } from "@/features/product/pipeline/search";
 
 const MAX_COMPARABLES = 8;
 
@@ -41,12 +27,6 @@ const CONDITION_SEARCH_WORDS: Record<ProductCondition, string> = {
   good: "usado",
   worn: "usado",
 };
-
-const searchResultSchema = z.object({ title: z.string(), url: z.url(), content: z.string() });
-
-const tavilyResponseSchema = z.object({ results: z.array(searchResultSchema) });
-
-const cachedResultsSchema = z.array(searchResultSchema);
 
 export type Comparable = {
   title: string;
@@ -68,80 +48,11 @@ export type ResearchInput = {
   condition: ProductCondition;
 };
 
-type SearchInput = {
-  query: string;
-  includeDomains: string[] | null;
-  country: string | null;
-};
-
-type SearchResult = z.infer<typeof searchResultSchema>;
-
-type TavilySearchBody = {
-  query: string;
-  max_results: number;
-  search_depth: "advanced";
-  chunks_per_source: number;
-  include_domains?: string[];
-  country?: string;
-};
-
 type ExtractedComparable = {
   resultIndex: number;
   title: string;
   priceInArs: number;
 };
-
-function buildSearchBody(input: SearchInput): string {
-  const body: TavilySearchBody = {
-    query: input.query,
-    max_results: TAVILY_MAX_RESULTS,
-    search_depth: "advanced",
-    chunks_per_source: TAVILY_CHUNKS_PER_SOURCE,
-  };
-
-  if (input.includeDomains !== null) {
-    body.include_domains = input.includeDomains;
-  }
-
-  if (input.country !== null) {
-    body.country = input.country;
-  }
-
-  return JSON.stringify(body);
-}
-
-function buildSearchCacheEntry(body: string): CacheEntry<SearchResult[]> {
-  const digest = createHash("sha256").update(body).digest("hex");
-
-  return {
-    key: `${SEARCH_CACHE_PREFIX}:${digest}`,
-    schema: cachedResultsSchema,
-    timeToLiveInSeconds: SEARCH_CACHE_TIME_TO_LIVE_IN_SECONDS,
-  };
-}
-
-async function fetchListings(body: string): Promise<SearchResult[]> {
-  const response = await fetch(TAVILY_SEARCH_URL, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${serverEnvironment.TAVILY_API_KEY}`,
-    },
-    body,
-  });
-
-  if (!response.ok) {
-    throw new Error(`Tavily responded ${response.status}`);
-  }
-
-  return tavilyResponseSchema.parse(await response.json()).results;
-}
-
-async function searchListings(input: SearchInput): Promise<SearchResult[]> {
-  const body = buildSearchBody(input);
-
-  return rememberCache(buildSearchCacheEntry(body), () => fetchListings(body));
-}
 
 function isArgentineResult(result: SearchResult): boolean {
   const hostname = new URL(result.url).hostname;
@@ -249,17 +160,17 @@ function resolveComparables(
 export async function researchComparables(input: ResearchInput): Promise<Research> {
   const conditionWord = CONDITION_SEARCH_WORDS[input.condition];
   const groups = await Promise.all([
-    searchListings({
+    searchWeb({
       query: `${input.searchQuery} ${conditionWord}`,
       includeDomains: MERCADO_LIBRE_DOMAINS,
       country: null,
     }),
-    searchListings({
+    searchWeb({
       query: `${input.genericQuery} ${conditionWord}`,
       includeDomains: MERCADO_LIBRE_DOMAINS,
       country: null,
     }),
-    searchListings({
+    searchWeb({
       query: `${input.searchQuery} ${conditionWord} precio`,
       includeDomains: null,
       country: ARGENTINA_COUNTRY,

@@ -10,6 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
 import { Spinner } from "@/components/ui/spinner";
 import { Textarea } from "@/components/ui/textarea";
+import { AgentFields } from "@/features/store/edit/agent";
 import { StoreImagesFields } from "@/features/store/edit/images";
 import { LocationPicker } from "@/features/store/location/picker";
 import { readStoredPlace } from "@/features/store/location/place";
@@ -60,6 +61,8 @@ export function StoreEditForm({ store }: StoreEditFormProps) {
       </FieldGroup>
       <Separator />
       <SocialFields handles={store} />
+      <Separator />
+      <AgentFields agentName={store.agentName} />
       <Separator />
       <LocationPicker initialPlace={readStoredPlace(store)} />
       {state.error !== null ? (

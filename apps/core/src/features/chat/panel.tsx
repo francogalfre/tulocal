@@ -8,6 +8,7 @@ import { AnimatePresence } from "motion/react";
 import { useEffect, useRef } from "react";
 
 import type { AgentUIMessage } from "@/features/agent/agent";
+import { Asked } from "@/features/chat/asked";
 import { Bubble } from "@/features/chat/bubble";
 import { Closing } from "@/features/chat/closing";
 import { Composer } from "@/features/chat/composer";
@@ -38,6 +39,16 @@ function readMessageText(message: AgentUIMessage): string {
     .filter((part) => part.type === "text")
     .map((part) => part.text)
     .join("");
+}
+
+function readAskedStatus(message: AgentUIMessage): "logged" | "pending" | null {
+  for (const part of message.parts) {
+    if (part.type === "tool-askSeller" && part.state === "output-available") {
+      return part.output.status;
+    }
+  }
+
+  return null;
 }
 
 function isReplyPending(status: ChatStatus, messages: AgentUIMessage[]): boolean {
@@ -145,13 +156,18 @@ export function Chat({
               return null;
             }
 
-            return (
+            const askedStatus = readAskedStatus(message);
+
+            return [
               <Bubble
                 key={message.id}
                 role={message.role === "user" ? "user" : "assistant"}
                 text={text}
-              />
-            );
+              />,
+              askedStatus !== null ? (
+                <Asked key={`${message.id}-asked`} status={askedStatus} />
+              ) : null,
+            ];
           })}
           {isWaiting ? <Thinking key="thinking" agentName={agentName} /> : null}
         </AnimatePresence>
