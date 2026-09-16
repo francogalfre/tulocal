@@ -56,11 +56,39 @@ describe("computeNegotiationMove", () => {
     expect(move.priceInArs).toBe(96_000);
   });
 
-  test("subsequent counters halve the remaining gap and the final one lands on floor", () => {
+  test("subsequent counters halve the gap and the last regular one stays just above floor", () => {
     const moves = playLowballs(10_000, 3);
 
-    expect(moves.map((move) => move.priceInArs)).toEqual([85_000, 77_500, FLOOR_PRICE_IN_ARS]);
-    expect(moves[2]?.isFinal).toBe(true);
+    expect(moves.map((move) => move.priceInArs)).toEqual([85_000, 77_500, 70_700]);
+    expect(moves.every((move) => !move.isFinal)).toBe(true);
+  });
+
+  test("only a further push after the regular counters reaches the floor", () => {
+    const moves = playLowballs(10_000, 4);
+
+    expect(moves[3]).toEqual({ kind: "counter", priceInArs: FLOOR_PRICE_IN_ARS, isFinal: true });
+  });
+
+  test("the cushion above floor rounds up to the price step", () => {
+    const move = computeNegotiationMove(
+      buildInput({
+        listPriceInArs: 499_000,
+        floorPriceInArs: 450_000,
+        buyerOfferInArs: 300_000,
+        counterOfferCount: 2,
+        lastCounterOfferInArs: 462_000,
+      }),
+    );
+
+    expect(move).toEqual({ kind: "counter", priceInArs: 455_000, isFinal: false });
+  });
+
+  test("an offer between floor and the last counter is taken after the regular counters", () => {
+    const move = computeNegotiationMove(
+      buildInput({ buyerOfferInArs: 70_500, counterOfferCount: 3, lastCounterOfferInArs: 70_700 }),
+    );
+
+    expect(move).toEqual({ kind: "accept", priceInArs: 70_500, isFinal: true });
   });
 
   test("never goes below floor across many pushes", () => {
@@ -71,12 +99,12 @@ describe("computeNegotiationMove", () => {
     }
   });
 
-  test("past the limit it holds once and then redirects", () => {
-    const moves = playLowballs(10_000, 5);
+  test("after reaching the floor it holds once and then redirects", () => {
+    const moves = playLowballs(10_000, 6);
 
-    expect(moves[3]?.kind).toBe("hold");
-    expect(moves[3]?.priceInArs).toBe(FLOOR_PRICE_IN_ARS);
-    expect(moves[4]?.kind).toBe("redirect");
+    expect(moves[4]?.kind).toBe("hold");
+    expect(moves[4]?.priceInArs).toBe(FLOOR_PRICE_IN_ARS);
+    expect(moves[5]?.kind).toBe("redirect");
   });
 
   test("accepts an offer at or above the current price without conceding", () => {

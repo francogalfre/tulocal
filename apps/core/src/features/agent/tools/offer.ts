@@ -44,6 +44,7 @@ async function persistMove(
       .update(conversations)
       .set({ lastBuyerOfferInArs: buyerOfferInArs, agreedPriceInArs: move.priceInArs })
       .where(eq(conversations.id, context.conversationId));
+
     await createEscalationOnce({
       conversationId: context.conversationId,
       productId: context.productId,

@@ -1,13 +1,17 @@
-import { eq } from "drizzle-orm";
+import { asc, eq } from "drizzle-orm";
 
 import { database } from "@tulocal/database/client";
+import { images } from "@tulocal/database/schema/images";
 import { products } from "@tulocal/database/schema/products";
 
 import type { NegotiationSettings } from "@/features/agent/negotiation/move";
+import type { AgentVoice } from "@/features/agent/voice";
 import type { ProductCategory } from "@/features/product/category";
 import type { ProductCondition } from "@/features/product/condition";
 
 const MAX_AGENT_COMPARABLES = 8;
+const MAX_INSPECTED_PHOTOS = 6;
+const MAX_LISTING_PHOTOS = 6;
 
 export type AgentProduct = {
   id: string;
@@ -23,14 +27,19 @@ export type AgentProduct = {
   facts: string[];
   listPriceInArs: number;
   floorPriceInArs: number;
+  photoUrls: string[];
+  listingPhotoUrls: string[];
 };
 
 export type AgentStore = {
   id: string;
   name: string;
   handle: string;
+  description: string | null;
+  locationName: string | null;
   agentName: string;
-  agentTone: "formal" | "casual" | "terse";
+  agentVoice: AgentVoice;
+  agentOpensNegotiation: boolean;
   agentContext: string | null;
   whatsappPhone: string | null;
   settings: NegotiationSettings;
@@ -53,6 +62,25 @@ export type AgentContext = {
   questions: AgentQuestion[];
   comparables: AgentComparable[];
 };
+
+type StoredImage = {
+  url: string;
+  kind: "original" | "primary" | "contextual";
+};
+
+function selectPhotoUrlsForInspection(storedImages: StoredImage[]): string[] {
+  const originals = storedImages.filter((image) => image.kind === "original");
+  const inspected = originals.length > 0 ? originals : storedImages;
+
+  return inspected.slice(0, MAX_INSPECTED_PHOTOS).map((image) => image.url);
+}
+
+function selectListingPhotoUrls(storedImages: StoredImage[]): string[] {
+  const generated = storedImages.filter((image) => image.kind !== "original");
+  const shown = generated.length > 0 ? generated : storedImages;
+
+  return shown.slice(0, MAX_LISTING_PHOTOS).map((image) => image.url);
+}
 
 export async function loadAgentContext(productId: string): Promise<AgentContext | null> {
   const product = await database.query.products.findFirst({
@@ -79,8 +107,11 @@ export async function loadAgentContext(productId: string): Promise<AgentContext 
           id: true,
           name: true,
           handle: true,
+          description: true,
+          locationName: true,
           agentName: true,
-          agentTone: true,
+          agentVoice: true,
+          agentOpensNegotiation: true,
           agentContext: true,
           whatsappPhone: true,
           maxCounterOffers: true,
@@ -88,6 +119,7 @@ export async function loadAgentContext(productId: string): Promise<AgentContext 
           subsequentConcessionPercent: true,
         },
       },
+      images: { columns: { url: true, kind: true }, orderBy: [asc(images.sortOrder)] },
       questions: { columns: { question: true, answer: true, status: true } },
       comparables: {
         columns: { title: true, priceInArs: true },
@@ -121,13 +153,18 @@ export async function loadAgentContext(productId: string): Promise<AgentContext 
       facts: product.facts,
       listPriceInArs: product.listPriceInArs,
       floorPriceInArs: product.floorPriceInArs,
+      photoUrls: selectPhotoUrlsForInspection(product.images),
+      listingPhotoUrls: selectListingPhotoUrls(product.images),
     },
     store: {
       id: product.store.id,
       name: product.store.name,
       handle: product.store.handle,
+      description: product.store.description,
+      locationName: product.store.locationName,
       agentName: product.store.agentName,
-      agentTone: product.store.agentTone,
+      agentVoice: product.store.agentVoice,
+      agentOpensNegotiation: product.store.agentOpensNegotiation,
       agentContext: product.store.agentContext,
       whatsappPhone: product.store.whatsappPhone,
       settings: {

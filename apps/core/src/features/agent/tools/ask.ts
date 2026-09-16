@@ -29,6 +29,7 @@ export const askSeller = tool({
       where: and(eq(questions.productId, context.productId), eq(questions.status, "pending")),
       columns: { question: true },
     });
+
     const isAlreadyPending = pending.some(
       (entry) => entry.question.toLowerCase() === question.toLowerCase(),
     );

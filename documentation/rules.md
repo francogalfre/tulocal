@@ -43,13 +43,14 @@ Price concessions happen gradually across multiple turns, never as one large dro
 
 - **Turn 1 counter-offer** (in response to a buyer's first lowball): concede up to ~40% of the gap between list price and the buyer's offer, but never below the midpoint of `[floor, list]`.
 - **Each subsequent counter-offer**: concede a shrinking fraction of the *remaining* gap to floor (for example ~50% of what is left each time), so the sequence asymptotically approaches floor without ever landing exactly on it until the final allowed offer.
-- **Final counter-offer** (see 3.3): may land exactly on floor, phrased as a firm final number, never announced as "the floor" or "the lowest possible".
+- **Last regular counter-offer** (see 3.3): lands just above floor, floor plus 1% rounded up to the price step (floor $ 450.000 becomes $ 455.000), and is not presented as final.
+- **Final concession**: only if the buyer pushes again after the last regular counter, the agent drops to floor, phrased as a firm final number, never announced as "the floor" or "the lowest possible". An offer between floor and the last counter at that point is accepted as is.
 
 The exact percentages are a starting default. Expose them as per-shop or per-product configuration (for example `negotiationSettings.concessionAggressiveness`), not hardcoded constants, since some sellers will want a harder or softer negotiator.
 
 ### 3.3 Counter-offer limit (anti-infinite-haggling guardrail)
 
-**Default: the agent makes at most 3 counter-offers in a single conversation.** After the third, it holds firm on its last number, restates it once if pushed, and if the buyer keeps pushing, redirects to the seller ("te paso con el dueño para que lo charlen directo" plus a "talk to the owner" surfacing, see section 5) rather than negotiating further. This count is per conversation, resets only if the seller manually reopens negotiation (for example changes list or floor price), and must be a configurable value per shop or per product (`negotiationSettings.maxCounterOffers`), not a hardcoded 3, since some sellers may want more or less room.
+**Default: the agent makes at most 3 counter-offers in a single conversation.** After the third, one more push earns the final concession to floor (3.2); past that it holds firm, restates it once if pushed, and if the buyer keeps pushing, redirects to the seller ("te paso con el dueño para que lo charlen directo" plus a "talk to the owner" surfacing, see section 5) rather than negotiating further. This count is per conversation, resets only if the seller manually reopens negotiation (for example changes list or floor price), and must be a configurable value per shop or per product (`negotiationSettings.maxCounterOffers`), not a hardcoded 3, since some sellers may want more or less room.
 
 A buyer restarting the chat, opening a new tab, or rephrasing the same ask does not reset the counter. The limit is tied to the conversation or session record for that buyer and product, not to message count or phrasing.
 

@@ -48,11 +48,16 @@ function computeMedian(sortedPrices: number[]): number | null {
   return (lower + upper) / 2;
 }
 
-export function roundToPriceStep(priceInArs: number): number {
-  const step =
-    priceInArs >= LARGE_PRICE_THRESHOLD_IN_ARS ? LARGE_PRICE_STEP_IN_ARS : SMALL_PRICE_STEP_IN_ARS;
+export function findPriceStepInArs(priceInArs: number): number {
+  return priceInArs >= LARGE_PRICE_THRESHOLD_IN_ARS
+    ? LARGE_PRICE_STEP_IN_ARS
+    : SMALL_PRICE_STEP_IN_ARS;
+}
 
-  return Math.round(priceInArs / step) * step;
+export function roundToPriceStep(priceInArs: number): number {
+  const stepInArs = findPriceStepInArs(priceInArs);
+
+  return Math.round(priceInArs / stepInArs) * stepInArs;
 }
 
 export function summarizePriceRange(pricesInArs: number[]): PriceRange | null {

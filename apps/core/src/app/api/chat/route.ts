@@ -5,9 +5,10 @@ import { z } from "zod";
 
 import { streamAgentTurn } from "@/features/agent/agent";
 import { loadAgentContext } from "@/features/agent/context";
+import { shownPhotosOutputSchema } from "@/features/agent/tools/album";
 import { negotiationMoveOutputSchema } from "@/features/agent/tools/offer";
 import { buildFallbackReply, isReplySafe } from "@/features/agent/validation/reply";
-import type { AgentChunk, AgentUIMessage } from "@/features/agent/agent";
+import type { AgentChunk, AgentUIMessage, ShownOffer } from "@/features/agent/agent";
 import type { NegotiationMoveOutput } from "@/features/agent/tools/offer";
 import { createConversation, findConversationByToken } from "@/features/conversation/find";
 import {
@@ -22,6 +23,8 @@ export const maxDuration = 60;
 const MESSAGE_MAX_LENGTH = 1000;
 
 const OFFER_TOOL_NAME = "respondToOffer";
+
+const PHOTOS_TOOL_NAME = "showPhotos";
 
 const bodySchema = z.object({
   productId: z.uuid(),
@@ -40,6 +43,7 @@ const bodySchema = z.object({
 type AgentTurn = {
   text: string;
   lastMove: NegotiationMoveOutput | null;
+  photoUrls: string[];
 };
 
 type SettleTurnInput = {
@@ -58,6 +62,7 @@ async function collectAgentTurn(stream: ReadableStream<AgentChunk>): Promise<Age
   const toolNamesByCallId = new Map<string, string>();
   let text = "";
   let lastMove: NegotiationMoveOutput | null = null;
+  const photoUrls: string[] = [];
 
   for await (const chunk of stream) {
     if (chunk.type === "text-delta") {
@@ -68,15 +73,22 @@ async function collectAgentTurn(stream: ReadableStream<AgentChunk>): Promise<Age
       toolNamesByCallId.set(chunk.toolCallId, chunk.toolName);
     }
 
-    if (
-      chunk.type === "tool-output-available" &&
-      toolNamesByCallId.get(chunk.toolCallId) === OFFER_TOOL_NAME
-    ) {
+    if (chunk.type !== "tool-output-available") {
+      continue;
+    }
+
+    const toolName = toolNamesByCallId.get(chunk.toolCallId);
+
+    if (toolName === OFFER_TOOL_NAME) {
       lastMove = negotiationMoveOutputSchema.parse(chunk.output);
+    }
+
+    if (toolName === PHOTOS_TOOL_NAME) {
+      photoUrls.push(...shownPhotosOutputSchema.parse(chunk.output).photoUrls);
     }
   }
 
-  return { text, lastMove };
+  return { text, lastMove, photoUrls };
 }
 
 function resolveReply(turn: AgentTurn, floorPriceInArs: number): ResolvedReply {
@@ -93,6 +105,18 @@ function resolveReply(turn: AgentTurn, floorPriceInArs: number): ResolvedReply {
   return { text: buildFallbackReply(turn.lastMove), wasReplaced: true };
 }
 
+function selectShownOffer(lastMove: NegotiationMoveOutput | null): ShownOffer | null {
+  if (lastMove === null || (lastMove.kind !== "counter" && lastMove.kind !== "hold")) {
+    return null;
+  }
+
+  return {
+    priceInArs: lastMove.priceInArs,
+    priceLabel: lastMove.priceLabel,
+    isFinal: lastMove.isFinal,
+  };
+}
+
 async function settleTurn(input: SettleTurnInput): Promise<ResolvedReply> {
   const turn = await collectAgentTurn(input.stream);
   const reply = resolveReply(turn, input.floorPriceInArs);
@@ -101,8 +125,16 @@ async function settleTurn(input: SettleTurnInput): Promise<ResolvedReply> {
     logEvent({ event: "agent.reply.rejected", productId: input.productId });
   }
 
-  if (reply.text !== "") {
-    await appendConversationMessage(input.conversationId, { role: "agent", content: reply.text });
+  const offer = selectShownOffer(turn.lastMove);
+  const hasSomethingToShow = reply.text !== "" || turn.photoUrls.length > 0 || offer !== null;
+
+  if (hasSomethingToShow) {
+    await appendConversationMessage(input.conversationId, {
+      role: "agent",
+      content: reply.text,
+      photoUrls: turn.photoUrls,
+      offer,
+    });
   }
 
   return reply;
@@ -154,7 +186,12 @@ export async function POST(request: Request): Promise<Response> {
   const buyerText = body.data.message.parts.map((part) => part.text).join("\n");
   const [history, buyerMessage] = await Promise.all([
     loadConversationMessages(conversation.id),
-    appendConversationMessage(conversation.id, { role: "buyer", content: buyerText }),
+    appendConversationMessage(conversation.id, {
+      role: "buyer",
+      content: buyerText,
+      photoUrls: [],
+      offer: null,
+    }),
   ]);
   const agentStream = await streamAgentTurn({
     conversationId: conversation.id,

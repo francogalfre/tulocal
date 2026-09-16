@@ -1,6 +1,8 @@
-import { roundToPriceStep } from "@/features/product/pipeline/pricing";
+import { findPriceStepInArs, roundToPriceStep } from "@/features/product/pipeline/pricing";
 
 const PERCENT_DIVISOR = 100;
+
+const FLOOR_CUSHION_PERCENT = 1;
 
 export type NegotiationSettings = {
   maxCounterOffers: number;
@@ -25,8 +27,16 @@ export type NegotiationMove = {
   isFinal: boolean;
 };
 
-function clampToFloor(candidateInArs: number, floorPriceInArs: number): number {
-  return Math.max(roundToPriceStep(candidateInArs), floorPriceInArs);
+function computePriceJustAboveFloor(input: NegotiationMoveInput): number {
+  const stepInArs = findPriceStepInArs(input.floorPriceInArs);
+  const cushionInArs = (input.floorPriceInArs * FLOOR_CUSHION_PERCENT) / PERCENT_DIVISOR;
+  const roundedCushionInArs = Math.max(Math.ceil(cushionInArs / stepInArs) * stepInArs, stepInArs);
+
+  return Math.min(input.floorPriceInArs + roundedCushionInArs, input.listPriceInArs);
+}
+
+function clampAboveFloor(candidateInArs: number, input: NegotiationMoveInput): number {
+  return Math.max(roundToPriceStep(candidateInArs), computePriceJustAboveFloor(input));
 }
 
 function computeFirstCounter(input: NegotiationMoveInput): number {
@@ -35,7 +45,7 @@ function computeFirstCounter(input: NegotiationMoveInput): number {
     input.listPriceInArs - (gapInArs * input.settings.firstConcessionPercent) / PERCENT_DIVISOR;
   const midpointInArs = (input.floorPriceInArs + input.listPriceInArs) / 2;
 
-  return clampToFloor(Math.max(concededInArs, midpointInArs), input.floorPriceInArs);
+  return clampAboveFloor(Math.max(concededInArs, midpointInArs), input);
 }
 
 function computeSubsequentCounter(input: NegotiationMoveInput, currentInArs: number): number {
@@ -44,14 +54,14 @@ function computeSubsequentCounter(input: NegotiationMoveInput, currentInArs: num
     currentInArs -
     (remainingGapInArs * input.settings.subsequentConcessionPercent) / PERCENT_DIVISOR;
 
-  return clampToFloor(concededInArs, input.floorPriceInArs);
+  return clampAboveFloor(concededInArs, input);
 }
 
 function computeCandidate(input: NegotiationMoveInput, currentInArs: number): number {
-  const isFinal = input.counterOfferCount === input.settings.maxCounterOffers - 1;
+  const isLastRegularCounter = input.counterOfferCount === input.settings.maxCounterOffers - 1;
 
-  if (isFinal) {
-    return input.floorPriceInArs;
+  if (isLastRegularCounter) {
+    return Math.min(computePriceJustAboveFloor(input), currentInArs);
   }
 
   if (input.counterOfferCount === 0) {
@@ -61,6 +71,25 @@ function computeCandidate(input: NegotiationMoveInput, currentInArs: number): nu
   return computeSubsequentCounter(input, currentInArs);
 }
 
+function computeMoveAfterRegularCounters(
+  input: NegotiationMoveInput,
+  currentInArs: number,
+): NegotiationMove {
+  if (currentInArs > input.floorPriceInArs) {
+    if (input.buyerOfferInArs >= input.floorPriceInArs) {
+      return { kind: "accept", priceInArs: input.buyerOfferInArs, isFinal: true };
+    }
+
+    return { kind: "counter", priceInArs: input.floorPriceInArs, isFinal: true };
+  }
+
+  if (input.counterOfferCount <= input.settings.maxCounterOffers + 1) {
+    return { kind: "hold", priceInArs: currentInArs, isFinal: true };
+  }
+
+  return { kind: "redirect", priceInArs: currentInArs, isFinal: true };
+}
+
 export function computeNegotiationMove(input: NegotiationMoveInput): NegotiationMove {
   const currentInArs = input.lastCounterOfferInArs ?? input.listPriceInArs;
 
@@ -68,20 +97,15 @@ export function computeNegotiationMove(input: NegotiationMoveInput): Negotiation
     return { kind: "accept", priceInArs: currentInArs, isFinal: false };
   }
 
-  if (input.counterOfferCount === input.settings.maxCounterOffers) {
-    return { kind: "hold", priceInArs: currentInArs, isFinal: true };
+  if (input.counterOfferCount >= input.settings.maxCounterOffers) {
+    return computeMoveAfterRegularCounters(input, currentInArs);
   }
 
-  if (input.counterOfferCount > input.settings.maxCounterOffers) {
-    return { kind: "redirect", priceInArs: currentInArs, isFinal: true };
-  }
-
-  const isFinal = input.counterOfferCount === input.settings.maxCounterOffers - 1;
   const candidateInArs = computeCandidate(input, currentInArs);
 
   if (input.buyerOfferInArs >= candidateInArs) {
-    return { kind: "accept", priceInArs: input.buyerOfferInArs, isFinal };
+    return { kind: "accept", priceInArs: input.buyerOfferInArs, isFinal: false };
   }
 
-  return { kind: "counter", priceInArs: candidateInArs, isFinal };
+  return { kind: "counter", priceInArs: candidateInArs, isFinal: false };
 }
