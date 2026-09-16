@@ -28,7 +28,7 @@ function describeProductCount(productCount: number): string {
 export function StoreHeader({ store, productCount, actions }: StoreHeaderProps) {
   return (
     <section className="flex flex-col">
-      <div className="relative aspect-[3/1] w-full overflow-hidden rounded-2xl bg-secondary">
+      <div className="relative -mx-5 aspect-[3/1] overflow-hidden bg-secondary sm:mx-0 sm:rounded-2xl">
         {store.bannerUrl !== null ? (
           <Image
             src={store.bannerUrl}
@@ -40,7 +40,7 @@ export function StoreHeader({ store, productCount, actions }: StoreHeaderProps) 
           />
         ) : null}
       </div>
-      <div className="-mt-10 flex items-end justify-between gap-4 px-4">
+      <div className="-mt-10 flex items-end justify-between gap-4">
         <Avatar className="size-20 border-4 border-background">
           {store.avatarUrl !== null ? <AvatarImage src={store.avatarUrl} alt="" /> : null}
           <AvatarFallback className="bg-brand-deep font-heading text-2xl font-semibold text-white">
@@ -49,13 +49,13 @@ export function StoreHeader({ store, productCount, actions }: StoreHeaderProps) 
         </Avatar>
         {actions !== undefined ? <div className="flex gap-2 pb-1">{actions}</div> : null}
       </div>
-      <div className="flex flex-col gap-2 px-4 pt-4">
+      <div className="flex flex-col gap-1.5 pt-3">
         <h1 className="text-3xl">{store.name}</h1>
         <p className="text-sm text-muted-foreground">
           tulocal/{store.handle} · {describeProductCount(productCount)}
         </p>
         {store.description !== null ? (
-          <p className="max-w-prose whitespace-pre-line">{store.description}</p>
+          <p className="max-w-prose whitespace-pre-line pt-1">{store.description}</p>
         ) : null}
       </div>
     </section>

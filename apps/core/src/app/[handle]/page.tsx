@@ -6,12 +6,17 @@ import { Button } from "@/components/ui/button";
 import { Empty, EmptyDescription, EmptyHeader, EmptyTitle } from "@/components/ui/empty";
 import { Logo } from "@/components/logo";
 import { ProductCard } from "@/features/store/card";
-import { arrangeCatalog, parseCatalogFilters, selectCoverUrl } from "@/features/store/catalog";
-import { CatalogFiltersBar } from "@/features/store/filters";
+import {
+  arrangeCatalog,
+  parseCatalogFilters,
+  selectCoverUrl,
+  summarizeCategories,
+} from "@/features/store/catalog";
 import { findOwnerCatalog } from "@/features/store/find";
 import { StoreHeader } from "@/features/store/header";
 import { findPublicStore } from "@/features/store/public";
 import { StoreShare } from "@/features/store/share";
+import { CatalogToolbar } from "@/features/store/toolbar";
 import type { CatalogProduct } from "@/features/store/catalog";
 import type { StoreProfile } from "@/features/store/header";
 import { findCurrentSession } from "@/lib/session";
@@ -36,6 +41,7 @@ async function loadStoreView(handle: string, ownerId: string | null): Promise<St
         products: catalog.products.map((product) => ({
           id: product.id,
           title: product.title,
+          category: product.category,
           listPriceInArs: product.listPriceInArs,
           condition: product.condition,
           status: product.status,
@@ -58,6 +64,7 @@ async function loadStoreView(handle: string, ownerId: string | null): Promise<St
     products: store.products.map((product) => ({
       id: product.id,
       title: product.title,
+      category: product.category,
       listPriceInArs: product.listPriceInArs,
       condition: product.condition,
       status: product.status,
@@ -79,6 +86,7 @@ export default async function StorePage({ params, searchParams }: StorePageProps
 
   const { store, products, isOwner } = view;
   const arranged = arrangeCatalog(products, filters);
+  const categories = summarizeCategories(products);
   const storeUrl = buildStoreUrl(store.handle);
 
   return (
@@ -88,10 +96,26 @@ export default async function StorePage({ params, searchParams }: StorePageProps
         <div className="flex items-center gap-2">
           <StoreShare url={storeUrl} title={store.name} />
           {isOwner ? (
-            <Button size="lg" render={<Link href="/new" />} nativeButton={false}>
-              <Plus data-icon="inline-start" />
-              Agregar producto
-            </Button>
+            <>
+              <Button
+                size="icon-lg"
+                className="sm:hidden"
+                aria-label="Agregar producto"
+                render={<Link href="/new" />}
+                nativeButton={false}
+              >
+                <Plus />
+              </Button>
+              <Button
+                size="lg"
+                className="hidden sm:inline-flex"
+                render={<Link href="/new" />}
+                nativeButton={false}
+              >
+                <Plus data-icon="inline-start" />
+                Agregar producto
+              </Button>
+            </>
           ) : null}
           {session === null ? (
             <Button variant="ghost" size="lg" render={<Link href="/" />} nativeButton={false}>
@@ -130,7 +154,7 @@ export default async function StorePage({ params, searchParams }: StorePageProps
         </Empty>
       ) : (
         <div className="flex flex-col gap-6">
-          <CatalogFiltersBar filters={filters} showStatus={isOwner} />
+          <CatalogToolbar filters={filters} categories={categories} showStatus={isOwner} />
           {arranged.length === 0 ? (
             <Empty>
               <EmptyHeader>

@@ -182,6 +182,7 @@ async function runStages(productId: string): Promise<void> {
   await database
     .update(products)
     .set({
+      category: identification.category.trim().toLowerCase(),
       condition: identification.condition,
       conditionNotes: identification.conditionNotes.join(". "),
       attributes: identification.attributes,

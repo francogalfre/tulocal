@@ -30,6 +30,7 @@ export const products = pgTable(
       .references(() => stores.id, { onDelete: "cascade" }),
     title: text("title"),
     description: text("description"),
+    category: text("category"),
     condition: productCondition("condition"),
     conditionNotes: text("condition_notes"),
     attributes: text("attributes").array().default([]).notNull(),
