@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 
 import { Logo } from "@/components/logo";
 import { Button } from "@/components/ui/button";
+import { InView } from "@/components/motion/inview";
 import { Features } from "@/features/landing/features";
 import { Footer } from "@/features/landing/footer";
 import { GoogleSignIn } from "@/features/landing/google";
@@ -36,7 +37,7 @@ export default async function LandingPage() {
     <SmoothScroll>
       <div className="mx-auto flex w-full max-w-4xl flex-1 flex-col lg:border-x">
         <main className="flex flex-1 flex-col pt-6">
-          <header className="flex h-12 items-center justify-between px-6 mb-6">
+          <header className="flex h-9 items-center justify-between px-6 mb-6">
             <Logo />
             {signedInStorePath !== null ? (
               <Button
@@ -57,8 +58,10 @@ export default async function LandingPage() {
             )}
           </header>
 
-          <div className="flex flex-1 flex-col motion-safe:animate-in motion-safe:fade-in motion-safe:slide-in-from-bottom-2 motion-safe:duration-500 motion-safe:ease-out">
-            <Hero signedInStorePath={signedInStorePath} />
+          <div className="flex flex-1 flex-col">
+            <InView>
+              <Hero signedInStorePath={signedInStorePath} />
+            </InView>
             <Features />
             <Sponsors />
           </div>

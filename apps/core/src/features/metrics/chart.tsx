@@ -1,8 +1,11 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useInView } from "motion/react";
+import { useRef } from "react";
 
 import type { DailyVisits } from "@/features/metrics/summary";
+
+const CHART_AMOUNT = 0.3;
 
 const BAR_DELAY_IN_MILLISECONDS = 16;
 
@@ -31,18 +34,13 @@ function computeBarPercent(total: number, peak: number): number {
 }
 
 export function Chart({ series }: ChartProps) {
-  const [hasEntered, setHasEntered] = useState(false);
+  const containerReference = useRef<HTMLDivElement>(null);
+  const hasEntered = useInView(containerReference, { once: true, amount: CHART_AMOUNT });
   const peak = Math.max(...series.map((entry) => entry.total), 1);
   const firstDay = series.at(0);
 
-  useEffect(() => {
-    const frame = requestAnimationFrame(() => setHasEntered(true));
-
-    return () => cancelAnimationFrame(frame);
-  }, []);
-
   return (
-    <div className="flex flex-col gap-3">
+    <div ref={containerReference} className="flex flex-col gap-3">
       <div className="flex h-28 items-end gap-1">
         {series.map((entry, index) => (
           <div

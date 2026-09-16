@@ -1,5 +1,6 @@
 import Image from "next/image";
 
+import { InView } from "@/components/motion/inview";
 import { Marquee } from "@/components/marquee";
 
 function V0Logo() {
@@ -18,7 +19,7 @@ function V0Logo() {
 
 export function Sponsors() {
   return (
-    <section className="flex flex-col gap-6 border-t px-6 py-12">
+    <InView as="section" className="flex flex-col gap-6 border-t px-6 py-12">
       <p className="text-center text-sm text-muted-foreground">Con el apoyo de</p>
       <Marquee
         aria-hidden="true"
@@ -41,6 +42,6 @@ export function Sponsors() {
         </span>
       </Marquee>
       <p className="sr-only">v0, Remo Litoral</p>
-    </section>
+    </InView>
   );
 }

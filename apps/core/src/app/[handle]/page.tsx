@@ -1,4 +1,3 @@
-import { ChartNoAxesColumn, Plus, Settings2 } from "lucide-react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { after } from "next/server";
@@ -7,8 +6,10 @@ import type { Metadata } from "next";
 import type { Session } from "@tulocal/authentication/server";
 
 import { Button } from "@/components/ui/button";
+import { tulocalIcons } from "@/components/icons";
 import { Empty, EmptyDescription, EmptyHeader, EmptyTitle } from "@/components/ui/empty";
 import { Logo } from "@/components/logo";
+import { InView } from "@/components/motion/inview";
 import { recordStoreVisit } from "@/features/metrics/record";
 import {
   arrangeCatalog,
@@ -158,7 +159,7 @@ export default async function StorePage({ params, searchParams }: StorePageProps
                 render={<Link href="/new" />}
                 nativeButton={false}
               >
-                <Plus />
+                <tulocalIcons.plus />
               </Button>
               <Button
                 size="lg"
@@ -166,7 +167,7 @@ export default async function StorePage({ params, searchParams }: StorePageProps
                 render={<Link href="/new" />}
                 nativeButton={false}
               >
-                <Plus data-icon="inline-start" />
+                <tulocalIcons.plus data-icon="inline-start" />
                 Agregar producto
               </Button>
             </>
@@ -178,34 +179,36 @@ export default async function StorePage({ params, searchParams }: StorePageProps
           ) : null}
         </div>
       </header>
-      <StoreHeader
-        store={store}
-        productCount={products.length}
-        actions={
-          isOwner ? (
-            <>
-              <Button
-                variant="outline"
-                size="icon-lg"
-                aria-label="Ver métricas"
-                render={<Link href="/metrics" />}
-                nativeButton={false}
-              >
-                <ChartNoAxesColumn />
-              </Button>
-              <Button
-                variant="outline"
-                size="lg"
-                render={<Link href="/store/edit" />}
-                nativeButton={false}
-              >
-                <Settings2 data-icon="inline-start" />
-                Editar tienda
-              </Button>
-            </>
-          ) : undefined
-        }
-      />
+      <InView>
+        <StoreHeader
+          store={store}
+          productCount={products.length}
+          actions={
+            isOwner ? (
+              <>
+                <Button
+                  variant="outline"
+                  size="icon-lg"
+                  aria-label="Ver métricas"
+                  render={<Link href="/metrics" />}
+                  nativeButton={false}
+                >
+                  <tulocalIcons.chart />
+                </Button>
+                <Button
+                  variant="outline"
+                  size="lg"
+                  render={<Link href="/store/edit" />}
+                  nativeButton={false}
+                >
+                  <tulocalIcons.settings data-icon="inline-start" />
+                  Editar tienda
+                </Button>
+              </>
+            ) : undefined
+          }
+        />
+      </InView>
       {products.length === 0 ? (
         <Empty>
           <EmptyHeader>
@@ -219,7 +222,9 @@ export default async function StorePage({ params, searchParams }: StorePageProps
         </Empty>
       ) : (
         <div className="flex flex-col gap-6">
-          <CatalogToolbar filters={filters} categories={categories} showStatus={isOwner} />
+          <InView>
+            <CatalogToolbar filters={filters} categories={categories} showStatus={isOwner} />
+          </InView>
           {arranged.length === 0 ? (
             <Empty>
               <EmptyHeader>
@@ -232,7 +237,11 @@ export default async function StorePage({ params, searchParams }: StorePageProps
           )}
         </div>
       )}
-      {place !== null ? <LocationSection place={place} /> : null}
+      {place !== null ? (
+        <InView>
+          <LocationSection place={place} />
+        </InView>
+      ) : null}
     </main>
   );
 }

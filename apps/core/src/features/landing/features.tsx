@@ -1,6 +1,8 @@
 import { cn } from "cn";
 import type { ReactNode } from "react";
 
+import { InView } from "@/components/motion/inview";
+import { Rise } from "@/components/motion/rise";
 import { ChatPrototype } from "@/features/landing/prototypes/chat";
 import { ListingPrototype } from "@/features/landing/prototypes/listing";
 import { PricingPrototype } from "@/features/landing/prototypes/pricing";
@@ -43,15 +45,18 @@ const FEATURES: Feature[] = [
 export function Features() {
   return (
     <section id="como-funciona" className="flex flex-col gap-12 border-t px-6 py-24">
-      <div className="flex flex-col items-center gap-2 text-center">
-        <h2 className="text-4xl">Cómo funciona</h2>
-        <p className="max-w-xl text-base text-muted-foreground sm:text-lg">
-          De la foto a la venta, sin vueltas.
-        </p>
-      </div>
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+      <InView>
+        <div className="flex flex-col items-center gap-2 text-center">
+          <h2 className="text-4xl">Cómo funciona</h2>
+          <p className="max-w-xl text-base text-muted-foreground sm:text-lg">
+            De la foto a la venta, sin vueltas.
+          </p>
+        </div>
+      </InView>
+      <InView stagger className="grid grid-cols-1 gap-4 md:grid-cols-3">
         {FEATURES.map((feature) => (
-          <article
+          <Rise
+            as="article"
             key={feature.title}
             className={cn(
               "flex flex-col gap-4 rounded-2xl bg-secondary/80 p-2",
@@ -65,9 +70,9 @@ export function Features() {
               <h3 className="font-heading text-lg font-medium">{feature.title}</h3>
               <p className="text-sm leading-relaxed text-muted-foreground">{feature.detail}</p>
             </div>
-          </article>
+          </Rise>
         ))}
-      </div>
+      </InView>
     </section>
   );
 }

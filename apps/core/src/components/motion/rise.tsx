@@ -10,6 +10,7 @@ const RISE_ELEMENTS = {
   li: motion.li,
   ol: motion.ol,
   section: motion.section,
+  article: motion.article,
 } as const;
 
 type RiseProps = {
