@@ -7,6 +7,8 @@ import { visits } from "@tulocal/database/schema/visits";
 
 import { findProductPerformance, rankProductPerformance } from "@/features/metrics/products";
 import type { ProductPerformance } from "@/features/metrics/products";
+import { findMostAskedProducts } from "@/features/metrics/questions";
+import type { ProductQuestions } from "@/features/metrics/questions";
 
 const TRENDED_DAYS = 30;
 
@@ -31,6 +33,7 @@ export type StoreMetrics = {
   soldProducts: number;
   dailyVisits: DailyVisits[];
   topProducts: ProductPerformance[];
+  mostAskedProducts: ProductQuestions[];
 };
 
 async function countStoreVisits(storeId: string): Promise<number> {
@@ -79,12 +82,14 @@ function fillMissingDays(recorded: DailyVisits[]): DailyVisits[] {
 
 export async function summarizeStoreMetrics(storeId: string): Promise<StoreMetrics> {
   const since = new Date(Date.now() - (TRENDED_DAYS - 1) * MILLISECONDS_IN_A_DAY);
-  const [performance, storeVisits, pendingQuestions, recordedDays] = await Promise.all([
-    findProductPerformance(storeId),
-    countStoreVisits(storeId),
-    countPendingQuestions(storeId),
-    queryDailyVisits(storeId, since),
-  ]);
+  const [performance, storeVisits, pendingQuestions, recordedDays, mostAskedProducts] =
+    await Promise.all([
+      findProductPerformance(storeId),
+      countStoreVisits(storeId),
+      countPendingQuestions(storeId),
+      queryDailyVisits(storeId, since),
+      findMostAskedProducts(storeId),
+    ]);
 
   const dailyVisits = fillMissingDays(recordedDays);
 
@@ -92,6 +97,7 @@ export async function summarizeStoreMetrics(storeId: string): Promise<StoreMetri
     dailyVisits,
     pendingQuestions,
     storeVisits,
+    mostAskedProducts,
     recentVisits: dailyVisits.reduce((total, entry) => total + entry.total, 0),
     productVisits: performance.reduce((total, product) => total + product.views, 0),
     chats: performance.reduce((total, product) => total + product.chats, 0),
