@@ -1,4 +1,3 @@
-import { ArrowUpRight } from "lucide-react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
@@ -7,6 +6,7 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Amount } from "@/components/amount";
+import { tulocalIcons } from "@/components/icons";
 import { Develop } from "@/components/motion/develop";
 import { Reveal } from "@/components/motion/reveal";
 import { Rise } from "@/components/motion/rise";
@@ -138,7 +138,7 @@ function Celebration({ product }: ProductViewProps) {
           nativeButton={false}
         >
           Ver mi local
-          <ArrowUpRight data-icon="inline-end" />
+          <tulocalIcons.arrowUpRight data-icon="inline-end" />
         </Button>
         <Button size="xl" variant="ghost" render={<Link href="/new" />} nativeButton={false}>
           Subir otro producto

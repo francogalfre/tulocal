@@ -1,8 +1,8 @@
 "use client";
 
-import { Lock, Pencil } from "lucide-react";
 import { useState } from "react";
 
+import { tulocalIcons } from "@/components/icons";
 import { Input } from "@/components/ui/input";
 import { Slider } from "@/components/ui/slider";
 import { Amount } from "@/components/amount";
@@ -40,7 +40,7 @@ export function FloorField({ floorPriceInArs, listPriceInArs, onChange }: FloorF
     <section className="flex flex-col gap-5">
       <div className="flex flex-col gap-1">
         <span className="flex items-center gap-1.5 text-sm font-medium text-muted-foreground">
-          <Lock className="size-3.5" aria-hidden="true" />
+          <tulocalIcons.lock className="size-3.5" aria-hidden="true" />
           Precio mínimo, solo lo ves vos
         </span>
         {isEditing ? (
@@ -68,7 +68,7 @@ export function FloorField({ floorPriceInArs, listPriceInArs, onChange }: FloorF
               amountInArs={floorPriceInArs}
               className="font-heading text-4xl leading-none font-semibold text-warning"
             />
-            <Pencil
+            <tulocalIcons.pencil
               className="size-5 text-muted-foreground opacity-60 transition-opacity group-hover:opacity-100"
               aria-hidden="true"
             />

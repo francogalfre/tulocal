@@ -1,12 +1,12 @@
 "use client";
 
-import { Check } from "lucide-react";
 import { motion } from "motion/react";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 import type { ReactNode } from "react";
 
 import { Reveal } from "@/components/motion/reveal";
+import { tulocalIcons } from "@/components/icons";
 import { Spinner } from "@/components/ui/spinner";
 import { Count } from "@/components/count";
 import { CATEGORY_LABELS } from "@/features/product/category";
@@ -107,7 +107,7 @@ function StageMarker({ status }: StageMarkerProps) {
         transition={{ duration: STATE_DURATION_IN_SECONDS, ease: EASE_OUT_EXPO }}
         className="flex size-6 items-center justify-center rounded-full bg-brand-deep text-white"
       >
-        <Check className="size-3.5" />
+        <tulocalIcons.check className="size-3.5" />
       </motion.span>
     );
   }

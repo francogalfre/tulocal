@@ -1,9 +1,9 @@
-import { MapPin } from "lucide-react";
 import Image from "next/image";
 import type { ReactNode } from "react";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Count } from "@/components/count";
+import { tulocalIcons } from "@/components/icons";
 import { SocialLinks } from "@/features/store/social/links";
 import type { SocialHandles } from "@/features/store/social/networks";
 
@@ -54,7 +54,7 @@ export function StoreHeader({ store, productCount, actions }: StoreHeaderProps) 
         </p>
         {store.locationName !== null ? (
           <p className="flex items-center gap-1.5 text-sm text-muted-foreground">
-            <MapPin className="size-4" aria-hidden="true" />
+            <tulocalIcons.mapPin className="size-4" aria-hidden="true" />
             {store.locationName}
           </p>
         ) : null}

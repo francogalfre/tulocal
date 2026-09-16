@@ -1,10 +1,10 @@
 "use client";
 
-import { Star, X } from "lucide-react";
 import Image from "next/image";
 import { useEffect, useState } from "react";
 
 import { Button } from "@/components/ui/button";
+import { tulocalIcons } from "@/components/icons";
 import {
   Carousel,
   CarouselContent,
@@ -60,7 +60,7 @@ function ArrangeActions({ images, currentIndex, onArrange }: ArrangeActionsProps
         disabled={isCover}
         onClick={() => onArrange(moveImage(images, currentIndex, 0))}
       >
-        <Star data-icon="inline-start" />
+        <tulocalIcons.star data-icon="inline-start" />
         {isCover ? "Es la portada" : "Usar de portada"}
       </Button>
     </div>
@@ -108,7 +108,7 @@ function Slides({ images, startIndex, onArrange }: SlidesProps) {
           <Count count={currentIndex + 1} /> de <Count count={images.length} />
         </DialogTitle>
         <DialogClose render={<Button variant="ghost" size="icon-lg" aria-label="Cerrar" />}>
-          <X />
+          <tulocalIcons.close />
         </DialogClose>
       </div>
       <Carousel

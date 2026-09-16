@@ -1,8 +1,8 @@
 "use client";
 
-import { SlidersHorizontal } from "lucide-react";
 import { useState } from "react";
 
+import { tulocalIcons } from "@/components/icons";
 import { Button } from "@/components/ui/button";
 import {
   Drawer,
@@ -81,7 +81,7 @@ export function FilterPanel({ filters, categories, showStatus, onApply }: Filter
 
   const trigger = (
     <>
-      <SlidersHorizontal />
+      <tulocalIcons.sliders />
       {activeCount > 0 ? (
         <Count
           count={activeCount}

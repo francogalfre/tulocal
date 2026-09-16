@@ -1,6 +1,6 @@
-import { Store } from "lucide-react";
 import Link from "next/link";
 
+import { tulocalIcons } from "@/components/icons";
 import { Button } from "@/components/ui/button";
 
 type StoreLinkProps = {
@@ -16,7 +16,7 @@ export function StoreLink({ handle }: StoreLinkProps) {
       render={<Link href={`/${handle}`} />}
       nativeButton={false}
     >
-      <Store data-icon="inline-start" />
+      <tulocalIcons.store data-icon="inline-start" />
       Mi local
     </Button>
   );

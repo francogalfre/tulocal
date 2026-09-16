@@ -1,9 +1,8 @@
 "use client";
 
-import { Check, Copy, MessageCircle } from "lucide-react";
 import { useState } from "react";
 
-import { XLogo } from "@/components/brand/x";
+import { tulocalIcons } from "@/components/icons";
 import { Swap } from "@/components/motion/swap";
 import { Button } from "@/components/ui/button";
 
@@ -29,7 +28,7 @@ export function Share({ url }: ShareProps) {
     <div className="flex flex-col gap-3">
       <Button size="xl" onClick={handleCopy}>
         <Swap activeKey={isCopied ? "copied" : "copy"} data-icon="inline-start">
-          {isCopied ? <Check /> : <Copy />}
+          {isCopied ? <tulocalIcons.check /> : <tulocalIcons.copy />}
         </Swap>
         {isCopied ? "Link copiado" : "Copiar link"}
       </Button>
@@ -39,7 +38,7 @@ export function Share({ url }: ShareProps) {
         render={<a href={whatsappUrl} target="_blank" rel="noreferrer" />}
         nativeButton={false}
       >
-        <MessageCircle data-icon="inline-start" />
+        <tulocalIcons.message data-icon="inline-start" />
         Compartir por WhatsApp
       </Button>
       <Button
@@ -48,7 +47,7 @@ export function Share({ url }: ShareProps) {
         render={<a href={twitterUrl} target="_blank" rel="noreferrer" />}
         nativeButton={false}
       >
-        <XLogo data-icon="inline-start" />
+        <tulocalIcons.xLogo data-icon="inline-start" />
         Compartir en X
       </Button>
     </div>

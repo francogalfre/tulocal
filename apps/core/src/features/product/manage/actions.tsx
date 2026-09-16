@@ -1,8 +1,8 @@
 "use client";
 
-import { CircleCheck, Pencil, Trash2 } from "lucide-react";
 import Link from "next/link";
 
+import { tulocalIcons } from "@/components/icons";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -33,7 +33,7 @@ export function ProductActions({ productId, isSold }: ProductActionsProps) {
           render={<Link href={`/product/${productId}/edit`} />}
           nativeButton={false}
         >
-          <Pencil data-icon="inline-start" />
+          <tulocalIcons.pencil data-icon="inline-start" />
           Editar publicación
         </Button>
       )}
@@ -41,7 +41,7 @@ export function ProductActions({ productId, isSold }: ProductActionsProps) {
         <form action={markProductSold}>
           <input type="hidden" name="productId" value={productId} />
           <Button type="submit" size="xl" variant="outline" className="w-full">
-            <CircleCheck data-icon="inline-start" />
+            <tulocalIcons.checkCircle data-icon="inline-start" />
             Marcar como vendido
           </Button>
         </form>
@@ -50,7 +50,7 @@ export function ProductActions({ productId, isSold }: ProductActionsProps) {
         <AlertDialogTrigger
           render={<Button size="xl" variant="ghost" className="text-destructive" />}
         >
-          <Trash2 data-icon="inline-start" />
+          <tulocalIcons.trash data-icon="inline-start" />
           Eliminar
         </AlertDialogTrigger>
         <AlertDialogContent>

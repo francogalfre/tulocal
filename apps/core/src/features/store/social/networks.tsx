@@ -1,9 +1,7 @@
-import type { ComponentType, SVGProps } from "react";
+import type { ComponentType } from "react";
 
-import { FacebookLogo } from "@/components/brand/facebook";
-import { InstagramLogo } from "@/components/brand/instagram";
-import { TiktokLogo } from "@/components/brand/tiktok";
-import { XLogo } from "@/components/brand/x";
+import { tulocalIcons } from "@/components/icons";
+import type { IconProps } from "@/components/icons";
 
 export type SocialNetworkKey = "instagramHandle" | "tiktokHandle" | "facebookHandle" | "xHandle";
 
@@ -15,7 +13,7 @@ export type SocialNetwork = {
   placeholder: string;
   profileBaseUrl: string;
   logoClassName: string;
-  Logo: ComponentType<SVGProps<SVGSVGElement>>;
+  Logo: ComponentType<IconProps>;
 };
 
 export const SOCIAL_NETWORKS: SocialNetwork[] = [
@@ -25,7 +23,7 @@ export const SOCIAL_NETWORKS: SocialNetwork[] = [
     placeholder: "tu.tienda",
     profileBaseUrl: "https://instagram.com/",
     logoClassName: "text-network-instagram",
-    Logo: InstagramLogo,
+    Logo: tulocalIcons.instagram,
   },
   {
     key: "tiktokHandle",
@@ -33,7 +31,7 @@ export const SOCIAL_NETWORKS: SocialNetwork[] = [
     placeholder: "tu.tienda",
     profileBaseUrl: "https://www.tiktok.com/@",
     logoClassName: "text-network-tiktok",
-    Logo: TiktokLogo,
+    Logo: tulocalIcons.tiktok,
   },
   {
     key: "facebookHandle",
@@ -41,7 +39,7 @@ export const SOCIAL_NETWORKS: SocialNetwork[] = [
     placeholder: "tutienda",
     profileBaseUrl: "https://facebook.com/",
     logoClassName: "text-network-facebook",
-    Logo: FacebookLogo,
+    Logo: tulocalIcons.facebook,
   },
   {
     key: "xHandle",
@@ -49,7 +47,7 @@ export const SOCIAL_NETWORKS: SocialNetwork[] = [
     placeholder: "tutienda",
     profileBaseUrl: "https://x.com/",
     logoClassName: "text-network-x",
-    Logo: XLogo,
+    Logo: tulocalIcons.xLogo,
   },
 ];
 

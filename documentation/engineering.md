@@ -30,6 +30,7 @@ Bun-managed, Turborepo-orchestrated monorepo.
 | database                  | PostgreSQL (Neon), Drizzle ORM                               |
 | auth                      | Better Auth 1.7, Google sign-in only, see the authentication section |
 | ui                        | Tailwind CSS v4, shadcn/ui (Base UI, `base-nova`) installed in `apps/core/src/components/ui` |
+| icons                     | Hugeicons free (`@hugeicons/react` + `@hugeicons/core-free-icons`), every icon exposed as `tulocalIcons.<name>` from `apps/core/src/components/icons.tsx` |
 | motion                    | `motion` (`motion/react`), wrappers in `apps/core/src/components/motion`, timing in `lib/motion` |
 | ai                        | Vercel AI SDK with OpenRouter as the provider                |
 | price research            | Tavily                                                       |

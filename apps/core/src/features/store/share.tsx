@@ -1,9 +1,8 @@
 "use client";
 
-import { Check, Copy, MessageCircle, Share2 } from "lucide-react";
 import { useState } from "react";
 
-import { XLogo } from "@/components/brand/x";
+import { tulocalIcons } from "@/components/icons";
 import { Swap } from "@/components/motion/swap";
 import { QRCode } from "@/components/qr-code";
 import { Button } from "@/components/ui/button";
@@ -47,7 +46,7 @@ export function StoreShare({ url, title, isOwner }: StoreShareProps) {
       <DialogTrigger
         render={<Button variant="outline" size="icon-lg" aria-label="Compartir tienda" />}
       >
-        <Share2 />
+        <tulocalIcons.share />
       </DialogTrigger>
       <DialogContent className="gap-6 p-8 sm:max-w-md">
         <DialogHeader>
@@ -59,7 +58,7 @@ export function StoreShare({ url, title, isOwner }: StoreShareProps) {
           <div className="flex w-full flex-col gap-4">
             <Button size="lg" className="h-11" onClick={handleCopy}>
               <Swap activeKey={isCopied ? "copied" : "copy"} data-icon="inline-start">
-                {isCopied ? <Check /> : <Copy />}
+                {isCopied ? <tulocalIcons.check /> : <tulocalIcons.copy />}
               </Swap>
               {isCopied ? "Link copiado" : "Copiar link"}
             </Button>
@@ -70,7 +69,7 @@ export function StoreShare({ url, title, isOwner }: StoreShareProps) {
               render={<a href={whatsappUrl} target="_blank" rel="noreferrer" />}
               nativeButton={false}
             >
-              <MessageCircle data-icon="inline-start" />
+              <tulocalIcons.message data-icon="inline-start" />
               Compartir por WhatsApp
             </Button>
             <Button
@@ -80,7 +79,7 @@ export function StoreShare({ url, title, isOwner }: StoreShareProps) {
               render={<a href={twitterUrl} target="_blank" rel="noreferrer" />}
               nativeButton={false}
             >
-              <XLogo data-icon="inline-start" />
+              <tulocalIcons.xLogo data-icon="inline-start" />
               Compartir en X
             </Button>
           </div>

@@ -1,9 +1,9 @@
 "use client";
 
-import { Camera } from "lucide-react";
 import { useState } from "react";
 import type { ChangeEvent } from "react";
 
+import { tulocalIcons } from "@/components/icons";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 type StoreImagesFieldsProps = {
@@ -36,7 +36,7 @@ export function StoreImagesFields({ name, avatarUrl, bannerUrl }: StoreImagesFie
           <img src={bannerPreview} alt="" className="absolute inset-0 size-full object-cover" />
         ) : null}
         <span className="relative inline-flex items-center gap-2 rounded-full border border-input bg-background/90 px-4 py-2 text-sm font-medium backdrop-blur transition-colors group-hover:bg-background">
-          <Camera className="size-4" aria-hidden="true" />
+          <tulocalIcons.camera className="size-4" aria-hidden="true" />
           {bannerPreview === null ? "Agregar portada" : "Cambiar portada"}
         </span>
         <input

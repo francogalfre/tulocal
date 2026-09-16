@@ -1,9 +1,9 @@
 "use client";
 
-import { SendHorizontal } from "lucide-react";
 import { useState } from "react";
 import type { FormEvent } from "react";
 
+import { tulocalIcons } from "@/components/icons";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
@@ -45,7 +45,7 @@ export function Composer({ isReady, onSend }: ComposerProps) {
         disabled={!canSend}
         aria-label="Enviar"
       >
-        <SendHorizontal />
+        <tulocalIcons.send />
       </Button>
     </form>
   );

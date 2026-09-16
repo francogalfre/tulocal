@@ -1,9 +1,10 @@
 import { cn } from "cn";
-import { Loader2Icon } from "lucide-react";
 
-function Spinner({ className, ...props }: React.ComponentProps<"svg">) {
+import { tulocalIcons } from "@/components/icons";
+
+function Spinner({ className, ...props }: React.ComponentProps<typeof tulocalIcons.spinner>) {
   return (
-    <Loader2Icon
+    <tulocalIcons.spinner
       data-slot="spinner"
       role="status"
       aria-label="Loading"

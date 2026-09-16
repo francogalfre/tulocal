@@ -1,10 +1,10 @@
 "use client";
 
-import { Camera, ImagePlus } from "lucide-react";
 import { useActionState, useRef, useState } from "react";
 import type { ChangeEvent, DragEvent } from "react";
 
 import { Develop } from "@/components/motion/develop";
+import { tulocalIcons } from "@/components/icons";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
@@ -70,12 +70,12 @@ export function Dropzone() {
       >
         {hasPhotos ? (
           <span className="inline-flex items-center gap-2 text-sm font-medium">
-            <ImagePlus className="size-4" aria-hidden="true" />
+            <tulocalIcons.imageAdd className="size-4" aria-hidden="true" />
             Cambiar fotos
           </span>
         ) : (
           <>
-            <Camera className="size-7 text-brand-deep" aria-hidden="true" />
+            <tulocalIcons.camera className="size-7 text-brand-deep" aria-hidden="true" />
             <span className="flex flex-col gap-1">
               <span className="font-medium">Sacá o subí hasta {MAX_PHOTOS} fotos</span>
               <span className="text-sm text-muted-foreground">

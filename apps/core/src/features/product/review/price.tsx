@@ -1,8 +1,8 @@
 "use client";
 
-import { Pencil } from "lucide-react";
 import { useState } from "react";
 
+import { tulocalIcons } from "@/components/icons";
 import { Input } from "@/components/ui/input";
 import { Slider } from "@/components/ui/slider";
 import { Amount } from "@/components/amount";
@@ -60,7 +60,7 @@ export function PriceField({
               amountInArs={listPriceInArs}
               className="font-heading text-[3.25rem] leading-none font-semibold text-brand-deep"
             />
-            <Pencil
+            <tulocalIcons.pencil
               className="size-5 text-muted-foreground opacity-60 transition-opacity group-hover:opacity-100"
               aria-hidden="true"
             />
