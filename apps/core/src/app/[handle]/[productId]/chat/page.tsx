@@ -1,10 +1,9 @@
-import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 
 import { Button } from "@/components/ui/button";
-import { Amount } from "@/components/amount";
+import { tulocalIcons } from "@/components/icons";
 import { Logo } from "@/components/logo";
 import { Chat } from "@/features/chat/panel";
 import { resumeConversation } from "@/features/conversation/resume";
@@ -43,7 +42,7 @@ export default async function ChatPage({ params }: ChatPageProps) {
   const title = product.title ?? "Producto";
 
   return (
-    <main className="mx-auto flex h-dvh w-full max-w-md flex-col gap-6 px-5 pt-6 pb-6">
+    <main className="mx-auto flex h-dvh w-full max-w-2xl flex-col gap-6 px-5 pt-6 pb-6">
       <header className="flex h-9 items-center justify-between">
         <Logo />
         <Button
@@ -52,18 +51,17 @@ export default async function ChatPage({ params }: ChatPageProps) {
           render={<Link href={`/${product.store.handle}/${product.id}`} />}
           nativeButton={false}
         >
-          <ArrowLeft data-icon="inline-start" />
+          <tulocalIcons.arrowLeft data-icon="inline-start" />
           {title}
         </Button>
       </header>
-      <Amount
-        amountInArs={product.listPriceInArs ?? 0}
-        className="font-heading text-3xl font-semibold text-brand-deep"
-      />
       <Chat
         productId={product.id}
         productTitle={title}
+        listPriceInArs={product.listPriceInArs ?? 0}
         agentName={product.store.agentName}
+        agentSeed={product.store.agentSeed}
+        agentVoice={product.store.agentVoice}
         whatsappPhone={product.store.whatsappPhone}
         initialMessages={conversation.messages}
         initialClosing={conversation.closing}

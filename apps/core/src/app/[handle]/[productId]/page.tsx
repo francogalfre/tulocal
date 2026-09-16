@@ -1,4 +1,3 @@
-import { ArrowLeft, ArrowUpRight } from "lucide-react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { after } from "next/server";
@@ -7,7 +6,9 @@ import type { Metadata } from "next";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Amount } from "@/components/amount";
+import { tulocalIcons } from "@/components/icons";
 import { Logo } from "@/components/logo";
+import { InView } from "@/components/motion/inview";
 import { Launcher } from "@/features/chat/launcher";
 import { truncateForPreview } from "@/features/opengraph/truncate";
 import { Chat } from "@/features/chat/panel";
@@ -85,12 +86,14 @@ export default async function PublicProductPage({ params }: PublicProductPagePro
           render={<Link href={`/${product.store.handle}`} />}
           nativeButton={false}
         >
-          <ArrowLeft data-icon="inline-start" />
+          <tulocalIcons.arrowLeft data-icon="inline-start" />
           {product.store.name}
         </Button>
       </header>
-      <Gallery images={product.images} />
-      <div className="flex flex-col gap-3">
+      <InView>
+        <Gallery images={product.images} />
+      </InView>
+      <InView className="flex flex-col gap-3">
         <Amount
           amountInArs={product.listPriceInArs ?? 0}
           className="font-heading text-5xl font-semibold text-brand-deep"
@@ -107,12 +110,20 @@ export default async function PublicProductPage({ params }: PublicProductPagePro
           ) : null}
         </div>
         <p className="whitespace-pre-line text-muted-foreground">{product.description}</p>
-      </div>
-      <Launcher agentName={product.store.agentName} hasHistory={conversation.messages.length > 0}>
+      </InView>
+      <Launcher
+        agentName={product.store.agentName}
+        agentSeed={product.store.agentSeed}
+        agentVoice={product.store.agentVoice}
+        hasHistory={conversation.messages.length > 0}
+      >
         <Chat
           productId={product.id}
           productTitle={title}
+          listPriceInArs={product.listPriceInArs ?? 0}
           agentName={product.store.agentName}
+          agentSeed={product.store.agentSeed}
+          agentVoice={product.store.agentVoice}
           whatsappPhone={product.store.whatsappPhone}
           initialMessages={conversation.messages}
           initialClosing={conversation.closing}
@@ -126,7 +137,7 @@ export default async function PublicProductPage({ params }: PublicProductPagePro
           nativeButton={false}
         >
           Ver el chat completo
-          <ArrowUpRight data-icon="inline-end" />
+          <tulocalIcons.arrowUpRight data-icon="inline-end" />
         </Button>
       </Launcher>
     </main>

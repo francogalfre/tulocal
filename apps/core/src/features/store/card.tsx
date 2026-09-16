@@ -48,7 +48,7 @@ export function ProductCard({ product, href, showStatus, position }: ProductCard
     <motion.li
       layout="position"
       initial={{ opacity: 0, y: CARD_START_OFFSET_IN_PIXELS }}
-      animate={{
+      whileInView={{
         opacity: 1,
         y: 0,
         transition: {
@@ -57,6 +57,7 @@ export function ProductCard({ product, href, showStatus, position }: ProductCard
           delay: computeEntranceDelayInSeconds(position),
         },
       }}
+      viewport={{ once: true, amount: 0.15 }}
       exit={{
         opacity: 0,
         scale: CARD_EXIT_SCALE,

@@ -141,36 +141,6 @@
   animation: scan 2.4s ease-in-out infinite alternate;
 }
 
-@keyframes pixel-on {
-  0%,
-  100% {
-    opacity: 0.15;
-  }
-  50% {
-    opacity: 1;
-  }
-}
-
-@utility animate-pixels {
-  & > * {
-    animation: pixel-on 650ms ease-in-out infinite;
-  }
-  & > :nth-child(1),
-  & > :nth-child(5),
-  & > :nth-child(7) {
-    animation-delay: 90ms;
-  }
-  & > :nth-child(2),
-  & > :nth-child(6),
-  & > :nth-child(8) {
-    animation-delay: 180ms;
-  }
-  & > :nth-child(3),
-  & > :nth-child(9) {
-    animation-delay: 270ms;
-  }
-}
-
 @keyframes shimmer-text {
   from {
     background-position: 200% 0;

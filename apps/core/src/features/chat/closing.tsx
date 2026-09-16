@@ -1,9 +1,10 @@
 "use client";
 
-import { MessageCircle } from "lucide-react";
 import { motion } from "motion/react";
 
+import { tulocalIcons } from "@/components/icons";
 import { Button } from "@/components/ui/button";
+import { Amount } from "@/components/amount";
 import type { ConversationClosing } from "@/features/conversation/closing";
 import { trackWhatsappClick } from "@/features/metrics/track";
 import { riseVariants } from "@/lib/motion/rise";
@@ -29,20 +30,36 @@ function buildClosingMessage(input: ClosingProps): string {
 }
 
 export function Closing(props: ClosingProps) {
+  const { agreedPriceInArs } = props.closing;
+
   return (
     <motion.div
       variants={riseVariants}
       initial="hidden"
       animate="visible"
       exit="exit"
-      className="flex flex-col gap-2 rounded-2xl border border-border p-4"
+      className="flex flex-col gap-4 rounded-2xl bg-secondary p-4"
     >
-      <p className="font-heading text-lg font-semibold">Ya le avisamos al dueño</p>
-      <p className="text-sm text-muted-foreground">
-        Cerrá directo con él por WhatsApp. Ningún pago pasa por tulocal.
-      </p>
+      <div className="flex items-end justify-between gap-4">
+        <div className="flex flex-col gap-0.5">
+          <p className="font-heading text-lg font-semibold">Ya le avisé al dueño</p>
+          <p className="text-[13px] text-muted-foreground">
+            Coordiná el pago y la entrega directo con él. Ningún pago pasa por tulocal.
+          </p>
+        </div>
+        {agreedPriceInArs !== null ? (
+          <div className="flex shrink-0 flex-col items-end">
+            <span className="text-xs font-medium text-muted-foreground">Acordado</span>
+            <Amount
+              amountInArs={agreedPriceInArs}
+              className="font-heading text-2xl font-semibold text-brand-deep"
+            />
+          </div>
+        ) : null}
+      </div>
       <Button
         size="xl"
+        className="w-full"
         onClick={() => {
           void trackWhatsappClick(props.productId);
         }}
@@ -58,8 +75,8 @@ export function Closing(props: ClosingProps) {
         }
         nativeButton={false}
       >
-        <MessageCircle data-icon="inline-start" />
-        Cerrar con el dueño por WhatsApp
+        <tulocalIcons.whatsapp data-icon="inline-start" />
+        Escribirle por WhatsApp
       </Button>
     </motion.div>
   );
