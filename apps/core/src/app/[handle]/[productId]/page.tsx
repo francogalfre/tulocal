@@ -1,26 +1,20 @@
-import { ArrowLeft, MessageCircle } from "lucide-react";
+import { ArrowLeft, ArrowUpRight } from "lucide-react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Amount } from "@/components/amount";
 import { Logo } from "@/components/logo";
-import { Gallery } from "@/features/product/gallery";
+import { Launcher } from "@/features/chat/launcher";
+import { Chat } from "@/features/chat/panel";
+import { resumeConversation } from "@/features/conversation/resume";
+import { CATEGORY_LABELS } from "@/features/product/category";
+import { CONDITION_LABELS } from "@/features/product/condition";
+import { Gallery } from "@/features/product/gallery/grid";
 import { findPublicProduct } from "@/features/product/public";
-import { formatArs } from "@/lib/money";
 
 type PublicProductPageProps = PageProps<"/[handle]/[productId]">;
-
-const CONDITION_LABELS = {
-  new: "Nuevo",
-  used: "Usado",
-};
-
-function buildWhatsappUrl(phone: string, title: string): string {
-  const message = `Hola, vi "${title}" en tu tienda de tulocal y me interesa.`;
-
-  return `https://wa.me/${phone.replace("+", "")}?text=${encodeURIComponent(message)}`;
-}
 
 export default async function PublicProductPage({ params }: PublicProductPageProps) {
   const { handle, productId } = await params;
@@ -31,6 +25,7 @@ export default async function PublicProductPage({ params }: PublicProductPagePro
   }
 
   const title = product.title ?? "Producto";
+  const conversation = await resumeConversation(product.id);
 
   return (
     <main className="mx-auto flex w-full max-w-2xl flex-1 flex-col gap-8 px-5 pt-6 pb-16">
@@ -48,31 +43,44 @@ export default async function PublicProductPage({ params }: PublicProductPagePro
       </header>
       <Gallery images={product.images} />
       <div className="flex flex-col gap-3">
-        <p className="numeric font-heading text-5xl font-semibold text-brand-deep">
-          {formatArs(product.listPriceInArs ?? 0)}
-        </p>
+        <Amount
+          amountInArs={product.listPriceInArs ?? 0}
+          className="font-heading text-5xl font-semibold text-brand-deep"
+        />
         <h1 className="text-2xl">{title}</h1>
-        {product.condition !== null ? (
-          <Badge variant="outline">{CONDITION_LABELS[product.condition]}</Badge>
-        ) : null}
+        <div className="flex items-center gap-3">
+          {product.condition !== null ? (
+            <Badge variant="outline">{CONDITION_LABELS[product.condition]}</Badge>
+          ) : null}
+          {product.category !== null ? (
+            <span className="text-sm text-muted-foreground">
+              {CATEGORY_LABELS[product.category]}
+            </span>
+          ) : null}
+        </div>
         <p className="whitespace-pre-line text-muted-foreground">{product.description}</p>
       </div>
-      {product.store.whatsappPhone !== null ? (
+      <Launcher agentName={product.store.agentName} hasHistory={conversation.messages.length > 0}>
+        <Chat
+          productId={product.id}
+          productTitle={title}
+          agentName={product.store.agentName}
+          whatsappPhone={product.store.whatsappPhone}
+          initialMessages={conversation.messages}
+          initialClosing={conversation.closing}
+          isFullHeight
+        />
         <Button
-          size="xl"
-          render={
-            <a
-              href={buildWhatsappUrl(product.store.whatsappPhone, title)}
-              target="_blank"
-              rel="noreferrer"
-            />
-          }
+          variant="ghost"
+          size="sm"
+          className="mt-3 self-start"
+          render={<Link href={`/${product.store.handle}/${product.id}/chat`} />}
           nativeButton={false}
         >
-          <MessageCircle data-icon="inline-start" />
-          Hablar con el dueño
+          Ver el chat completo
+          <ArrowUpRight data-icon="inline-end" />
         </Button>
-      ) : null}
+      </Launcher>
     </main>
   );
 }

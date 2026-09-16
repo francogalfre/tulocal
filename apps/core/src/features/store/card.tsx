@@ -2,8 +2,9 @@ import Image from "next/image";
 import Link from "next/link";
 
 import { Badge } from "@/components/ui/badge";
+import { Amount } from "@/components/amount";
+import { CONDITION_LABELS } from "@/features/product/condition";
 import type { CatalogProduct } from "@/features/store/catalog";
-import { formatArs } from "@/lib/money";
 
 const STATUS_LABELS = {
   processing: { label: "Procesando", variant: "secondary" },
@@ -12,11 +13,6 @@ const STATUS_LABELS = {
   published: { label: "Publicado", variant: "default" },
   sold: { label: "Vendido", variant: "outline" },
 } as const;
-
-const CONDITION_LABELS = {
-  new: "Nuevo",
-  used: "Usado",
-};
 
 type ProductCardProps = {
   product: CatalogProduct;
@@ -44,9 +40,10 @@ export function ProductCard({ product, href, showStatus }: ProductCardProps) {
             />
           ) : null}
           {product.listPriceInArs !== null ? (
-            <span className="numeric absolute top-3 left-3 rounded-lg border border-border bg-background px-2.5 py-1 font-heading text-sm font-semibold">
-              {formatArs(product.listPriceInArs)}
-            </span>
+            <Amount
+              amountInArs={product.listPriceInArs}
+              className="absolute top-3 left-3 rounded-lg border border-border bg-background px-2.5 py-1 font-heading text-sm font-semibold"
+            />
           ) : null}
         </div>
         <div className="flex flex-col gap-1.5 px-1">

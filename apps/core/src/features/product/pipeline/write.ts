@@ -1,6 +1,8 @@
 import { generateText, Output } from "ai";
 import { z } from "zod";
 
+import { CATEGORY_LABELS } from "@/features/product/category";
+import { CONDITION_LABELS } from "@/features/product/condition";
 import { fastModel } from "@/features/product/pipeline/models";
 import type { Identification } from "@/features/product/pipeline/identify";
 
@@ -26,10 +28,10 @@ function buildWritingPrompt(identification: Identification): string {
 Language: Rioplatense Spanish with voseo. Short sentences, no exclamation marks, no marketing hype, no empty adjectives. Do not use em dashes.
 
 Only use these facts. Do not add anything that is not here.
-- Category: ${identification.category}
+- Category: ${CATEGORY_LABELS[identification.category]}
 - Brand: ${identification.brand ?? "not visible"}
 - Model: ${identification.model ?? "not visible"}
-- Condition: ${identification.condition === "new" ? "nuevo" : "usado"}
+- Condition: ${CONDITION_LABELS[identification.condition]}
 - Visible defects: ${notes}
 - Attributes: ${identification.attributes.join("; ")}
 

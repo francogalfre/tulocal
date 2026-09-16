@@ -5,23 +5,24 @@ import { notFound } from "next/navigation";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Amount } from "@/components/amount";
 import { Screen } from "@/components/screen";
+import { EscalationList } from "@/features/escalation/list";
 import { findOwnedProduct } from "@/features/product/find";
-import { Gallery } from "@/features/product/gallery";
+import { Gallery } from "@/features/product/gallery/grid";
 import { ProductActions } from "@/features/product/manage/actions";
+import { Preview } from "@/features/product/progress/preview";
 import { Stages } from "@/features/product/progress/stages";
 import { Qr } from "@/features/product/published/qr";
 import { Share } from "@/features/product/published/share";
 import { retryPipeline } from "@/features/product/retry";
 import { Comparables } from "@/features/product/review/comparables";
 import { ReviewForm } from "@/features/product/review/form";
+import { Inbox } from "@/features/question/inbox";
 import { StoreLink } from "@/features/store/link";
 import type { OwnedProduct } from "@/features/product/find";
-import { formatArs } from "@/lib/money";
 import { requireCurrentSession } from "@/lib/session";
 import { buildStoreUrl } from "@/lib/url";
-
-const GENERATED_IMAGE_COUNT = 3;
 
 type ProductPageProps = PageProps<"/product/[id]">;
 
@@ -30,17 +31,17 @@ type ProductViewProps = {
 };
 
 function Processing({ product }: ProductViewProps) {
-  const pendingSlots = product.pipelineStage === "identifying" ? 0 : GENERATED_IMAGE_COUNT;
-
   return (
     <>
-      <Gallery images={product.images} pendingSlots={pendingSlots} />
-      <div className="flex flex-col gap-5">
+      <Preview images={product.images} isIdentifying={product.pipelineStage === "identifying"} />
+      <div className="flex flex-col gap-6">
         <div className="flex flex-col gap-2">
           <h1 className="text-3xl">Armando la publicación</h1>
-          <p className="text-muted-foreground">Tarda menos de un minuto. Podés quedarte acá.</p>
+          <p className="text-muted-foreground">
+            Tarda menos de un minuto. Si te vas, seguimos igual y lo encontrás en tu tienda.
+          </p>
         </div>
-        <Stages currentStage={product.pipelineStage} />
+        <Stages product={product} />
       </div>
     </>
   );
@@ -79,7 +80,10 @@ function Review({ product }: ProductViewProps) {
           Todo lo que ves lo podés cambiar. Nada se publica sin tu ok.
         </p>
       </div>
-      <Gallery images={product.images} />
+      <Gallery images={product.images} ownerProductId={product.id} />
+      <p className="-mt-6 text-sm text-muted-foreground">
+        Tocá una foto para verla grande, elegir la portada o cambiar el orden.
+      </p>
       <ReviewForm product={product} mode="publish" />
       <Comparables comparables={product.comparables} />
     </>
@@ -126,25 +130,29 @@ function Managed({ product }: ProductViewProps) {
 
   return (
     <>
-      <Gallery images={product.images} />
+      <Gallery images={product.images} ownerProductId={product.id} />
       <div className="flex flex-col gap-3">
         <Badge variant={isSold ? "outline" : "default"}>{isSold ? "Vendido" : "Publicado"}</Badge>
-        <p className="numeric font-heading text-5xl font-semibold text-brand-deep">
-          {formatArs(product.listPriceInArs ?? 0)}
-        </p>
-        <h1 className="text-2xl">{product.title}</h1>
-        <p className="whitespace-pre-line text-muted-foreground">{product.description}</p>
+        <Amount
+          amountInArs={product.listPriceInArs ?? 0}
+          className="font-heading text-5xl font-semibold text-brand-deep"
+        />
         {product.floorPriceInArs !== null ? (
-          <p className="text-sm text-muted-foreground">
-            Mínimo secreto:{" "}
-            <span className="numeric font-medium text-foreground">
-              {formatArs(product.floorPriceInArs)}
-            </span>
+          <p className="flex items-baseline gap-2">
+            <span className="text-sm text-muted-foreground">Mínimo, solo lo ves vos</span>
+            <Amount
+              amountInArs={product.floorPriceInArs}
+              className="font-heading text-2xl font-semibold text-warning"
+            />
           </p>
         ) : null}
+        <h1 className="text-2xl">{product.title}</h1>
+        <p className="whitespace-pre-line text-muted-foreground">{product.description}</p>
       </div>
       <ProductActions productId={product.id} isSold={isSold} />
       {isSold ? null : <Share url={productUrl} />}
+      <Inbox productId={product.id} questions={product.questions} />
+      <EscalationList escalations={product.escalations} />
     </>
   );
 }

@@ -76,6 +76,7 @@ Workspace package names are short technical nouns (`database`, `storage`, `authe
 ## Database
 
 - Schema lives in `packages/database/src/schema`, one file per domain concept (`stores.ts`, `products.ts`, `conversations.ts`, `questions.ts`, `escalations.ts`).
+- Product category (`product_category`, a fixed taxonomy) and condition (`product_condition`: `new`, `like_new`, `good`, `worn`) are Postgres enums. The Drizzle enum is the only owner of each value list: server code builds zod enums from `productCategory.enumValues` / `productCondition.enumValues`, and the Spanish labels live in `apps/core/src/features/product/category.ts` and `condition.ts` as a `Record` keyed by the enum type, so a missing or extra label fails to compile. Client components only `import type` from the schema.
 - The driver is `@neondatabase/serverless` over HTTP (`drizzle-orm/neon-http`): no connection pool to warm up, one fetch per query, the fastest option on Vercel Functions. It does not support interactive transactions (`database.transaction`); use `database.batch` for multi-statement atomic writes. Switch to `drizzle-orm/neon-serverless` (WebSocket pool) only if a feature genuinely needs an interactive transaction.
 - `@tulocal/database/client` exports `database`, created once at module load from `databaseEnvironment.DATABASE_URL`, and the `Database` type for passing it around. Use the pooled Neon endpoint (`-pooler` host) in `DATABASE_URL`.
 - Run `database:generate` after editing a schema and commit the generated migration. `database:migrate` applies pending migrations, `database:push` syncs the schema without a migration file (local experiments only), `database:studio` opens Drizzle Studio. All four run from the repo root; drizzle-kit does not load `.env` on its own, so the package scripts pass `apps/core/.env` through `bun --env-file`. `apps/core/.env` is a symlink to the root `.env`.
@@ -116,8 +117,8 @@ The single app reads every variable: `DATABASE_URL`, `REDIS_URL`, `BLOB_READ_WRI
 Decided during planning on 2026-09-15. Do not re-open them; extend what exists.
 
 - **AI provider is OpenRouter** through `@openrouter/ai-sdk-provider`, on the Vercel AI SDK. Not Vercel AI Gateway. Model identifiers live in `apps/core/src/features/product/pipeline/models.ts`; image output needs `extraBody.modalities`.
-- **Price research uses Tavily**, not Perplexity or Gemini grounding.
-- **The listing pipeline runs inside `after()`** of the `createProduct` Server Action (`features/product/pipeline/run.ts`), one stage after another, and the product page refreshes every 2 seconds until the status leaves `processing`. No Vercel Workflow, no queues.
+- **Price research uses Tavily**, not Perplexity or Gemini grounding. Tavily is called with `search_depth: "advanced"`: basic mode returns Mercado Libre blog posts and store pages without prices, advanced snippets carry listing titles and prices. Raw content and the extract endpoint do not work for Mercado Libre, so the snippet is the only source. Comparable URLs always come from the Tavily results (the extraction model returns a result index, never a URL).
+- **The listing pipeline runs inside `after()`** of the `createProduct` Server Action (`features/product/pipeline/run.ts`): identification first, then images, copy and price research in parallel, and the product page refreshes every 2 seconds until the status leaves `processing`. No Vercel Workflow, no queues.
 - **Uploads go through the `createProduct` Server Action**, which receives the photos as `FormData` and calls `uploadBlob` from `@tulocal/storage/blob` server-side.
 - **Generated product images must never fake the product.** Backgrounds and framing change; the item does not.
 

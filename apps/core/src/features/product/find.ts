@@ -1,8 +1,10 @@
-import { asc, eq } from "drizzle-orm";
+import { asc, desc, eq } from "drizzle-orm";
 
 import { database } from "@tulocal/database/client";
+import { escalations } from "@tulocal/database/schema/escalations";
 import { images } from "@tulocal/database/schema/images";
 import { products } from "@tulocal/database/schema/products";
+import { questions } from "@tulocal/database/schema/questions";
 
 export type OwnedProduct = NonNullable<Awaited<ReturnType<typeof queryProduct>>>;
 
@@ -13,6 +15,8 @@ async function queryProduct(productId: string) {
       store: true,
       images: { orderBy: [asc(images.sortOrder)] },
       comparables: true,
+      questions: { orderBy: [desc(questions.createdAt)] },
+      escalations: { orderBy: [desc(escalations.createdAt)] },
     },
   });
 }

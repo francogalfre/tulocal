@@ -1,6 +1,6 @@
 import { Badge } from "@/components/ui/badge";
+import { Amount } from "@/components/amount";
 import type { OwnedProduct } from "@/features/product/find";
-import { formatArs } from "@/lib/money";
 
 const SOURCE_LABELS = {
   mercadolibre: "Mercado Libre",
@@ -38,9 +38,10 @@ export function Comparables({ comparables }: ComparablesProps) {
                 </span>
                 <Badge variant="outline">{SOURCE_LABELS[comparable.source]}</Badge>
               </span>
-              <span className="numeric shrink-0 font-heading font-semibold">
-                {formatArs(comparable.priceInArs)}
-              </span>
+              <Amount
+                amountInArs={comparable.priceInArs}
+                className="shrink-0 font-heading font-semibold"
+              />
             </a>
           </li>
         ))}

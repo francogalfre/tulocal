@@ -131,12 +131,12 @@ export default async function StorePage({ params, searchParams }: StorePageProps
           isOwner ? (
             <Button
               variant="outline"
-              size="lg"
+              size="icon-lg"
+              aria-label="Editar tienda"
               render={<Link href="/store/edit" />}
               nativeButton={false}
             >
-              <Settings2 data-icon="inline-start" />
-              Editar tienda
+              <Settings2 />
             </Button>
           ) : undefined
         }

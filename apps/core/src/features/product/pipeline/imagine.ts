@@ -29,7 +29,7 @@ const SHOTS: Shot[] = [
   {
     kind: "contextual",
     describeScene: (identification) =>
-      `Place the product in a real, lived-in place where a ${identification.category} is normally found or used in an Argentine home or street. Late afternoon window light or open shade, realistic cast shadows that match the light direction, the product resting naturally on a real surface. Shallow depth of field, background softly out of focus, nothing touching or overlapping the product. The scene complements the product's ${identification.dominantColor} color and looks like a candid photo, not a render.`,
+      `Place the product in a real, lived-in place where a ${identification.genericQuery} is normally found or used in an Argentine home or street. Late afternoon window light or open shade, realistic cast shadows that match the light direction, the product resting naturally on a real surface. Shallow depth of field, background softly out of focus, nothing touching or overlapping the product. The scene complements the product's ${identification.dominantColor} color and looks like a candid photo, not a render.`,
   },
   {
     kind: "contextual",

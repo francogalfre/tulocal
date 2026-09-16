@@ -20,11 +20,7 @@ import { logEvent } from "@/lib/logger";
 
 const ORIGINAL_IMAGE_KIND = "original";
 
-const EMPTY_RESEARCH: Research = {
-  comparables: [],
-  minimumPriceInArs: null,
-  maximumPriceInArs: null,
-};
+const EMPTY_RESEARCH: Research = { comparables: [] };
 
 function describeError(error: unknown): string {
   if (error instanceof Error) {
@@ -98,6 +94,10 @@ async function researchSafely(
     return await researchComparables({
       searchQuery: identification.searchQuery,
       genericQuery: identification.genericQuery,
+      category: identification.category,
+      brand: identification.brand,
+      model: identification.model,
+      attributes: identification.attributes,
       condition: identification.condition,
     });
   } catch (error) {
@@ -124,16 +124,15 @@ async function storeResearch(
   }
 
   const suggestion = suggestPrices({
-    minimumPriceInArs: research.minimumPriceInArs,
-    maximumPriceInArs: research.maximumPriceInArs,
+    pricesInArs: research.comparables.map((comparable) => comparable.priceInArs),
     condition: identification.condition,
   });
 
   await database
     .update(products)
     .set({
-      suggestedMinimumPriceInArs: research.minimumPriceInArs,
-      suggestedMaximumPriceInArs: research.maximumPriceInArs,
+      suggestedMinimumPriceInArs: suggestion?.minimumPriceInArs ?? null,
+      suggestedMaximumPriceInArs: suggestion?.maximumPriceInArs ?? null,
       listPriceInArs: suggestion?.listPriceInArs ?? null,
       floorPriceInArs: suggestion?.floorPriceInArs ?? null,
     })
@@ -182,7 +181,9 @@ async function runStages(productId: string): Promise<void> {
   await database
     .update(products)
     .set({
-      category: identification.category.trim().toLowerCase(),
+      category: identification.category,
+      brand: identification.brand,
+      model: identification.model,
       condition: identification.condition,
       conditionNotes: identification.conditionNotes.join(". "),
       attributes: identification.attributes,

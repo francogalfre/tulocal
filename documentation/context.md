@@ -50,12 +50,12 @@ Both use the exact same flow: photo in, listing out, agent handles the buyer con
 ## Product-creation pipeline
 
 1. Seller uploads 1 to 3 photos from their phone.
-2. AI identifies the item, its condition, and visible details or flaws.
+2. AI identifies the item: category from a fixed taxonomy, condition on four levels (nuevo, como nuevo, buen estado, con detalles), brand and model when visible, and visible details or flaws.
 3. AI generates enhanced images: one primary shot on a clean white background, and one or two contextual shots with a background that complements the product's color. Generated images must never depict a different product than the one photographed.
 4. AI generates a title and a description.
 5. AI searches for comparable listings (Mercado Libre, Facebook Marketplace) and surfaces 3 or 4 comparables with real prices.
 6. AI proposes a price range, exposed as a price-versus-sale-speed slider (sell fast and cheap, or wait and ask for more).
-7. Seller accepts or edits everything. Nothing is final until reviewed.
+7. Seller accepts or edits everything, including category, condition, brand and model. Nothing is final until reviewed.
 8. Seller sets the floor price and adds agent context.
 
 How this pipeline is implemented (providers, synchronous mode, image upload) lives in [engineering.md](./engineering.md).

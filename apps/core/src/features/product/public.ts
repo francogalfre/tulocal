@@ -13,6 +13,7 @@ async function queryPublicProduct(productId: string) {
       id: true,
       title: true,
       description: true,
+      category: true,
       condition: true,
       conditionNotes: true,
       listPriceInArs: true,

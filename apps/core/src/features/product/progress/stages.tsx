@@ -3,27 +3,121 @@
 import { Check } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
+import type { ReactNode } from "react";
 
 import { Spinner } from "@/components/ui/spinner";
+import { Count } from "@/components/count";
+import { CATEGORY_LABELS } from "@/features/product/category";
+import { CONDITION_LABELS } from "@/features/product/condition";
+import { useElapsedSeconds } from "@/features/product/progress/elapsed";
 import { cn } from "@/lib/utils";
 import type { OwnedProduct } from "@/features/product/find";
 
 const REFRESH_INTERVAL_IN_MILLISECONDS = 2000;
 
-const STAGES = [
-  { key: "identifying", label: "Identificando el producto" },
-  { key: "imaging", label: "Mejorando las fotos" },
-  { key: "writing", label: "Escribiendo título y descripción" },
-  { key: "researching", label: "Buscando precios parecidos" },
-] as const;
+const PROGRESS_WIDTHS = ["w-0", "w-1/4", "w-2/4", "w-3/4", "w-full"] as const;
 
-type StagesProps = {
-  currentStage: OwnedProduct["pipelineStage"];
+type StageStatus = "pending" | "running" | "done";
+
+type Stage = {
+  key: string;
+  label: string;
+  hint: string;
+  status: StageStatus;
+  summary: ReactNode;
 };
 
-export function Stages({ currentStage }: StagesProps) {
+type StageMarkerProps = {
+  status: StageStatus;
+};
+
+type StagesProps = {
+  product: OwnedProduct;
+};
+
+function describeIdentification(product: OwnedProduct): string | null {
+  const parts = [
+    product.category === null ? null : CATEGORY_LABELS[product.category],
+    product.brand,
+    product.condition === null ? null : CONDITION_LABELS[product.condition],
+  ].filter((part) => part !== null);
+
+  return parts.length === 0 ? null : parts.join(" · ");
+}
+
+function resolveParallelStatus(product: OwnedProduct, isDone: boolean): StageStatus {
+  if (product.pipelineStage === "identifying") {
+    return "pending";
+  }
+
+  return isDone ? "done" : "running";
+}
+
+function describeStages(product: OwnedProduct): Stage[] {
+  const generatedCount = product.images.filter((image) => image.kind !== "original").length;
+
+  return [
+    {
+      key: "identifying",
+      label: "Identificando el producto",
+      hint: "Marca, modelo, categoría y estado",
+      status: product.pipelineStage === "identifying" ? "running" : "done",
+      summary: describeIdentification(product),
+    },
+    {
+      key: "imaging",
+      label: "Mejorando las fotos",
+      hint: "Fondo blanco, en contexto y editorial",
+      status: resolveParallelStatus(product, generatedCount > 0),
+      summary:
+        generatedCount === 0 ? null : (
+          <>
+            <Count count={generatedCount} /> fotos nuevas
+          </>
+        ),
+    },
+    {
+      key: "writing",
+      label: "Escribiendo título y descripción",
+      hint: "En castellano, corto y sin chamuyo",
+      status: resolveParallelStatus(product, product.title !== null),
+      summary: product.title,
+    },
+    {
+      key: "researching",
+      label: "Buscando precios parecidos",
+      hint: "Mercado Libre y Facebook Marketplace",
+      status: resolveParallelStatus(product, product.pipelineStage === "completed"),
+      summary: null,
+    },
+  ];
+}
+
+function StageMarker({ status }: StageMarkerProps) {
+  if (status === "done") {
+    return (
+      <span className="flex size-6 items-center justify-center rounded-full bg-brand-deep text-white motion-safe:animate-in motion-safe:zoom-in-50 motion-safe:duration-300">
+        <Check className="size-3.5" />
+      </span>
+    );
+  }
+
+  if (status === "running") {
+    return (
+      <span className="flex size-6 items-center justify-center rounded-full border border-brand-deep">
+        <Spinner className="size-3.5 text-brand-deep" />
+      </span>
+    );
+  }
+
+  return <span className="size-6 rounded-full border border-border" />;
+}
+
+export function Stages({ product }: StagesProps) {
   const router = useRouter();
-  const currentIndex = STAGES.findIndex((stage) => stage.key === currentStage);
+  const stages = describeStages(product);
+  const doneCount = stages.filter((stage) => stage.status === "done").length;
+  const elapsedSeconds = useElapsedSeconds(product.createdAt);
 
   useEffect(() => {
     const interval = setInterval(() => router.refresh(), REFRESH_INTERVAL_IN_MILLISECONDS);
@@ -32,29 +126,62 @@ export function Stages({ currentStage }: StagesProps) {
   }, [router]);
 
   return (
-    <ol className="flex flex-col gap-3">
-      {STAGES.map((stage, index) => {
-        const isDone = currentStage === "completed" || index < currentIndex;
-        const isCurrent = !isDone && index >= currentIndex;
-
-        return (
-          <li
-            key={stage.key}
+    <div className="flex flex-col gap-6">
+      <div className="flex flex-col gap-3">
+        <div className="flex items-center justify-between text-sm text-muted-foreground">
+          <span>
+            <Count count={doneCount} /> de <Count count={stages.length} /> listos
+          </span>
+          <span>
+            <Count count={elapsedSeconds} /> s
+          </span>
+        </div>
+        <div className="h-1 w-full overflow-hidden rounded-full bg-secondary">
+          <div
             className={cn(
-              "flex items-center gap-3 transition-colors duration-300",
-              isDone || isCurrent ? "text-foreground" : "text-muted-foreground",
+              "h-full rounded-full bg-brand-deep transition-[width] duration-700 ease-out",
+              PROGRESS_WIDTHS[doneCount],
             )}
-          >
-            <span className="flex size-5 items-center justify-center">
-              {isDone ? (
-                <Check className="size-4 text-brand-deep motion-safe:animate-in motion-safe:zoom-in-50 motion-safe:duration-300" />
+          />
+        </div>
+      </div>
+      <ol className="flex flex-col">
+        {stages.map((stage, index) => (
+          <li key={stage.key} className="flex gap-4">
+            <div className="flex flex-col items-center">
+              <StageMarker status={stage.status} />
+              {index < stages.length - 1 ? (
+                <span
+                  className={cn(
+                    "my-1 w-px flex-1 transition-colors duration-500",
+                    stage.status === "done" ? "bg-brand-deep" : "bg-border",
+                  )}
+                />
               ) : null}
-              {isCurrent ? <Spinner className="text-brand-deep" /> : null}
-            </span>
-            {stage.label}
+            </div>
+            <div
+              className={cn("flex min-w-0 flex-col gap-0.5", index < stages.length - 1 && "pb-6")}
+            >
+              <span
+                className={cn(
+                  "font-medium transition-colors duration-300",
+                  stage.status === "pending" ? "text-muted-foreground" : "text-foreground",
+                )}
+              >
+                {stage.label}
+              </span>
+              {stage.status === "running" ? (
+                <span className="text-sm text-muted-foreground">{stage.hint}</span>
+              ) : null}
+              {stage.status === "done" && stage.summary !== null ? (
+                <span className="truncate text-sm text-muted-foreground motion-safe:animate-in motion-safe:fade-in motion-safe:duration-500">
+                  {stage.summary}
+                </span>
+              ) : null}
+            </div>
           </li>
-        );
-      })}
-    </ol>
+        ))}
+      </ol>
+    </div>
   );
 }

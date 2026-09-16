@@ -3,7 +3,36 @@ import { index, integer, pgEnum, pgTable, text, timestamp, uuid } from "drizzle-
 import { baseColumns } from "@tulocal/database/schema/columns";
 import { stores } from "@tulocal/database/schema/stores";
 
-export const productCondition = pgEnum("product_condition", ["new", "used"]);
+export const productCategory = pgEnum("product_category", [
+  "celulares",
+  "computacion",
+  "audio",
+  "tv_video",
+  "fotografia",
+  "videojuegos",
+  "electrodomesticos",
+  "cocina",
+  "muebles",
+  "decoracion",
+  "iluminacion",
+  "jardin",
+  "herramientas",
+  "deportes",
+  "bicicletas",
+  "ropa",
+  "calzado",
+  "accesorios",
+  "belleza",
+  "bebes",
+  "juguetes",
+  "libros",
+  "instrumentos",
+  "vehiculos",
+  "mascotas",
+  "otros",
+]);
+
+export const productCondition = pgEnum("product_condition", ["new", "like_new", "good", "worn"]);
 
 export const productStatus = pgEnum("product_status", [
   "processing",
@@ -30,7 +59,9 @@ export const products = pgTable(
       .references(() => stores.id, { onDelete: "cascade" }),
     title: text("title"),
     description: text("description"),
-    category: text("category"),
+    category: productCategory("category"),
+    brand: text("brand"),
+    model: text("model"),
     condition: productCondition("condition"),
     conditionNotes: text("condition_notes"),
     attributes: text("attributes").array().default([]).notNull(),

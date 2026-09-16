@@ -1,25 +1,25 @@
 "use client";
 
-import { Pencil } from "lucide-react";
 import { useActionState, useState } from "react";
 
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Field, FieldDescription, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
-import { Slider } from "@/components/ui/slider";
 import { Spinner } from "@/components/ui/spinner";
 import { Textarea } from "@/components/ui/textarea";
 import { roundToPriceStep } from "@/features/product/pipeline/pricing";
 import { publishProduct } from "@/features/product/publish";
+import { FloorField } from "@/features/product/review/floor";
+import { IdentityFields } from "@/features/product/review/identity";
+import { PriceField } from "@/features/product/review/price";
 import { updateProduct } from "@/features/product/update";
 import type { OwnedProduct } from "@/features/product/find";
 import type { PublishProductState } from "@/features/product/publish";
-import { formatArs } from "@/lib/money";
 
 const INITIAL_STATE: PublishProductState = { error: null };
 
-const SLIDER_STEPS = 100;
+const DEFAULT_FLOOR_RATIO = 0.8;
 
 const MODES = {
   publish: { action: publishProduct, idle: "Publicar", busy: "Publicando" },
@@ -31,84 +31,52 @@ type ReviewFormProps = {
   mode: keyof typeof MODES;
 };
 
-function readSliderValue(value: number | readonly number[]): number {
-  if (Array.isArray(value)) {
-    return value[0] ?? 0;
+function selectInitialFloor(product: OwnedProduct): number {
+  if (product.floorPriceInArs !== null) {
+    return product.floorPriceInArs;
   }
 
-  return Number(value);
+  if (product.listPriceInArs === null) {
+    return 0;
+  }
+
+  return roundToPriceStep(product.listPriceInArs * DEFAULT_FLOOR_RATIO);
 }
 
 export function ReviewForm({ product, mode }: ReviewFormProps) {
   const [state, submit, isPending] = useActionState(MODES[mode].action, INITIAL_STATE);
   const [listPriceInArs, setListPriceInArs] = useState(product.listPriceInArs ?? 0);
-  const minimum = product.suggestedMinimumPriceInArs;
-  const maximum = product.suggestedMaximumPriceInArs;
-  const hasRange = minimum !== null && maximum !== null && minimum < maximum;
-  const hasSuggestion = product.listPriceInArs !== null;
-  const [isEditingPrice, setIsEditingPrice] = useState(!hasSuggestion);
+  const [floorPriceInArs, setFloorPriceInArs] = useState(selectInitialFloor(product));
   const needsWhatsapp = mode === "publish" && product.store.whatsappPhone === null;
+  const canSubmit = listPriceInArs > 0 && floorPriceInArs > 0 && floorPriceInArs <= listPriceInArs;
+
+  function changeListPrice(next: number): void {
+    setListPriceInArs(next);
+
+    if (next > 0 && floorPriceInArs > next) {
+      setFloorPriceInArs(next);
+    }
+  }
 
   return (
     <form action={submit} className="flex flex-col gap-10">
       <input type="hidden" name="productId" value={product.id} />
       <input type="hidden" name="listPriceInArs" value={listPriceInArs} />
-      <section className="flex flex-col gap-5">
-        <div className="flex flex-col gap-1">
-          <span className="text-sm font-medium text-muted-foreground">Precio de venta</span>
-          {isEditingPrice ? (
-            <Input
-              id="listPriceInput"
-              type="number"
-              inputMode="numeric"
-              min={1}
-              autoFocus={hasSuggestion}
-              aria-label="Precio de venta"
-              className="numeric h-14 font-heading text-4xl font-semibold text-brand-deep"
-              value={listPriceInArs === 0 ? "" : listPriceInArs}
-              onChange={(event) => setListPriceInArs(Number(event.target.value))}
-              onBlur={() => setIsEditingPrice(listPriceInArs <= 0)}
-              required
-            />
-          ) : (
-            <button
-              type="button"
-              onClick={() => setIsEditingPrice(true)}
-              className="group flex w-fit items-center gap-3 rounded-lg text-left outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
-            >
-              <span className="numeric font-heading text-[3.25rem] leading-none font-semibold text-brand-deep">
-                {formatArs(listPriceInArs)}
-              </span>
-              <Pencil
-                className="size-5 text-muted-foreground opacity-60 transition-opacity group-hover:opacity-100"
-                aria-hidden="true"
-              />
-            </button>
-          )}
-        </div>
-        {hasRange ? (
-          <div className="flex flex-col gap-3">
-            <Slider
-              min={minimum}
-              max={maximum}
-              step={Math.max(1, Math.round((maximum - minimum) / SLIDER_STEPS))}
-              value={listPriceInArs}
-              onValueChange={(value) => setListPriceInArs(roundToPriceStep(readSliderValue(value)))}
-              aria-label="Precio de venta"
-            />
-            <div className="flex justify-between text-sm text-muted-foreground">
-              <span>Vender rápido</span>
-              <span>Pedir más</span>
-            </div>
-          </div>
-        ) : null}
-        {hasSuggestion ? null : (
-          <p className="text-sm text-muted-foreground">
-            No encontramos precios parecidos. Ponele el precio que te parezca.
-          </p>
-        )}
-      </section>
+      <input type="hidden" name="floorPriceInArs" value={floorPriceInArs} />
+      <PriceField
+        listPriceInArs={listPriceInArs}
+        suggestedMinimumPriceInArs={product.suggestedMinimumPriceInArs}
+        suggestedMaximumPriceInArs={product.suggestedMaximumPriceInArs}
+        hasSuggestion={product.listPriceInArs !== null}
+        onChange={changeListPrice}
+      />
+      <FloorField
+        floorPriceInArs={floorPriceInArs}
+        listPriceInArs={listPriceInArs}
+        onChange={setFloorPriceInArs}
+      />
       <FieldGroup className="gap-6">
+        <IdentityFields product={product} />
         <Field>
           <FieldLabel htmlFor="title">Título</FieldLabel>
           <Input
@@ -128,22 +96,6 @@ export function ReviewForm({ product, mode }: ReviewFormProps) {
             rows={7}
             required
           />
-        </Field>
-        <Field>
-          <FieldLabel htmlFor="floorPriceInArs">Precio mínimo</FieldLabel>
-          <Input
-            id="floorPriceInArs"
-            name="floorPriceInArs"
-            type="number"
-            inputMode="numeric"
-            min={1}
-            className="numeric h-11"
-            defaultValue={product.floorPriceInArs ?? ""}
-            required
-          />
-          <FieldDescription>
-            Es secreto. Tu vendedora negocia, pero nunca baja de acá.
-          </FieldDescription>
         </Field>
         {needsWhatsapp ? (
           <Field>
@@ -169,7 +121,7 @@ export function ReviewForm({ product, mode }: ReviewFormProps) {
           <AlertDescription>{state.error}</AlertDescription>
         </Alert>
       ) : null}
-      <Button type="submit" size="xl" disabled={isPending || listPriceInArs <= 0}>
+      <Button type="submit" size="xl" disabled={isPending || !canSubmit}>
         {isPending ? <Spinner data-icon="inline-start" /> : null}
         {isPending ? MODES[mode].busy : MODES[mode].idle}
       </Button>

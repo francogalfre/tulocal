@@ -119,3 +119,16 @@
   font-variant-numeric: tabular-nums;
   font-feature-settings: "tnum";
 }
+
+@keyframes scan {
+  from {
+    top: 0;
+  }
+  to {
+    top: 100%;
+  }
+}
+
+@utility animate-scan {
+  animation: scan 2.4s ease-in-out infinite alternate;
+}

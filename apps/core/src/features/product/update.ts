@@ -42,6 +42,10 @@ export async function updateProduct(
     .set({
       title: details.title,
       description: details.description,
+      category: details.category,
+      condition: details.condition,
+      brand: details.brand,
+      model: details.model,
       listPriceInArs: details.listPriceInArs,
       floorPriceInArs: details.floorPriceInArs,
     })

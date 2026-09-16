@@ -2,19 +2,24 @@ import { z } from "zod";
 
 import type { products } from "@tulocal/database/schema/products";
 
+import { CATEGORY_LABELS } from "@/features/product/category";
+import type { ProductCategory } from "@/features/product/category";
+import type { ProductCondition } from "@/features/product/condition";
+
 export type CatalogProduct = {
   id: string;
   title: string | null;
-  category: string | null;
+  category: ProductCategory | null;
   listPriceInArs: number | null;
-  condition: "new" | "used" | null;
+  condition: ProductCondition | null;
   status: typeof products.$inferSelect.status;
   coverUrl: string | null;
   createdAt: Date;
 };
 
 export type CatalogCategory = {
-  name: string;
+  name: ProductCategory;
+  label: string;
   count: number;
   coverUrl: string | null;
 };
@@ -30,7 +35,7 @@ const stringListSchema = z
 const optionalPriceSchema = z.coerce.number().int().positive().nullable().catch(null);
 
 const catalogFiltersSchema = z.object({
-  condition: z.enum(["all", "new", "used"]).catch("all"),
+  condition: z.enum(["all", "new", "like_new", "good", "worn"]).catch("all"),
   status: z.enum(["all", "published", "review", "sold"]).catch("all"),
   sort: z.enum(["newest", "cheapest", "priciest"]).catch("newest"),
   category: stringListSchema,
@@ -180,7 +185,7 @@ export function arrangeCatalog(
 }
 
 export function summarizeCategories(products: CatalogProduct[]): CatalogCategory[] {
-  const categories = new Map<string, CatalogCategory>();
+  const categories = new Map<ProductCategory, CatalogCategory>();
 
   for (const product of products) {
     if (product.category === null) {
@@ -192,6 +197,7 @@ export function summarizeCategories(products: CatalogProduct[]): CatalogCategory
     if (existing === undefined) {
       categories.set(product.category, {
         name: product.category,
+        label: CATEGORY_LABELS[product.category],
         count: 1,
         coverUrl: product.coverUrl,
       });
@@ -209,5 +215,7 @@ export function summarizeCategories(products: CatalogProduct[]): CatalogCategory
 }
 
 export function selectCoverUrl(images: { url: string; kind: string }[]): string | null {
-  return images.find((image) => image.kind === "primary")?.url ?? images[0]?.url ?? null;
+  const cover = images.find((image) => image.kind !== "original") ?? images[0];
+
+  return cover === undefined ? null : cover.url;
 }
