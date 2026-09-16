@@ -1,7 +1,7 @@
 import { generateText, Output } from "ai";
 import { z } from "zod";
 
-import { visionModel } from "@/features/product/pipeline/models";
+import { fastModel } from "@/features/product/pipeline/models";
 import type { Identification } from "@/features/product/pipeline/identify";
 
 const listingSchema = z.object({
@@ -38,7 +38,7 @@ The title has at most ${TITLE_MAX_LENGTH} characters and states what the product
 
 export async function writeListing(identification: Identification): Promise<Listing> {
   const { output } = await generateText({
-    model: visionModel,
+    model: fastModel,
     output: Output.object({ schema: listingSchema }),
     prompt: buildWritingPrompt(identification),
   });

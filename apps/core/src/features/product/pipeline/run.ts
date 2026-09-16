@@ -14,6 +14,7 @@ import { researchComparables } from "@/features/product/pipeline/research";
 import { writeListing } from "@/features/product/pipeline/write";
 import type { GeneratedImage } from "@/features/product/pipeline/imagine";
 import type { Identification } from "@/features/product/pipeline/identify";
+import type { Photo } from "@/features/product/pipeline/photos";
 import type { Research } from "@/features/product/pipeline/research";
 import { logEvent } from "@/lib/logger";
 
@@ -24,8 +25,6 @@ const EMPTY_RESEARCH: Research = {
   minimumPriceInArs: null,
   maximumPriceInArs: null,
 };
-
-type PipelineStage = typeof products.$inferInsert.pipelineStage;
 
 function describeError(error: unknown): string {
   if (error instanceof Error) {
@@ -53,10 +52,6 @@ function buildImageExtension(mediaType: string): string {
   return mediaType === "image/jpeg" ? "jpg" : (mediaType.split("/")[1] ?? "png");
 }
 
-async function setStage(productId: string, pipelineStage: PipelineStage): Promise<void> {
-  await database.update(products).set({ pipelineStage }).where(eq(products.id, productId));
-}
-
 async function clearPreviousRun(productId: string): Promise<void> {
   await database.batch([
     database
@@ -71,17 +66,28 @@ async function clearPreviousRun(productId: string): Promise<void> {
 }
 
 async function storeGeneratedImages(productId: string, generated: GeneratedImage[]): Promise<void> {
-  for (const [sortOrder, image] of generated.entries()) {
-    const stored = await uploadBlob({
-      pathname: `products/${productId}/${image.kind}.${buildImageExtension(image.mediaType)}`,
-      body: new Blob([image.bytes.slice()], { type: image.mediaType }),
-      contentType: image.mediaType,
-    });
+  const stored = await Promise.all(
+    generated.map((image) =>
+      uploadBlob({
+        pathname: `products/${productId}/${image.kind}.${buildImageExtension(image.mediaType)}`,
+        body: new Blob([image.bytes.slice()], { type: image.mediaType }),
+        contentType: image.mediaType,
+      }),
+    ),
+  );
 
-    await database
-      .insert(images)
-      .values({ productId, url: stored.url, kind: image.kind, sortOrder });
+  if (stored.length === 0) {
+    return;
   }
+
+  await database.insert(images).values(
+    stored.map((blob, sortOrder) => ({
+      productId,
+      url: blob.url,
+      kind: generated[sortOrder]?.kind ?? "contextual",
+      sortOrder,
+    })),
+  );
 }
 
 async function researchSafely(
@@ -91,6 +97,7 @@ async function researchSafely(
   try {
     return await researchComparables({
       searchQuery: identification.searchQuery,
+      genericQuery: identification.genericQuery,
       condition: identification.condition,
     });
   } catch (error) {
@@ -129,10 +136,34 @@ async function storeResearch(
       suggestedMaximumPriceInArs: research.maximumPriceInArs,
       listPriceInArs: suggestion?.listPriceInArs ?? null,
       floorPriceInArs: suggestion?.floorPriceInArs ?? null,
-      status: "review",
-      pipelineStage: "completed",
     })
     .where(eq(products.id, productId));
+}
+
+async function produceImages(
+  productId: string,
+  photos: Photo[],
+  identification: Identification,
+): Promise<void> {
+  const source = selectSourcePhoto(photos, identification.bestPhotoIndex);
+  const generated = await generateProductImages({ source, identification });
+
+  await storeGeneratedImages(productId, generated);
+}
+
+async function produceListing(productId: string, identification: Identification): Promise<void> {
+  const listing = await writeListing(identification);
+
+  await database
+    .update(products)
+    .set({ title: listing.title, description: listing.description })
+    .where(eq(products.id, productId));
+}
+
+async function produceResearch(productId: string, identification: Identification): Promise<void> {
+  const research = await researchSafely(identification, productId);
+
+  await storeResearch(productId, identification, research);
 }
 
 async function runStages(productId: string): Promise<void> {
@@ -157,23 +188,15 @@ async function runStages(productId: string): Promise<void> {
       pipelineStage: "imaging",
     })
     .where(eq(products.id, productId));
-
-  const source = selectSourcePhoto(photos, identification.bestPhotoIndex);
-  const generated = await generateProductImages({ source, identification });
-
-  await storeGeneratedImages(productId, generated);
-  await setStage(productId, "writing");
-
-  const listing = await writeListing(identification);
-
+  await Promise.all([
+    produceImages(productId, photos, identification),
+    produceListing(productId, identification),
+    produceResearch(productId, identification),
+  ]);
   await database
     .update(products)
-    .set({ title: listing.title, description: listing.description, pipelineStage: "researching" })
+    .set({ status: "review", pipelineStage: "completed" })
     .where(eq(products.id, productId));
-
-  const research = await researchSafely(identification, productId);
-
-  await storeResearch(productId, identification, research);
 }
 
 export async function runPipeline(productId: string): Promise<void> {

@@ -34,7 +34,7 @@ export function Stages({ currentStage }: StagesProps) {
     <ol className="flex flex-col gap-3">
       {STAGES.map((stage, index) => {
         const isDone = currentStage === "completed" || index < currentIndex;
-        const isCurrent = index === currentIndex;
+        const isCurrent = !isDone && index >= currentIndex;
 
         return (
           <li

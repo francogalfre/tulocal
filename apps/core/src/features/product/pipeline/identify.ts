@@ -23,6 +23,11 @@ const identificationSchema = z.object({
   searchQuery: z
     .string()
     .describe("Query to find the same product on Mercado Libre Argentina: brand, model, key spec."),
+  genericQuery: z
+    .string()
+    .describe(
+      "Query for the same kind of product without brand or model, in Spanish, e.g. 'bicicleta mountain bike rodado 29' or 'silla de madera'.",
+    ),
   bestPhotoIndex: z
     .number()
     .int()
