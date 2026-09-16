@@ -12,6 +12,7 @@ import { Reveal } from "@/components/motion/reveal";
 import { Rise } from "@/components/motion/rise";
 import { Stagger } from "@/components/motion/stagger";
 import { Screen } from "@/components/screen";
+import { ShareButton } from "@/components/share/button";
 import { EscalationList } from "@/features/escalation/list";
 import { findOwnedProduct } from "@/features/product/find";
 import { Gallery } from "@/features/product/gallery/grid";
@@ -29,7 +30,7 @@ import { Inbox } from "@/features/question/inbox";
 import { StoreLink } from "@/features/store/link";
 import type { OwnedProduct } from "@/features/product/find";
 import { requireCurrentSession } from "@/lib/session";
-import { buildProductUrl, buildStoreUrl } from "@/lib/url";
+import { buildStoreUrl } from "@/lib/url";
 
 type ProductPageProps = PageProps<"/product/[id]">;
 
@@ -135,7 +136,7 @@ function Celebration({ product }: ProductViewProps) {
         <Qr url={storeUrl} handle={product.store.handle} />
       </Develop>
       <Rise>
-        <Share url={storeUrl} />
+        <Share />
       </Rise>
       <Rise className="flex flex-col gap-1">
         <Button
@@ -157,17 +158,20 @@ function Celebration({ product }: ProductViewProps) {
 
 function Managed({ product }: ProductViewProps) {
   const isSold = product.status === "sold";
-  const productUrl = buildProductUrl(product.store.handle, product.id);
+  const productUrl = `${buildStoreUrl(product.store.handle)}/${product.id}`;
 
   return (
     <>
       <Gallery images={product.images} ownerProductId={product.id} />
       <div className="flex flex-col gap-3">
         <Badge variant={isSold ? "outline" : "default"}>{isSold ? "Vendido" : "Publicado"}</Badge>
-        <Amount
-          amountInArs={product.listPriceInArs ?? 0}
-          className="font-heading text-5xl font-semibold text-brand-deep"
-        />
+        <div className="flex items-center justify-between gap-4">
+          <Amount
+            amountInArs={product.listPriceInArs ?? 0}
+            className="font-heading text-5xl font-semibold text-brand-deep"
+          />
+          {isSold ? null : <ShareButton url={productUrl} direction="left" />}
+        </div>
         {product.floorPriceInArs !== null ? (
           <p className="flex items-baseline gap-2">
             <span className="text-sm text-muted-foreground">Mínimo, solo lo ves vos</span>
@@ -181,7 +185,6 @@ function Managed({ product }: ProductViewProps) {
         <p className="whitespace-pre-line text-muted-foreground">{product.description}</p>
       </div>
       <ProductActions productId={product.id} isSold={isSold} />
-      {isSold ? null : <Share url={productUrl} />}
       <Inbox productId={product.id} questions={product.questions} />
       <EscalationList escalations={product.escalations} />
     </>
