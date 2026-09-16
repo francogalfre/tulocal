@@ -25,6 +25,14 @@ const EMPTY_RESEARCH: Research = { comparables: [] };
 
 const EMPTY_FACTS: string[] = [];
 
+const MARK_FAILED_MAX_ATTEMPTS = 3;
+
+const MARK_FAILED_RETRY_DELAY_IN_MILLISECONDS = 500;
+
+function wait(delayInMilliseconds: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, delayInMilliseconds));
+}
+
 function describeError(error: unknown): string {
   if (error instanceof Error) {
     return error.message;
@@ -237,6 +245,29 @@ async function runStages(productId: string): Promise<void> {
     .where(eq(products.id, productId));
 }
 
+async function markProductFailed(productId: string, detail: string): Promise<void> {
+  for (let attempt = 1; attempt <= MARK_FAILED_MAX_ATTEMPTS; attempt++) {
+    try {
+      await database
+        .update(products)
+        .set({ status: "failed", pipelineError: detail })
+        .where(eq(products.id, productId));
+      return;
+    } catch (error) {
+      if (attempt === MARK_FAILED_MAX_ATTEMPTS) {
+        logEvent({
+          event: "pipeline.failed.unrecoverable",
+          productId,
+          detail: describeError(error),
+        });
+        return;
+      }
+
+      await wait(MARK_FAILED_RETRY_DELAY_IN_MILLISECONDS * attempt);
+    }
+  }
+}
+
 export async function runPipeline(productId: string): Promise<void> {
   logEvent({ event: "pipeline.started", productId });
 
@@ -248,9 +279,6 @@ export async function runPipeline(productId: string): Promise<void> {
     const detail = describeError(error);
 
     logEvent({ event: "pipeline.failed", productId, detail });
-    await database
-      .update(products)
-      .set({ status: "failed", pipelineError: detail })
-      .where(eq(products.id, productId));
+    await markProductFailed(productId, detail);
   }
 }
