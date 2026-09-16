@@ -6,10 +6,7 @@ const VISION_MODEL_ID = "google/gemini-3.8-flash";
 
 const IMAGE_MODEL_ID = "google/gemini-3.1-flash-image";
 
-const openrouter = createOpenRouter({
-  apiKey: serverEnvironment.OPENROUTER_API_KEY,
-  headers: { "X-Title": "tulocal" },
-});
+const openrouter = createOpenRouter({ apiKey: serverEnvironment.OPENROUTER_API_KEY });
 
 export const visionModel = openrouter.chat(VISION_MODEL_ID);
 
