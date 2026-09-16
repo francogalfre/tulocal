@@ -12,10 +12,9 @@
   <img src="branding/banner.svg" alt="tulocal banner" width="100%">
 
   <p align="center">
-    Hecho para la hackathon de <strong>Remo Litoral</strong>
     <br />
     <br />
-    <a href="documentation"><strong>Explorar la documentación »</strong></a>
+    <a href="documentation">Explorar la documentación »</a>
   </p>
 </div>
 
@@ -29,11 +28,9 @@ Emprendedores y gente que vende algo suelto (la bici, el celu viejo, el sillón 
 
 No es un marketplace: no hay catálogo central ni comisión. Cada vendedor trae sus propios compradores, tulocal solo hace el trabajo pesado de publicar y atender.
 
-## Stack
+<br>
 
-Next.js (App Router) sobre Bun y Turborepo, Postgres (Neon) con Drizzle, autenticación con Better Auth, IA vía Vercel AI SDK sobre OpenRouter, y Tailwind CSS con shadcn/ui.
-
-Detalles de arquitectura, convenciones de código y el comportamiento del agente de ventas viven en [`documentation/`](documentation).
+Hecho para la hackathon de <a href="https://x.com/remolitoral">Remo Litoral</a>
 
 <!-- MARKDOWN LINKS & IMAGES -->
 
