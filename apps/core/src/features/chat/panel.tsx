@@ -18,6 +18,7 @@ import { Thinking } from "@/features/chat/thinking";
 import { Welcome } from "@/features/chat/welcome";
 import type { ConversationClosing } from "@/features/conversation/closing";
 import { cn } from "@/lib/utils";
+import { useVisualViewport } from "@/lib/viewport";
 
 type ChatProps = {
   productId: string;
@@ -120,6 +121,8 @@ export function Chat({
     void sendMessage({ text });
   }
 
+  useVisualViewport();
+
   useEffect(() => {
     const list = listRef.current;
 
@@ -131,6 +134,22 @@ export function Chat({
       hasScrolledOnceRef.current = true;
     }
   }, [messages, isWaiting]);
+
+  useEffect(() => {
+    const list = listRef.current;
+
+    if (list === null) {
+      return;
+    }
+
+    const observer = new ResizeObserver(() => {
+      list.scrollTo({ top: list.scrollHeight, behavior: "instant" });
+    });
+
+    observer.observe(list);
+
+    return () => observer.disconnect();
+  }, []);
 
   return (
     <section

@@ -54,6 +54,8 @@
 }
 
 :root {
+  --visual-viewport-height: 100dvh;
+  --visual-viewport-bottom-inset: 0px;
   --background: #f6f4ec;
   --foreground: #14231a;
   --card: #f6f4ec;

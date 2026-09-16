@@ -42,7 +42,7 @@ export default async function ChatPage({ params }: ChatPageProps) {
   const title = product.title ?? "Producto";
 
   return (
-    <main className="mx-auto flex h-dvh w-full max-w-2xl flex-col gap-6 px-5 pt-6 pb-6">
+    <main className="mx-auto flex h-(--visual-viewport-height) w-full max-w-2xl flex-col gap-6 px-5 pt-6 pb-6">
       <header className="flex h-9 items-center justify-between">
         <Logo />
         <Button

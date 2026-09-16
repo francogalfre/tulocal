@@ -40,7 +40,7 @@ export function Launcher({
   }
 
   return (
-    <Drawer open={isOpen} onOpenChange={handleOpenChange}>
+    <Drawer open={isOpen} onOpenChange={handleOpenChange} repositionInputs={false}>
       <DrawerTrigger
         className={cn(buttonVariants({ size: "xl" }), "h-14 has-data-[icon=inline-start]:pl-2")}
       >
@@ -59,7 +59,7 @@ export function Launcher({
         </span>
         {label}
       </DrawerTrigger>
-      <DrawerContent>
+      <DrawerContent className="bottom-(--visual-viewport-bottom-inset) h-[calc(var(--visual-viewport-height)*5/6)]">
         <DrawerTitle className="sr-only">Chat con {agentName}</DrawerTitle>
         <div className="mx-auto flex min-h-0 w-full max-w-2xl flex-1 flex-col px-5 pt-4 pb-5">
           {children}
