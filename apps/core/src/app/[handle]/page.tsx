@@ -1,79 +1,156 @@
-import Image from "next/image";
+import { Plus, Settings2 } from "lucide-react";
+import Link from "next/link";
 import { notFound } from "next/navigation";
 
+import { Button } from "@/components/ui/button";
 import { Empty, EmptyDescription, EmptyHeader, EmptyTitle } from "@/components/ui/empty";
 import { Logo } from "@/components/logo";
+import { ProductCard } from "@/features/store/card";
+import { arrangeCatalog, parseCatalogFilters, selectCoverUrl } from "@/features/store/catalog";
+import { CatalogFiltersBar } from "@/features/store/filters";
+import { findOwnerCatalog } from "@/features/store/find";
+import { StoreHeader } from "@/features/store/header";
 import { findPublicStore } from "@/features/store/public";
-import type { PublicStore } from "@/features/store/public";
-import { formatArs } from "@/lib/money";
+import { StoreShare } from "@/features/store/share";
+import type { CatalogProduct } from "@/features/store/catalog";
+import type { StoreProfile } from "@/features/store/header";
+import { findCurrentSession } from "@/lib/session";
+import { buildStoreUrl } from "@/lib/url";
 
 type StorePageProps = PageProps<"/[handle]">;
 
-type PublicProduct = PublicStore["products"][number];
+type StoreView = {
+  store: StoreProfile & { handle: string };
+  products: CatalogProduct[];
+  isOwner: boolean;
+};
 
-function selectCoverImage(product: PublicProduct) {
-  return product.images.find((image) => image.kind === "primary") ?? product.images[0] ?? null;
-}
+async function loadStoreView(handle: string, ownerId: string | null): Promise<StoreView | null> {
+  if (ownerId !== null) {
+    const catalog = await findOwnerCatalog(ownerId);
 
-function ProductCard({ product }: { product: PublicProduct }) {
-  const cover = selectCoverImage(product);
+    if (catalog !== null && catalog.handle === handle) {
+      return {
+        store: catalog,
+        isOwner: true,
+        products: catalog.products.map((product) => ({
+          id: product.id,
+          title: product.title,
+          listPriceInArs: product.listPriceInArs,
+          condition: product.condition,
+          status: product.status,
+          coverUrl: selectCoverUrl(product.images),
+          createdAt: product.createdAt,
+        })),
+      };
+    }
+  }
 
-  return (
-    <li className="flex flex-col gap-3">
-      {cover !== null ? (
-        <div className="relative aspect-square overflow-hidden rounded-2xl bg-secondary">
-          <Image
-            src={cover.url}
-            alt={product.title ?? ""}
-            fill
-            sizes="(max-width: 640px) 100vw, 320px"
-            className="object-cover transition-transform duration-500 ease-out hover:scale-[1.03]"
-          />
-        </div>
-      ) : null}
-      <div className="flex flex-col gap-1">
-        <p className="numeric font-heading text-3xl font-semibold text-brand-deep">
-          {formatArs(product.listPriceInArs ?? 0)}
-        </p>
-        <h2 className="text-lg">{product.title}</h2>
-        <p className="line-clamp-3 text-sm whitespace-pre-line text-muted-foreground">
-          {product.description}
-        </p>
-      </div>
-    </li>
-  );
-}
-
-export default async function StorePage({ params }: StorePageProps) {
-  const { handle } = await params;
   const store = await findPublicStore(handle);
 
   if (store === null) {
+    return null;
+  }
+
+  return {
+    store,
+    isOwner: false,
+    products: store.products.map((product) => ({
+      id: product.id,
+      title: product.title,
+      listPriceInArs: product.listPriceInArs,
+      condition: product.condition,
+      status: product.status,
+      coverUrl: selectCoverUrl(product.images),
+      createdAt: product.createdAt,
+    })),
+  };
+}
+
+export default async function StorePage({ params, searchParams }: StorePageProps) {
+  const { handle } = await params;
+  const filters = parseCatalogFilters(await searchParams);
+  const session = await findCurrentSession();
+  const view = await loadStoreView(handle, session?.user.id ?? null);
+
+  if (view === null) {
     notFound();
   }
 
+  const { store, products, isOwner } = view;
+  const arranged = arrangeCatalog(products, filters);
+  const storeUrl = buildStoreUrl(store.handle);
+
   return (
-    <main className="mx-auto flex w-full max-w-2xl flex-1 flex-col gap-10 px-5 pt-6 pb-16">
-      <header className="flex h-8 items-center">
-        <Logo wordmark={false} href={`/${store.handle}`} />
+    <main className="mx-auto flex w-full max-w-2xl flex-1 flex-col gap-8 px-5 pt-6 pb-16">
+      <header className="flex h-9 items-center justify-between">
+        <Logo />
+        <div className="flex items-center gap-2">
+          <StoreShare url={storeUrl} title={store.name} />
+          {isOwner ? (
+            <Button size="lg" render={<Link href="/new" />} nativeButton={false}>
+              <Plus data-icon="inline-start" />
+              Agregar producto
+            </Button>
+          ) : null}
+          {session === null ? (
+            <Button variant="ghost" size="lg" render={<Link href="/" />} nativeButton={false}>
+              Ingresar
+            </Button>
+          ) : null}
+        </div>
       </header>
-      <div className="flex flex-col gap-2">
-        <h1 className="text-4xl">{store.name}</h1>
-        <p className="text-muted-foreground">tulocal/{store.handle}</p>
-      </div>
-      {store.products.length === 0 ? (
+      <StoreHeader
+        store={store}
+        productCount={products.length}
+        actions={
+          isOwner ? (
+            <Button
+              variant="outline"
+              size="lg"
+              render={<Link href="/store/edit" />}
+              nativeButton={false}
+            >
+              <Settings2 data-icon="inline-start" />
+              Editar tienda
+            </Button>
+          ) : undefined
+        }
+      />
+      {products.length === 0 ? (
         <Empty>
           <EmptyHeader>
-            <EmptyTitle>Todavía no hay nada publicado</EmptyTitle>
-            <EmptyDescription>Volvé en un rato.</EmptyDescription>
+            <EmptyTitle>
+              {isOwner ? "Todavía no subiste nada" : "Todavía no hay nada publicado"}
+            </EmptyTitle>
+            <EmptyDescription>
+              {isOwner ? "Sacá una foto y la publicación se arma sola." : "Volvé en un rato."}
+            </EmptyDescription>
           </EmptyHeader>
         </Empty>
       ) : (
-        <ul className="grid grid-cols-1 gap-10 sm:grid-cols-2 sm:gap-8">
-          {store.products.map((product) => (
-            <ProductCard key={product.id} product={product} />
-          ))}
-        </ul>
+        <div className="flex flex-col gap-6">
+          <CatalogFiltersBar filters={filters} showStatus={isOwner} />
+          {arranged.length === 0 ? (
+            <Empty>
+              <EmptyHeader>
+                <EmptyTitle>Nada con esos filtros</EmptyTitle>
+                <EmptyDescription>Probá con otro estado u orden.</EmptyDescription>
+              </EmptyHeader>
+            </Empty>
+          ) : (
+            <ul className="grid grid-cols-2 gap-x-4 gap-y-8 sm:gap-x-6">
+              {arranged.map((product) => (
+                <ProductCard
+                  key={product.id}
+                  product={product}
+                  href={isOwner ? `/product/${product.id}` : `/${store.handle}/${product.id}`}
+                  showStatus={isOwner}
+                />
+              ))}
+            </ul>
+          )}
+        </div>
       )}
     </main>
   );

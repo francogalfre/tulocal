@@ -12,6 +12,7 @@ import { Spinner } from "@/components/ui/spinner";
 import { Textarea } from "@/components/ui/textarea";
 import { roundToPriceStep } from "@/features/product/pipeline/pricing";
 import { publishProduct } from "@/features/product/publish";
+import { updateProduct } from "@/features/product/update";
 import type { OwnedProduct } from "@/features/product/find";
 import type { PublishProductState } from "@/features/product/publish";
 import { formatArs } from "@/lib/money";
@@ -20,8 +21,14 @@ const INITIAL_STATE: PublishProductState = { error: null };
 
 const SLIDER_STEPS = 100;
 
+const MODES = {
+  publish: { action: publishProduct, idle: "Publicar", busy: "Publicando" },
+  edit: { action: updateProduct, idle: "Guardar cambios", busy: "Guardando" },
+};
+
 type ReviewFormProps = {
   product: OwnedProduct;
+  mode: keyof typeof MODES;
 };
 
 function readSliderValue(value: number | readonly number[]): number {
@@ -32,15 +39,15 @@ function readSliderValue(value: number | readonly number[]): number {
   return Number(value);
 }
 
-export function ReviewForm({ product }: ReviewFormProps) {
-  const [state, submit, isPending] = useActionState(publishProduct, INITIAL_STATE);
+export function ReviewForm({ product, mode }: ReviewFormProps) {
+  const [state, submit, isPending] = useActionState(MODES[mode].action, INITIAL_STATE);
   const [listPriceInArs, setListPriceInArs] = useState(product.listPriceInArs ?? 0);
   const minimum = product.suggestedMinimumPriceInArs;
   const maximum = product.suggestedMaximumPriceInArs;
   const hasRange = minimum !== null && maximum !== null && minimum < maximum;
   const hasSuggestion = product.listPriceInArs !== null;
   const [isEditingPrice, setIsEditingPrice] = useState(!hasSuggestion);
-  const needsWhatsapp = product.store.whatsappPhone === null;
+  const needsWhatsapp = mode === "publish" && product.store.whatsappPhone === null;
 
   return (
     <form action={submit} className="flex flex-col gap-10">
@@ -164,7 +171,7 @@ export function ReviewForm({ product }: ReviewFormProps) {
       ) : null}
       <Button type="submit" size="xl" disabled={isPending || listPriceInArs <= 0}>
         {isPending ? <Spinner data-icon="inline-start" /> : null}
-        {isPending ? "Publicando" : "Publicar"}
+        {isPending ? MODES[mode].busy : MODES[mode].idle}
       </Button>
     </form>
   );

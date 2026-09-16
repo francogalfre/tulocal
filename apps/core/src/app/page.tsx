@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 
 import { Screen } from "@/components/screen";
 import { GoogleSignIn } from "@/features/landing/google";
+import { findStoreByOwner, hasAnyProduct } from "@/features/store/find";
 import { findCurrentSession } from "@/lib/session";
 
 const STEPS = [
@@ -19,7 +20,10 @@ export default async function LandingPage() {
   const session = await findCurrentSession();
 
   if (session !== null) {
-    redirect("/new");
+    const store = await findStoreByOwner(session.user.id);
+    const hasProducts = store !== null && (await hasAnyProduct(store.id));
+
+    redirect(hasProducts && store !== null ? `/${store.handle}` : "/new");
   }
 
   return (

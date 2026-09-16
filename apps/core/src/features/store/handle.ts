@@ -4,7 +4,7 @@ const HANDLE_MIN_LENGTH = 3;
 
 const FALLBACK_HANDLE = "tienda";
 
-const RESERVED_HANDLES = new Set(["new", "product", "api", "login", "logout"]);
+const RESERVED_HANDLES = new Set(["new", "product", "store", "api", "login", "logout"]);
 
 function stripDiacritics(text: string): string {
   return text.normalize("NFD").replaceAll(/[̀-ͯ]/g, "");

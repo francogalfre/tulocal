@@ -8,13 +8,16 @@ import { Button } from "@/components/ui/button";
 import { Screen } from "@/components/screen";
 import { findOwnedProduct } from "@/features/product/find";
 import { Gallery } from "@/features/product/gallery";
+import { ProductActions } from "@/features/product/manage/actions";
 import { Stages } from "@/features/product/progress/stages";
 import { Qr } from "@/features/product/published/qr";
 import { Share } from "@/features/product/published/share";
 import { retryPipeline } from "@/features/product/retry";
 import { Comparables } from "@/features/product/review/comparables";
 import { ReviewForm } from "@/features/product/review/form";
+import { StoreLink } from "@/features/store/link";
 import type { OwnedProduct } from "@/features/product/find";
+import { formatArs } from "@/lib/money";
 import { requireCurrentSession } from "@/lib/session";
 import { buildStoreUrl } from "@/lib/url";
 
@@ -77,13 +80,13 @@ function Review({ product }: ProductViewProps) {
         </p>
       </div>
       <Gallery images={product.images} />
-      <ReviewForm product={product} />
+      <ReviewForm product={product} mode="publish" />
       <Comparables comparables={product.comparables} />
     </>
   );
 }
 
-function Published({ product }: ProductViewProps) {
+function Celebration({ product }: ProductViewProps) {
   const storeUrl = buildStoreUrl(product.store.handle);
 
   return (
@@ -103,7 +106,7 @@ function Published({ product }: ProductViewProps) {
         <Button
           size="xl"
           variant="ghost"
-          render={<a href={storeUrl} target="_blank" rel="noreferrer" />}
+          render={<Link href={`/${product.store.handle}`} />}
           nativeButton={false}
         >
           Ver mi tienda
@@ -117,23 +120,55 @@ function Published({ product }: ProductViewProps) {
   );
 }
 
-export default async function ProductPage({ params }: ProductPageProps) {
+function Managed({ product }: ProductViewProps) {
+  const isSold = product.status === "sold";
+  const productUrl = `${buildStoreUrl(product.store.handle)}/${product.id}`;
+
+  return (
+    <>
+      <Gallery images={product.images} />
+      <div className="flex flex-col gap-3">
+        <Badge variant={isSold ? "outline" : "default"}>{isSold ? "Vendido" : "Publicado"}</Badge>
+        <p className="numeric font-heading text-5xl font-semibold text-brand-deep">
+          {formatArs(product.listPriceInArs ?? 0)}
+        </p>
+        <h1 className="text-2xl">{product.title}</h1>
+        <p className="whitespace-pre-line text-muted-foreground">{product.description}</p>
+        {product.floorPriceInArs !== null ? (
+          <p className="text-sm text-muted-foreground">
+            Mínimo secreto:{" "}
+            <span className="numeric font-medium text-foreground">
+              {formatArs(product.floorPriceInArs)}
+            </span>
+          </p>
+        ) : null}
+      </div>
+      <ProductActions productId={product.id} isSold={isSold} />
+      {isSold ? null : <Share url={productUrl} />}
+    </>
+  );
+}
+
+export default async function ProductPage({ params, searchParams }: ProductPageProps) {
   const session = await requireCurrentSession();
   const { id } = await params;
+  const { celebrate } = await searchParams;
   const product = await findOwnedProduct(id, session.user.id);
 
   if (product === null) {
     notFound();
   }
 
+  const isCelebrating = product.status === "published" && celebrate === "1";
+  const isManaged = (product.status === "published" || product.status === "sold") && !isCelebrating;
+
   return (
-    <Screen>
+    <Screen aside={<StoreLink handle={product.store.handle} />}>
       {product.status === "processing" ? <Processing product={product} /> : null}
       {product.status === "failed" ? <Failed product={product} /> : null}
       {product.status === "review" ? <Review product={product} /> : null}
-      {product.status === "published" || product.status === "sold" ? (
-        <Published product={product} />
-      ) : null}
+      {isCelebrating ? <Celebration product={product} /> : null}
+      {isManaged ? <Managed product={product} /> : null}
     </Screen>
   );
 }

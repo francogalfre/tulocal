@@ -7,14 +7,36 @@ import { stores } from "@tulocal/database/schema/stores";
 
 export type PublicStore = NonNullable<Awaited<ReturnType<typeof queryPublicStore>>>;
 
+const PUBLIC_STORE_COLUMNS = {
+  id: true,
+  name: true,
+  handle: true,
+  description: true,
+  avatarUrl: true,
+  bannerUrl: true,
+  whatsappPhone: true,
+  agentName: true,
+} as const;
+
+const PUBLIC_PRODUCT_COLUMNS = {
+  id: true,
+  title: true,
+  description: true,
+  condition: true,
+  conditionNotes: true,
+  listPriceInArs: true,
+  status: true,
+  createdAt: true,
+} as const;
+
 async function queryPublicStore(handle: string) {
   return database.query.stores.findFirst({
     where: eq(stores.handle, handle),
-    columns: { id: true, name: true, handle: true, agentName: true },
+    columns: PUBLIC_STORE_COLUMNS,
     with: {
       products: {
         where: eq(products.status, "published"),
-        columns: { id: true, title: true, description: true, listPriceInArs: true },
+        columns: PUBLIC_PRODUCT_COLUMNS,
         with: { images: { orderBy: [asc(images.sortOrder)] } },
       },
     },
