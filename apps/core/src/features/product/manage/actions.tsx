@@ -26,15 +26,17 @@ type ProductActionsProps = {
 export function ProductActions({ productId, isSold }: ProductActionsProps) {
   return (
     <div className="flex flex-col gap-3">
-      <Button
-        size="xl"
-        variant="outline"
-        render={<Link href={`/product/${productId}/edit`} />}
-        nativeButton={false}
-      >
-        <Pencil data-icon="inline-start" />
-        Editar publicación
-      </Button>
+      {isSold ? null : (
+        <Button
+          size="xl"
+          variant="outline"
+          render={<Link href={`/product/${productId}/edit`} />}
+          nativeButton={false}
+        >
+          <Pencil data-icon="inline-start" />
+          Editar publicación
+        </Button>
+      )}
       {isSold ? null : (
         <form action={markProductSold}>
           <input type="hidden" name="productId" value={productId} />

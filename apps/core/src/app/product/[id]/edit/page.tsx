@@ -1,4 +1,4 @@
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 
 import { Screen } from "@/components/screen";
 import { findOwnedProduct } from "@/features/product/find";
@@ -16,6 +16,10 @@ export default async function ProductEditPage({ params }: ProductEditPageProps) 
 
   if (product === null) {
     notFound();
+  }
+
+  if (product.status === "sold") {
+    redirect(`/product/${id}`);
   }
 
   return (

@@ -33,6 +33,10 @@ export async function updateProduct(
     return { error: "No encontramos el producto." };
   }
 
+  if (product.status === "sold") {
+    return { error: "No podés editar un producto ya vendido." };
+  }
+
   await database
     .update(products)
     .set({
