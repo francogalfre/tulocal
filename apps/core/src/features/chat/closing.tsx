@@ -1,11 +1,15 @@
+"use client";
+
 import { MessageCircle } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import type { ConversationClosing } from "@/features/conversation/closing";
+import { trackWhatsappClick } from "@/features/metrics/track";
 import { formatArs } from "@/lib/money";
 import { buildWhatsappUrl } from "@/lib/whatsapp";
 
 type ClosingProps = {
+  productId: string;
   closing: ConversationClosing;
   agentName: string;
   productTitle: string;
@@ -35,6 +39,9 @@ export function Closing(props: ClosingProps) {
       </p>
       <Button
         size="xl"
+        onClick={() => {
+          void trackWhatsappClick(props.productId);
+        }}
         render={
           <a
             href={buildWhatsappUrl({

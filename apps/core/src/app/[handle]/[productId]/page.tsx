@@ -1,6 +1,7 @@
 import { ArrowLeft, ArrowUpRight } from "lucide-react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { after } from "next/server";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -9,16 +10,21 @@ import { Logo } from "@/components/logo";
 import { Launcher } from "@/features/chat/launcher";
 import { Chat } from "@/features/chat/panel";
 import { resumeConversation } from "@/features/conversation/resume";
+import { recordProductVisit } from "@/features/metrics/record";
 import { CATEGORY_LABELS } from "@/features/product/category";
 import { CONDITION_LABELS } from "@/features/product/condition";
 import { Gallery } from "@/features/product/gallery/grid";
 import { findPublicProduct } from "@/features/product/public";
+import { findCurrentSession } from "@/lib/session";
 
 type PublicProductPageProps = PageProps<"/[handle]/[productId]">;
 
 export default async function PublicProductPage({ params }: PublicProductPageProps) {
   const { handle, productId } = await params;
-  const product = await findPublicProduct(handle, productId);
+  const [product, session] = await Promise.all([
+    findPublicProduct(handle, productId),
+    findCurrentSession(),
+  ]);
 
   if (product === null) {
     notFound();
@@ -26,6 +32,10 @@ export default async function PublicProductPage({ params }: PublicProductPagePro
 
   const title = product.title ?? "Producto";
   const conversation = await resumeConversation(product.id);
+
+  if (session?.user.id !== product.store.ownerId) {
+    after(() => recordProductVisit(product.store.id, product.id));
+  }
 
   return (
     <main className="mx-auto flex w-full max-w-2xl flex-1 flex-col gap-8 px-5 pt-6 pb-16">

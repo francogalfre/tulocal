@@ -133,6 +133,7 @@ export function Chat({
         {isWaiting ? <Bubble role="assistant" text="…" /> : null}
       </div>
       <Closing
+        productId={productId}
         closing={closing}
         agentName={agentName}
         productTitle={productTitle}

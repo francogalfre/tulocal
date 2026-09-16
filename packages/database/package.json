@@ -15,7 +15,8 @@
     "./schema/products": "./src/schema/products.ts",
     "./schema/questions": "./src/schema/questions.ts",
     "./schema/relations": "./src/schema/relations.ts",
-    "./schema/stores": "./src/schema/stores.ts"
+    "./schema/stores": "./src/schema/stores.ts",
+    "./schema/visits": "./src/schema/visits.ts"
   },
   "scripts": {
     "check:types": "tsc --noEmit",

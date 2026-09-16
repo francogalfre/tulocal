@@ -43,6 +43,13 @@
       "when": 1789527581879,
       "tag": "0005_shocking_red_skull",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1789530761557,
+      "tag": "0006_dazzling_mad_thinker",
+      "breakpoints": true
     }
   ]
 }

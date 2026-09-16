@@ -9,6 +9,7 @@ import { messages } from "@tulocal/database/schema/messages";
 import { products } from "@tulocal/database/schema/products";
 import { questions } from "@tulocal/database/schema/questions";
 import { stores } from "@tulocal/database/schema/stores";
+import { visits } from "@tulocal/database/schema/visits";
 
 export const usersRelations = relations(users, ({ one }) => ({
   store: one(stores),
@@ -19,6 +20,7 @@ export const storesRelations = relations(stores, ({ one, many }) => ({
   products: many(products),
   conversations: many(conversations),
   escalations: many(escalations),
+  visits: many(visits),
 }));
 
 export const productsRelations = relations(products, ({ one, many }) => ({
@@ -28,6 +30,12 @@ export const productsRelations = relations(products, ({ one, many }) => ({
   questions: many(questions),
   conversations: many(conversations),
   escalations: many(escalations),
+  visits: many(visits),
+}));
+
+export const visitsRelations = relations(visits, ({ one }) => ({
+  store: one(stores, { fields: [visits.storeId], references: [stores.id] }),
+  product: one(products, { fields: [visits.productId], references: [products.id] }),
 }));
 
 export const imagesRelations = relations(images, ({ one }) => ({

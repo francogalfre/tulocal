@@ -22,7 +22,14 @@ async function queryPublicProduct(productId: string) {
     with: {
       images: { orderBy: [asc(images.sortOrder)] },
       store: {
-        columns: { id: true, name: true, handle: true, whatsappPhone: true, agentName: true },
+        columns: {
+          id: true,
+          ownerId: true,
+          name: true,
+          handle: true,
+          whatsappPhone: true,
+          agentName: true,
+        },
       },
     },
   });

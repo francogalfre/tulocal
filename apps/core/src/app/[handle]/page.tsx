@@ -1,10 +1,12 @@
-import { Plus, Settings2 } from "lucide-react";
+import { ChartNoAxesColumn, Plus, Settings2 } from "lucide-react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { after } from "next/server";
 
 import { Button } from "@/components/ui/button";
 import { Empty, EmptyDescription, EmptyHeader, EmptyTitle } from "@/components/ui/empty";
 import { Logo } from "@/components/logo";
+import { recordStoreVisit } from "@/features/metrics/record";
 import { ProductCard } from "@/features/store/card";
 import {
   arrangeCatalog,
@@ -25,7 +27,7 @@ import { buildStoreUrl } from "@/lib/url";
 type StorePageProps = PageProps<"/[handle]">;
 
 type StoreView = {
-  store: StoreProfile & { handle: string };
+  store: StoreProfile & { id: string; handle: string };
   products: CatalogProduct[];
   isOwner: boolean;
 };
@@ -85,6 +87,11 @@ export default async function StorePage({ params, searchParams }: StorePageProps
   }
 
   const { store, products, isOwner } = view;
+
+  if (!isOwner) {
+    after(() => recordStoreVisit(store.id));
+  }
+
   const arranged = arrangeCatalog(products, filters);
   const categories = summarizeCategories(products);
   const storeUrl = buildStoreUrl(store.handle);
@@ -129,15 +136,26 @@ export default async function StorePage({ params, searchParams }: StorePageProps
         productCount={products.length}
         actions={
           isOwner ? (
-            <Button
-              variant="outline"
-              size="icon-lg"
-              aria-label="Editar tienda"
-              render={<Link href="/store/edit" />}
-              nativeButton={false}
-            >
-              <Settings2 />
-            </Button>
+            <>
+              <Button
+                variant="outline"
+                size="icon-lg"
+                aria-label="Ver métricas"
+                render={<Link href="/metrics" />}
+                nativeButton={false}
+              >
+                <ChartNoAxesColumn />
+              </Button>
+              <Button
+                variant="outline"
+                size="lg"
+                render={<Link href="/store/edit" />}
+                nativeButton={false}
+              >
+                <Settings2 data-icon="inline-start" />
+                Editar tienda
+              </Button>
+            </>
           ) : undefined
         }
       />
