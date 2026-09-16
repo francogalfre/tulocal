@@ -9,7 +9,13 @@ type StoreLinkProps = {
 
 export function StoreLink({ handle }: StoreLinkProps) {
   return (
-    <Button variant="ghost" size="sm" render={<Link href={`/${handle}`} />} nativeButton={false}>
+    <Button
+      variant="ghost"
+      size="sm"
+      className="text-sm"
+      render={<Link href={`/${handle}`} />}
+      nativeButton={false}
+    >
       <Store data-icon="inline-start" />
       Mi tienda
     </Button>
