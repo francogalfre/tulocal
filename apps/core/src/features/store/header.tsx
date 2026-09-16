@@ -47,13 +47,15 @@ export function StoreHeader({ store, productCount, actions }: StoreHeaderProps) 
             {store.name.slice(0, 1).toUpperCase()}
           </AvatarFallback>
         </Avatar>
-        {actions !== undefined ? <div className="flex gap-2 pb-1">{actions}</div> : null}
+
+        {actions !== undefined ? <div className="flex gap-2 pb-1 pt-14">{actions}</div> : null}
       </div>
       <div className="flex flex-col gap-1.5 pt-3">
         <h1 className="text-3xl">{store.name}</h1>
         <p className="text-sm text-muted-foreground">
           tulocal/{store.handle} · {describeProductCount(productCount)}
         </p>
+
         {store.description !== null ? (
           <p className="max-w-prose whitespace-pre-line pt-1">{store.description}</p>
         ) : null}

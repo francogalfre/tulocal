@@ -41,12 +41,12 @@ export function StoreEditForm({ store }: StoreEditFormProps) {
       <div className="flex flex-col">
         <label
           htmlFor="banner"
-          className="relative flex aspect-[3/1] cursor-pointer items-center justify-center overflow-hidden rounded-2xl bg-secondary text-sm font-medium transition-colors hover:bg-muted focus-within:ring-3 focus-within:ring-ring/50"
+          className="group relative flex aspect-[3/1] cursor-pointer items-center justify-center overflow-hidden rounded-2xl bg-secondary text-sm font-medium transition-colors hover:bg-muted focus-within:ring-3 focus-within:ring-ring/50"
         >
           {bannerPreview !== null ? (
             <img src={bannerPreview} alt="" className="absolute inset-0 size-full object-cover" />
           ) : null}
-          <span className="relative inline-flex items-center gap-2 rounded-lg bg-background/90 px-3 py-1.5">
+          <span className="relative inline-flex items-center gap-2 rounded-full border border-input bg-background/90 px-4 py-2 text-sm font-medium backdrop-blur transition-colors group-hover:bg-background">
             <Camera className="size-4" aria-hidden="true" />
             {bannerPreview === null ? "Agregar portada" : "Cambiar portada"}
           </span>
@@ -93,7 +93,8 @@ export function StoreEditForm({ store }: StoreEditFormProps) {
           <Textarea
             id="description"
             name="description"
-            rows={4}
+            rows={5}
+            className="min-h-24 resize-none"
             placeholder="Qué vendés, de dónde sos, cómo entregás."
             defaultValue={store.description ?? ""}
           />

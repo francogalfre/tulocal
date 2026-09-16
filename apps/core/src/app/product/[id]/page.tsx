@@ -151,8 +151,10 @@ function Managed({ product }: ProductViewProps) {
 
 export default async function ProductPage({ params, searchParams }: ProductPageProps) {
   const session = await requireCurrentSession();
+
   const { id } = await params;
   const { celebrate } = await searchParams;
+
   const product = await findOwnedProduct(id, session.user.id);
 
   if (product === null) {
