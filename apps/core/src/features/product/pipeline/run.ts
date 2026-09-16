@@ -6,6 +6,7 @@ import { images } from "@tulocal/database/schema/images";
 import { products } from "@tulocal/database/schema/products";
 import { uploadBlob } from "@tulocal/storage/blob";
 
+import { researchFacts } from "@/features/product/pipeline/facts";
 import { identifyProduct } from "@/features/product/pipeline/identify";
 import { generateProductImages } from "@/features/product/pipeline/imagine";
 import { downloadPhoto, selectSourcePhoto } from "@/features/product/pipeline/photos";
@@ -21,6 +22,8 @@ import { logEvent } from "@/lib/logger";
 const ORIGINAL_IMAGE_KIND = "original";
 
 const EMPTY_RESEARCH: Research = { comparables: [] };
+
+const EMPTY_FACTS: string[] = [];
 
 function describeError(error: unknown): string {
   if (error instanceof Error) {
@@ -56,7 +59,12 @@ async function clearPreviousRun(productId: string): Promise<void> {
     database.delete(comparables).where(eq(comparables.productId, productId)),
     database
       .update(products)
-      .set({ status: "processing", pipelineStage: "identifying", pipelineError: null })
+      .set({
+        status: "processing",
+        pipelineStage: "identifying",
+        pipelineError: null,
+        facts: EMPTY_FACTS,
+      })
       .where(eq(products.id, productId)),
   ]);
 }
@@ -103,6 +111,23 @@ async function researchSafely(
   } catch (error) {
     logEvent({ event: "pipeline.research.failed", productId, detail: describeError(error) });
     return EMPTY_RESEARCH;
+  }
+}
+
+async function researchFactsSafely(
+  identification: Identification,
+  productId: string,
+): Promise<string[]> {
+  try {
+    return await researchFacts({
+      category: identification.category,
+      brand: identification.brand,
+      model: identification.model,
+      searchQuery: identification.searchQuery,
+    });
+  } catch (error) {
+    logEvent({ event: "pipeline.facts.failed", productId, detail: describeError(error) });
+    return EMPTY_FACTS;
   }
 }
 
@@ -165,6 +190,16 @@ async function produceResearch(productId: string, identification: Identification
   await storeResearch(productId, identification, research);
 }
 
+async function produceFacts(productId: string, identification: Identification): Promise<void> {
+  const facts = await researchFactsSafely(identification, productId);
+
+  if (facts.length === 0) {
+    logEvent({ event: "pipeline.facts.empty", productId });
+  }
+
+  await database.update(products).set({ facts }).where(eq(products.id, productId));
+}
+
 async function runStages(productId: string): Promise<void> {
   const originals = await database.query.images.findMany({
     where: and(eq(images.productId, productId), eq(images.kind, ORIGINAL_IMAGE_KIND)),
@@ -194,6 +229,7 @@ async function runStages(productId: string): Promise<void> {
     produceImages(productId, photos, identification),
     produceListing(productId, identification),
     produceResearch(productId, identification),
+    produceFacts(productId, identification),
   ]);
   await database
     .update(products)

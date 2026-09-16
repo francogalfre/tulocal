@@ -6,7 +6,7 @@ import { askSeller } from "@/features/agent/tools/ask";
 import { signalBuyIntent } from "@/features/agent/tools/intent";
 import { respondToOffer } from "@/features/agent/tools/offer";
 import { flagScam } from "@/features/agent/tools/scam";
-import type { AgentContext, AgentProduct } from "@/features/agent/context";
+import type { AgentComparable, AgentContext, AgentProduct } from "@/features/agent/context";
 import { agentModel } from "@/features/product/pipeline/models";
 
 const MAX_STEPS = 4;
@@ -33,14 +33,23 @@ function stripFloorPrice(product: AgentProduct): Omit<AgentProduct, "floorPriceI
     id: product.id,
     title: product.title,
     description: product.description,
+    category: product.category,
     brand: product.brand,
     model: product.model,
     condition: product.condition,
     conditionNotes: product.conditionNotes,
     attributes: product.attributes,
     sellerNotes: product.sellerNotes,
+    facts: product.facts,
     listPriceInArs: product.listPriceInArs,
   };
+}
+
+function selectComparablesAboveFloor(
+  comparables: AgentComparable[],
+  floorPriceInArs: number,
+): AgentComparable[] {
+  return comparables.filter((comparable) => comparable.priceInArs > floorPriceInArs);
 }
 
 export async function streamAgentTurn(
@@ -54,6 +63,7 @@ export async function streamAgentTurn(
       product: stripFloorPrice(product),
       store,
       questions: context.questions,
+      comparables: selectComparablesAboveFloor(context.comparables, product.floorPriceInArs),
       lastCounterOfferInArs,
     }),
     messages: await convertToModelMessages(input.history, { tools: agentTools }),

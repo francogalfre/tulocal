@@ -24,6 +24,8 @@ const NAME_MAX_LENGTH = 60;
 
 const DESCRIPTION_MAX_LENGTH = 300;
 
+const AGENT_NAME_MAX_LENGTH = 30;
+
 const MAX_IMAGE_SIZE_IN_BYTES = 8 * 1024 * 1024;
 
 const storeInputSchema = z.object({
@@ -34,6 +36,7 @@ const storeInputSchema = z.object({
   tiktokHandle: socialHandleSchema,
   facebookHandle: socialHandleSchema,
   xHandle: socialHandleSchema,
+  agentName: z.string().trim().min(1).max(AGENT_NAME_MAX_LENGTH),
 });
 
 export type UpdateStoreState = {
@@ -87,10 +90,13 @@ export async function updateStore(
     tiktokHandle: formData.get("tiktokHandle") ?? "",
     facebookHandle: formData.get("facebookHandle") ?? "",
     xHandle: formData.get("xHandle") ?? "",
+    agentName: formData.get("agentName"),
   });
 
   if (!parsed.success) {
-    return { error: "Revisá el nombre, la descripción, el WhatsApp y las redes." };
+    return {
+      error: "Revisá el nombre, la descripción, el WhatsApp, las redes y el nombre de tu vendedor.",
+    };
   }
 
   const parsedPlace = placeFormSchema.safeParse({
@@ -137,6 +143,7 @@ export async function updateStore(
       tiktokHandle: toNullableText(parsed.data.tiktokHandle),
       facebookHandle: toNullableText(parsed.data.facebookHandle),
       xHandle: toNullableText(parsed.data.xHandle),
+      agentName: parsed.data.agentName,
       addressLine: place === null || !place.isAddress ? null : place.addressLine,
       addressLatitude: place === null || !place.isAddress ? null : place.latitude,
       addressLongitude: place === null || !place.isAddress ? null : place.longitude,

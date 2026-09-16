@@ -1,4 +1,5 @@
-const PRICE_PATTERN = /(\$\s?)?(\d{1,3}(?:\.\d{3})+|\d+(?:,\d+)?)(?:\s?(k|mil|lucas|pesos)\b)?/giu;
+const PRICE_PATTERN =
+  /(\$\s?)?(\d{1,3}(?:\.\d{3})+|\d+(?:,\d+)?)(?!\s?(?:gb|tb|mb|mah|w|hz|mm|cm|kg|g|ml|mp|px)\b)(?:\s?(k|mil|lucas|pesos)\b)?/giu;
 
 const THOUSAND = 1000;
 

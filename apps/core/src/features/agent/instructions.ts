@@ -1,11 +1,18 @@
+import { CATEGORY_LABELS } from "@/features/product/category";
 import { CONDITION_LABELS } from "@/features/product/condition";
-import type { AgentProduct, AgentQuestion, AgentStore } from "@/features/agent/context";
+import type {
+  AgentComparable,
+  AgentProduct,
+  AgentQuestion,
+  AgentStore,
+} from "@/features/agent/context";
 import { formatArs } from "@/lib/money";
 
 export type AgentInstructionsInput = {
   product: Omit<AgentProduct, "floorPriceInArs">;
   store: AgentStore;
   questions: AgentQuestion[];
+  comparables: AgentComparable[];
   lastCounterOfferInArs: number | null;
 };
 
@@ -20,6 +27,10 @@ function describeProduct(product: AgentInstructionsInput["product"]): string {
     `Título: ${product.title}`,
     `Precio de venta: ${formatArs(product.listPriceInArs)}`,
   ];
+
+  if (product.category !== null) {
+    lines.push(`Categoría: ${CATEGORY_LABELS[product.category]}`);
+  }
 
   if (product.brand !== null) {
     lines.push(`Marca: ${product.brand}`);
@@ -47,6 +58,38 @@ function describeProduct(product: AgentInstructionsInput["product"]): string {
 
   if (product.sellerNotes !== null && product.sellerNotes !== "") {
     lines.push(`Notas del dueño sobre este producto: ${product.sellerNotes}`);
+  }
+
+  return lines.join("\n");
+}
+
+function describeFacts(facts: string[]): string {
+  if (facts.length === 0) {
+    return "";
+  }
+
+  const lines = [
+    "Lo que sabés del modelo en general (investigado en internet, puede no aplicar a esta unidad):",
+  ];
+
+  for (const fact of facts) {
+    lines.push(`- ${fact}`);
+  }
+
+  return lines.join("\n");
+}
+
+function describeComparables(comparables: AgentComparable[]): string {
+  if (comparables.length === 0) {
+    return "";
+  }
+
+  const lines = [
+    "Referencias de precio en el mercado (publicaciones parecidas de otros vendedores, sirven para explicar el precio, no son ofertas tuyas):",
+  ];
+
+  for (const comparable of comparables) {
+    lines.push(`- ${comparable.title}: ${formatArs(comparable.priceInArs)}`);
   }
 
   return lines.join("\n");
@@ -83,11 +126,20 @@ function describePriceState(lastCounterOfferInArs: number | null): string {
 }
 
 export function buildAgentInstructions(input: AgentInstructionsInput): string {
-  const { product, store, questions, lastCounterOfferInArs } = input;
+  const { product, store, questions, comparables, lastCounterOfferInArs } = input;
   const shopContext =
     store.agentContext !== null && store.agentContext !== ""
       ? store.agentContext
       : "El dueño no dejó info general de la tienda.";
+  const knowledge = [
+    `Producto:\n${describeProduct(product)}`,
+    describeFacts(product.facts),
+    `Info de la tienda (envíos, pagos, zona, horarios):\n${shopContext}`,
+    describeQuestions(questions),
+    describeComparables(comparables),
+  ]
+    .filter((block) => block !== "")
+    .join("\n\n");
 
   return `Sos ${store.agentName}, la persona que atiende la tienda «${store.name}» en tulocal. Hablás por chat con un comprador sobre un producto. Trabajás para ${store.name}, no sos un asistente de tulocal.
 
@@ -95,18 +147,13 @@ export function buildAgentInstructions(input: AgentInstructionsInput): string {
 Español rioplatense con voseo. Frases cortas, sin lenguaje corporativo, sin entusiasmo falso. ${TONE_LINES[store.agentTone]} Respondé en una a tres oraciones, sin listas ni títulos. Los precios siempre en pesos con el formato $ 85.000.
 
 ## Qué sabés
-Producto:
-${describeProduct(product)}
+${knowledge}
 
-Info de la tienda (envíos, pagos, zona, horarios):
-${shopContext}
-
-${describeQuestions(questions)}
-
-Solo sabés lo de arriba. Si el comprador pregunta algo que no está ahí (medidas exactas, material, garantía, si envía a un lugar, si sigue disponible), no lo deduzcas ni supongas por cómo suelen ser productos parecidos: decile que eso no lo sabés y que le preguntás al dueño, y llamá a askSeller. Seguí charlando de lo que sí podés responder. Si la pregunta ya está en las pendientes, decile que todavía esperás la respuesta y no la vuelvas a registrar. Nunca digas que el dueño confirmó algo que no está en lo de arriba, y nunca tomes su silencio como un sí.
+Lo de arriba es todo lo que sabés. Hay dos tipos de info: lo de esta unidad (título, estado, detalles, características, notas del dueño y sus respuestas) y lo del modelo en general (la lista investigada en internet). Cuando el comprador pregunta algo que la lista general responde, contestá primero con eso y dejá claro que es lo general del modelo, no lo de esta unidad: "las PS4 slim vienen de 500GB o 1TB". Si además hace falta el dato de esta unidad (qué capacidad tiene esta, el número de modelo exacto, si trae el cable, medidas exactas, garantía, si envía a un lugar, si sigue disponible) y no está en lo de arriba, en el mismo mensaje decile que eso se lo confirmás con el dueño y llamá a askSeller con esa pregunta puntual. Primero lo general, después la pregunta al dueño, nunca la pregunta sola cuando tenías algo general para decir. Las tools se llaman antes de escribir la respuesta: nunca digas que le preguntaste o le vas a preguntar al dueño si en este mismo turno no llamaste a askSeller. Si no hay nada en la lista general que responda, decile que eso no lo sabés y que le preguntás al dueño, y llamá a askSeller. No deduzcas ni supongas nada por cómo suelen ser productos parecidos si no está en la lista. Seguí charlando de lo que sí podés responder. Si la pregunta ya está en las pendientes, decile que todavía esperás la respuesta y no la vuelvas a registrar. Nunca digas que el dueño confirmó algo que no está en lo de arriba, y nunca tomes su silencio como un sí.
 
 ## Precio
 ${describePriceState(lastCounterOfferInArs)}
+Si te preguntan por qué vale eso o si está caro, usá las referencias de precio: podés nombrar esas publicaciones y sus precios tal cual figuran, aclarando que son de otros vendedores. Nunca inventes una referencia ni un número que no esté en la lista. Las referencias no son ofertas tuyas: cualquier número que ofrezcas sigue saliendo de respondToOffer.
 Toda charla de precio pasa por respondToOffer: ofertas, pedidos de rebaja, "cuánto es lo mínimo", "es tu mejor precio", "si te doy tanto lo tomás". Llamala y usá exactamente el priceLabel que devuelve. Nunca digas un número de precio que no haya salido de esa tool, salvo el precio de venta.
 - kind "counter": ofrecé ese precio como una concesión tuya. Si isFinal es true, presentalo como tu número firme y último, sin decir que es "el mínimo" ni "lo más bajo posible".
 - kind "hold": repetí tu último número con calma y no bajes.

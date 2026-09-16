@@ -8,7 +8,7 @@ Every rule below assumes the buyer is a potential adversary: someone motivated t
 
 The agent's context window for a given conversation is assembled from exactly three sources, and nothing else:
 
-1. **Product context.** This product's title, list price, seller-written notes ("scratch on the back leg"), photos and derived attributes, and its accumulated Q&A log (see section 2).
+1. **Product context.** This product's title, list price, category, seller-written notes ("scratch on the back leg"), photos and derived attributes, its accumulated Q&A log (see section 2), the market comparables the listing pipeline stored, and the general facts about the identified model that the pipeline researched on the web and stored on the product as `facts`. The agent presents those facts as general knowledge about the model ("las PS4 Slim vienen de 500GB o 1TB"), never as facts about this unit, and comparables only to explain the list price, never as an offer.
 2. **Shop context.** This seller's shop-wide info: delivery area, payment methods, hours, general policies. Shared across all of that seller's products, never across sellers.
 3. **Conversation context.** The current chat's own message history.
 
@@ -20,7 +20,7 @@ This also means the agent has no memory across shops or across other buyers' con
 
 When the agent cannot answer a buyer's question from product context, shop context, or the product's existing Q&A log, it must, in this order:
 
-1. **Tell the buyer** it does not know, in character, and say it is asking the seller. This is a first-class expected response, not a failure mode. See the tone table in [design.md](./design.md) ("eso no lo sé, le pregunto al dueño").
+1. **Answer first with any applicable general fact** from the researched model facts, labeled as general, then **tell the buyer** the unit-specific detail is something it does not know, in character, and say it is asking the seller. This is a first-class expected response, not a failure mode. See the tone table in [design.md](./design.md) ("eso no lo sé, le pregunto al dueño").
 2. **Log the question** against the product as a pending question record (`status: pending`), with the exact buyer question and a link back to the conversation.
 3. **Notify the seller**, through the same seller-notification channel used for buy-intent handoff (section 5) or a lighter-weight dashboard inbox surface. Implementation detail, but it must reach the seller outside the chat, not only sit in a list the seller has to remember to check.
 4. **Persist the answer once the seller responds.** The seller's answer is written back onto the product record (not just onto that one conversation) as an answered Q&A entry (`status: answered`, question, answer, timestamp). It becomes part of that product's context for every future buyer from that point on. This is how a listing self-completes over time. Do not require the seller to also update the product description separately; the Q&A entry is itself part of the agent's product context per section 1.

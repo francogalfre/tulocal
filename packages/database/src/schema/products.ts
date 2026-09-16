@@ -65,6 +65,7 @@ export const products = pgTable(
     condition: productCondition("condition"),
     conditionNotes: text("condition_notes"),
     attributes: text("attributes").array().default([]).notNull(),
+    facts: text("facts").array().default([]).notNull(),
     sellerNotes: text("seller_notes"),
     listPriceInArs: integer("list_price_in_ars"),
     floorPriceInArs: integer("floor_price_in_ars"),
