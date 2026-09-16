@@ -1,122 +1,167 @@
 "use client";
 
-import { useActionState, useRef, useState } from "react";
+import { AnimatePresence, motion } from "motion/react";
+import { useActionState, useEffect, useRef, useState } from "react";
 import type { ChangeEvent, DragEvent } from "react";
 
-import { Develop } from "@/components/motion/develop";
 import { tulocalIcons } from "@/components/icons";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
 import { createProduct } from "@/features/product/create";
-import type { CreateProductState } from "@/features/product/create";
+import { Hint } from "@/features/product/upload/hint";
+import { MAX_PHOTOS } from "@/features/product/upload/limits";
+import { Photo } from "@/features/product/upload/photo";
+import {
+  appendPhotos,
+  buildFileList,
+  promotePhotoToCover,
+  removePhoto,
+} from "@/features/product/upload/selection";
+import { Slot } from "@/features/product/upload/slot";
+import { riseVariants } from "@/lib/motion/rise";
 import { cn } from "@/lib/utils";
-
-const MAX_PHOTOS = 3;
+import type { CreateProductState } from "@/features/product/create";
+import type { SelectedPhoto } from "@/features/product/upload/selection";
 
 const INITIAL_STATE: CreateProductState = { error: null };
 
+const CELL_CLASSES = ["col-span-2 row-span-2", "aspect-square", "aspect-square"] as const;
+
+const SLOT_INDEXES = Array.from({ length: MAX_PHOTOS }, (_, index) => index);
+
 export function Dropzone() {
   const [state, submit, isPending] = useActionState(createProduct, INITIAL_STATE);
-  const [previewUrls, setPreviewUrls] = useState<string[]>([]);
+  const [photos, setPhotos] = useState<SelectedPhoto[]>([]);
+  const [rejectedMessage, setRejectedMessage] = useState<string | null>(null);
   const [isDragging, setIsDragging] = useState(false);
   const inputReference = useRef<HTMLInputElement>(null);
-  const hasPhotos = previewUrls.length > 0;
+  const developedIdsReference = useRef(new Set<string>());
+  const hasPhotos = photos.length > 0;
+  const nextEmptyIndex = photos.length;
+  const visibleError = rejectedMessage !== null ? rejectedMessage : state.error;
 
-  function acceptFiles(fileList: FileList | null): void {
-    const files = Array.from(fileList ?? [])
-      .filter((file) => file.type.startsWith("image/"))
-      .slice(0, MAX_PHOTOS);
-    const transfer = new DataTransfer();
-
-    for (const file of files) {
-      transfer.items.add(file);
+  useEffect(() => {
+    for (const photo of photos) {
+      developedIdsReference.current.add(photo.id);
     }
+  }, [photos]);
+
+  function applyPhotos(next: SelectedPhoto[]): void {
+    setPhotos(next);
 
     if (inputReference.current !== null) {
-      inputReference.current.files = transfer.files;
+      inputReference.current.files = buildFileList(next);
     }
+  }
 
-    setPreviewUrls(files.map((file) => URL.createObjectURL(file)));
+  function acceptFiles(fileList: FileList | null): void {
+    const selection = appendPhotos(photos, Array.from(fileList ?? []));
+
+    setRejectedMessage(selection.rejectedMessage);
+    applyPhotos(selection.photos);
+  }
+
+  function openPicker(): void {
+    inputReference.current?.click();
   }
 
   function handleChange(event: ChangeEvent<HTMLInputElement>): void {
     acceptFiles(event.target.files);
   }
 
-  function handleDrop(event: DragEvent<HTMLLabelElement>): void {
+  function handleDrop(event: DragEvent<HTMLDivElement>): void {
     event.preventDefault();
     setIsDragging(false);
     acceptFiles(event.dataTransfer.files);
   }
 
-  function handleDragOver(event: DragEvent<HTMLLabelElement>): void {
+  function handleDragOver(event: DragEvent<HTMLDivElement>): void {
     event.preventDefault();
     setIsDragging(true);
   }
 
+  function handleDragLeave(event: DragEvent<HTMLDivElement>): void {
+    if (event.relatedTarget instanceof Node && event.currentTarget.contains(event.relatedTarget)) {
+      return;
+    }
+
+    setIsDragging(false);
+  }
+
   return (
     <form action={submit} className="flex flex-col gap-4">
-      <label
-        htmlFor="photos"
+      <div
         onDrop={handleDrop}
         onDragOver={handleDragOver}
-        onDragLeave={() => setIsDragging(false)}
-        className={cn(
-          "flex min-h-56 cursor-pointer flex-col items-center justify-center gap-3 rounded-2xl border border-dashed p-6 text-center transition-[background-color,border-color,transform] duration-200 hover:border-brand-deep/60 hover:bg-muted/60 focus-within:border-ring focus-within:ring-3 focus-within:ring-ring/50",
-          isDragging ? "scale-[1.01] border-brand-deep bg-muted" : "border-border",
-          hasPhotos ? "min-h-0 py-5" : "",
-        )}
+        onDragLeave={handleDragLeave}
+        className="grid grid-cols-3 gap-2"
       >
-        {hasPhotos ? (
-          <span className="inline-flex items-center gap-2 text-sm font-medium">
-            <tulocalIcons.imageAdd className="size-4" aria-hidden="true" />
-            Cambiar fotos
-          </span>
-        ) : (
-          <>
-            <tulocalIcons.camera className="size-7 text-brand-deep" aria-hidden="true" />
-            <span className="flex flex-col gap-1">
-              <span className="font-medium">Sacá o subí hasta {MAX_PHOTOS} fotos</span>
-              <span className="text-sm text-muted-foreground">
-                Con luz natural y el producto entero en cuadro sale mejor.
-              </span>
-            </span>
-          </>
-        )}
+        {SLOT_INDEXES.map((index) => {
+          const photo = photos[index];
+
+          return (
+            <div key={index} className={cn("relative", CELL_CLASSES[index])}>
+              <AnimatePresence initial={false}>
+                {photo !== undefined ? (
+                  <Photo
+                    key={photo.id}
+                    photo={photo}
+                    position={index + 1}
+                    isCover={index === 0}
+                    isUploading={isPending}
+                    isNew={!developedIdsReference.current.has(photo.id)}
+                    onRemove={(id) => applyPhotos(removePhoto(photos, id))}
+                    onPromote={(id) => applyPhotos(promotePhotoToCover(photos, id))}
+                  />
+                ) : (
+                  <Slot
+                    key="slot"
+                    isCover={index === 0}
+                    isNext={index === nextEmptyIndex}
+                    isDragging={isDragging}
+                    onPick={openPicker}
+                  />
+                )}
+              </AnimatePresence>
+            </div>
+          );
+        })}
         <input
           ref={inputReference}
-          id="photos"
           name="photos"
           type="file"
           accept="image/*"
           multiple
-          required
+          tabIndex={-1}
           className="sr-only"
           onChange={handleChange}
         />
-      </label>
-      {hasPhotos ? (
-        <div className="grid grid-cols-3 gap-2">
-          {previewUrls.map((url, index) => (
-            <Develop
-              key={url}
-              className="relative aspect-square overflow-hidden rounded-xl bg-muted"
-            >
-              <img src={url} alt={`Foto ${index + 1}`} className="size-full object-cover" />
-            </Develop>
-          ))}
-        </div>
-      ) : null}
-      {state.error !== null ? (
+      </div>
+      <Hint count={photos.length} />
+      {visibleError !== null ? (
         <Alert variant="destructive">
-          <AlertDescription>{state.error}</AlertDescription>
+          <tulocalIcons.close aria-hidden="true" />
+          <AlertDescription>{visibleError}</AlertDescription>
         </Alert>
       ) : null}
-      <Button type="submit" size="xl" disabled={isPending || !hasPhotos}>
-        {isPending ? <Spinner data-icon="inline-start" /> : null}
-        {isPending ? "Subiendo las fotos" : "Armar la publicación"}
-      </Button>
+      <AnimatePresence initial={false}>
+        {hasPhotos ? (
+          <motion.div
+            key="submit"
+            variants={riseVariants}
+            initial="hidden"
+            animate="visible"
+            exit="exit"
+            className="flex flex-col"
+          >
+            <Button type="submit" size="xl" disabled={isPending}>
+              {isPending ? <Spinner data-icon="inline-start" /> : null}
+              {isPending ? "Subiendo las fotos" : "Armar la publicación"}
+            </Button>
+          </motion.div>
+        ) : null}
+      </AnimatePresence>
     </form>
   );
 }

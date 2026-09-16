@@ -50,6 +50,12 @@ const PUBLIC_IMAGE_COLUMNS = {
   sortOrder: true,
 } as const;
 
+const PUBLIC_STORE_CACHE_SHAPE = JSON.stringify([
+  PUBLIC_STORE_COLUMNS,
+  PUBLIC_PRODUCT_COLUMNS,
+  PUBLIC_IMAGE_COLUMNS,
+]);
+
 type QueriedPublicStore = NonNullable<Awaited<ReturnType<typeof queryPublicStore>>>;
 
 type QueriedPublicProduct = QueriedPublicStore["products"][number];
@@ -99,10 +105,11 @@ async function querySerializedPublicStore(handle: string): Promise<SerializedPub
 }
 
 function readCachedPublicStore(handle: string): Promise<SerializedPublicStore | null> {
-  return unstable_cache(() => querySerializedPublicStore(handle), [handle], {
-    tags: [buildStoreTag(handle)],
-    revalidate: PUBLIC_STORE_REVALIDATE_IN_SECONDS,
-  })();
+  return unstable_cache(
+    () => querySerializedPublicStore(handle),
+    [handle, PUBLIC_STORE_CACHE_SHAPE],
+    { tags: [buildStoreTag(handle)], revalidate: PUBLIC_STORE_REVALIDATE_IN_SECONDS },
+  )();
 }
 
 async function findPublicStoreOnce(handle: string): Promise<PublicStore | null> {

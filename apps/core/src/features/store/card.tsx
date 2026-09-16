@@ -7,6 +7,7 @@ import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import { Amount } from "@/components/amount";
 import { CONDITION_LABELS } from "@/features/product/condition";
+import { ProductShare } from "@/features/product/share";
 import type { CatalogProduct } from "@/features/store/catalog";
 import {
   EASE_OUT_EXPO,
@@ -33,6 +34,7 @@ const ABOVE_THE_FOLD_CARDS = 4;
 type ProductCardProps = {
   product: CatalogProduct;
   href: string;
+  shareUrl: string | null;
   showStatus: boolean;
   position: number;
 };
@@ -41,12 +43,13 @@ function computeEntranceDelayInSeconds(position: number): number {
   return Math.min(position, MAX_STAGGER_STEPS) * STAGGER_STEP_IN_SECONDS;
 }
 
-export function ProductCard({ product, href, showStatus, position }: ProductCardProps) {
+export function ProductCard({ product, href, shareUrl, showStatus, position }: ProductCardProps) {
   const status = STATUS_LABELS[product.status];
 
   return (
     <motion.li
       layout="position"
+      className="group relative"
       initial={{ opacity: 0, y: CARD_START_OFFSET_IN_PIXELS }}
       whileInView={{
         opacity: 1,
@@ -66,9 +69,9 @@ export function ProductCard({ product, href, showStatus, position }: ProductCard
     >
       <Link
         href={href}
-        className="group flex flex-col gap-3 rounded-2xl outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
+        className="flex flex-col gap-3 rounded-2xl outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
       >
-        <div className="relative aspect-square overflow-hidden rounded-2xl bg-secondary">
+        <div className="relative aspect-square overflow-hidden rounded-2xl border border-border bg-secondary">
           {product.coverUrl !== null ? (
             <Image
               src={product.coverUrl}
@@ -96,6 +99,7 @@ export function ProductCard({ product, href, showStatus, position }: ProductCard
           </div>
         </div>
       </Link>
+      {shareUrl !== null ? <ProductShare url={shareUrl} title={product.title} /> : null}
     </motion.li>
   );
 }

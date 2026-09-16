@@ -23,17 +23,20 @@ export type EntryAgent = {
 type EntryInput = {
   message: AgentUIMessage;
   agent: EntryAgent;
+  listPriceInArs: number;
   canAcceptOffer: boolean;
+  isStillStreaming: boolean;
   onSend: (text: string) => void;
 };
 
 type CardInput = {
   card: ChatCard;
+  listPriceInArs: number;
   canAcceptOffer: boolean;
   onSend: (text: string) => void;
 };
 
-function renderCard({ card, canAcceptOffer, onSend }: CardInput): ReactNode {
+function renderCard({ card, listPriceInArs, canAcceptOffer, onSend }: CardInput): ReactNode {
   if (card.kind === "photos") {
     return <Photos key={card.id} photoUrls={card.photoUrls} />;
   }
@@ -41,6 +44,8 @@ function renderCard({ card, canAcceptOffer, onSend }: CardInput): ReactNode {
   return (
     <Offer
       key={card.id}
+      listPriceInArs={listPriceInArs}
+      priceInArs={card.priceInArs}
       priceLabel={card.priceLabel}
       isFinal={card.isFinal}
       canAccept={canAcceptOffer}
@@ -49,9 +54,16 @@ function renderCard({ card, canAcceptOffer, onSend }: CardInput): ReactNode {
   );
 }
 
-export function renderEntry({ message, agent, canAcceptOffer, onSend }: EntryInput): ReactNode[] {
+export function renderEntry({
+  message,
+  agent,
+  listPriceInArs,
+  canAcceptOffer,
+  isStillStreaming,
+  onSend,
+}: EntryInput): ReactNode[] {
   const text = readMessageText(message);
-  const cards = readCards(message);
+  const cards = isStillStreaming ? [] : readCards(message);
 
   if (text === "" && cards.length === 0) {
     return [];
@@ -82,7 +94,12 @@ export function renderEntry({ message, agent, canAcceptOffer, onSend }: EntryInp
   return [
     bubble,
     ...cards.map((card, index) =>
-      renderCard({ card, canAcceptOffer: canAcceptOffer && index === lastCardIndex, onSend }),
+      renderCard({
+        card,
+        listPriceInArs,
+        canAcceptOffer: canAcceptOffer && index === lastCardIndex,
+        onSend,
+      }),
     ),
     ...readNoteKinds(message).map((kind) => <Note key={`${message.id}-${kind}`} kind={kind} />),
   ];

@@ -109,6 +109,7 @@ export function Chat({
   const closing = deriveClosing(messages, initialClosing);
   const canCloseOnWhatsapp = closing.hasBuyIntent && whatsappPhone !== null;
   const canAcceptOffer = status === "ready" && !closing.hasBuyIntent;
+  const isReplyStreaming = status === "submitted" || status === "streaming";
   const agent = { name: agentName, seed: agentSeed, voice: agentVoice };
   const offeredPriceInArs = readOfferedPriceInArs(
     messages,
@@ -174,7 +175,9 @@ export function Chat({
             renderEntry({
               message,
               agent,
+              listPriceInArs,
               canAcceptOffer: canAcceptOffer && index === messages.length - 1,
+              isStillStreaming: isReplyStreaming && index === messages.length - 1,
               onSend: send,
             }),
           )}

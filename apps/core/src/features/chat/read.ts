@@ -3,7 +3,7 @@ import type { ChatNoteKind } from "@/features/chat/note";
 
 export type ChatCard =
   | { kind: "photos"; id: string; photoUrls: string[] }
-  | { kind: "offer"; id: string; priceLabel: string; isFinal: boolean };
+  | { kind: "offer"; id: string; priceInArs: number; priceLabel: string; isFinal: boolean };
 
 export function readMessageText(message: AgentUIMessage): string {
   const correction = message.parts.find((part) => part.type === "data-correction");
@@ -66,6 +66,7 @@ export function readCards(message: AgentUIMessage): ChatCard[] {
       cards.push({
         kind: "offer",
         id: `${message.id}-offer`,
+        priceInArs: part.data.priceInArs,
         priceLabel: part.data.priceLabel,
         isFinal: part.data.isFinal,
       });
@@ -83,6 +84,7 @@ export function readCards(message: AgentUIMessage): ChatCard[] {
       cards.push({
         kind: "offer",
         id: part.toolCallId,
+        priceInArs: part.output.priceInArs,
         priceLabel: part.output.priceLabel,
         isFinal: part.output.isFinal,
       });

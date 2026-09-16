@@ -18,6 +18,7 @@ import { Gallery } from "@/features/product/gallery/grid";
 import { ProductActions } from "@/features/product/manage/actions";
 import { Preview } from "@/features/product/progress/preview";
 import { Stages } from "@/features/product/progress/stages";
+import { Thumbnail } from "@/features/product/progress/thumbnail";
 import { Qr } from "@/features/product/published/qr";
 import { Share } from "@/features/product/published/share";
 import { retryPipeline } from "@/features/product/retry";
@@ -28,7 +29,7 @@ import { Inbox } from "@/features/question/inbox";
 import { StoreLink } from "@/features/store/link";
 import type { OwnedProduct } from "@/features/product/find";
 import { requireCurrentSession } from "@/lib/session";
-import { buildStoreUrl } from "@/lib/url";
+import { buildProductUrl, buildStoreUrl } from "@/lib/url";
 
 type ProductPageProps = PageProps<"/product/[id]">;
 
@@ -45,18 +46,24 @@ type ProductViewProps = {
 };
 
 function Processing({ product }: ProductViewProps) {
+  const original = product.images.find((image) => image.kind === "original");
+  const isIdentifying = product.pipelineStage === "identifying";
+
   return (
     <>
-      <Preview images={product.images} isIdentifying={product.pipelineStage === "identifying"} />
-      <div className="flex flex-col gap-6">
+      <div className="flex items-start gap-4">
+        {original !== undefined ? (
+          <Thumbnail url={original.url} isScanning={isIdentifying} />
+        ) : null}
         <div className="flex flex-col gap-2">
           <h1 className="text-3xl">Armando la publicación</h1>
           <p className="text-muted-foreground">
             Tarda menos de un minuto. Si te vas, seguimos igual y lo encontrás en tu tienda.
           </p>
         </div>
-        <Stages product={product} />
       </div>
+      <Stages product={product} />
+      {isIdentifying ? null : <Preview images={product.images} />}
     </>
   );
 }
@@ -150,7 +157,7 @@ function Celebration({ product }: ProductViewProps) {
 
 function Managed({ product }: ProductViewProps) {
   const isSold = product.status === "sold";
-  const productUrl = `${buildStoreUrl(product.store.handle)}/${product.id}`;
+  const productUrl = buildProductUrl(product.store.handle, product.id);
 
   return (
     <>
