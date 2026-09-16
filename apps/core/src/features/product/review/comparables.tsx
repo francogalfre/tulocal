@@ -1,5 +1,12 @@
+import { Badge } from "@/components/ui/badge";
 import type { OwnedProduct } from "@/features/product/find";
 import { formatArs } from "@/lib/money";
+
+const SOURCE_LABELS = {
+  mercadolibre: "Mercado Libre",
+  facebook: "Facebook",
+  other: "Web",
+};
 
 type ComparablesProps = {
   comparables: OwnedProduct["comparables"];
@@ -11,25 +18,33 @@ export function Comparables({ comparables }: ComparablesProps) {
   }
 
   return (
-    <div className="flex flex-col gap-3">
-      <h2 className="text-lg">precios parecidos</h2>
-      <ul className="flex flex-col gap-2">
+    <section className="flex flex-col gap-4">
+      <div className="flex flex-col gap-1">
+        <h2 className="text-lg">Precios parecidos</h2>
+        <p className="text-sm text-muted-foreground">De acá salió el precio sugerido.</p>
+      </div>
+      <ul className="flex flex-col divide-y divide-border">
         {comparables.map((comparable) => (
-          <li key={comparable.id} className="flex items-baseline justify-between gap-4 text-sm">
+          <li key={comparable.id}>
             <a
               href={comparable.url}
               target="_blank"
               rel="noreferrer"
-              className="truncate text-muted-foreground"
+              className="group flex items-center justify-between gap-4 py-3 outline-none focus-visible:rounded-md focus-visible:ring-3 focus-visible:ring-ring/50"
             >
-              {comparable.title}
+              <span className="flex min-w-0 flex-col gap-1">
+                <span className="truncate text-sm group-hover:underline group-hover:underline-offset-4">
+                  {comparable.title}
+                </span>
+                <Badge variant="outline">{SOURCE_LABELS[comparable.source]}</Badge>
+              </span>
+              <span className="numeric shrink-0 font-heading font-semibold">
+                {formatArs(comparable.priceInArs)}
+              </span>
             </a>
-            <span className="shrink-0 font-heading font-semibold">
-              {formatArs(comparable.priceInArs)}
-            </span>
           </li>
         ))}
       </ul>
-    </div>
+    </section>
   );
 }

@@ -1,5 +1,6 @@
 "use client";
 
+import { Check, Copy, MessageCircle } from "lucide-react";
 import { useState } from "react";
 
 import { Button } from "@/components/ui/button";
@@ -12,7 +13,7 @@ type ShareProps = {
 
 export function Share({ url }: ShareProps) {
   const [isCopied, setIsCopied] = useState(false);
-  const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(url)}`;
+  const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(`Mirá lo que estoy vendiendo: ${url}`)}`;
 
   async function handleCopy(): Promise<void> {
     await navigator.clipboard.writeText(url);
@@ -22,16 +23,18 @@ export function Share({ url }: ShareProps) {
 
   return (
     <div className="flex flex-col gap-3">
-      <Button size="lg" onClick={handleCopy}>
-        {isCopied ? "copiado" : "copiar link"}
+      <Button size="xl" onClick={handleCopy}>
+        {isCopied ? <Check data-icon="inline-start" /> : <Copy data-icon="inline-start" />}
+        {isCopied ? "Link copiado" : "Copiar link"}
       </Button>
       <Button
-        size="lg"
+        size="xl"
         variant="outline"
         render={<a href={whatsappUrl} target="_blank" rel="noreferrer" />}
         nativeButton={false}
       >
-        compartir por WhatsApp
+        <MessageCircle data-icon="inline-start" />
+        Compartir por WhatsApp
       </Button>
     </div>
   );

@@ -1,5 +1,6 @@
 "use client";
 
+import { Pencil } from "lucide-react";
 import { useActionState, useState } from "react";
 
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -37,88 +38,121 @@ export function ReviewForm({ product }: ReviewFormProps) {
   const minimum = product.suggestedMinimumPriceInArs;
   const maximum = product.suggestedMaximumPriceInArs;
   const hasRange = minimum !== null && maximum !== null && minimum < maximum;
+  const hasSuggestion = product.listPriceInArs !== null;
+  const [isEditingPrice, setIsEditingPrice] = useState(!hasSuggestion);
   const needsWhatsapp = product.store.whatsappPhone === null;
 
   return (
-    <form action={submit} className="flex flex-col gap-8">
+    <form action={submit} className="flex flex-col gap-10">
       <input type="hidden" name="productId" value={product.id} />
       <input type="hidden" name="listPriceInArs" value={listPriceInArs} />
-      <div className="flex flex-col gap-4">
-        <p className="font-heading text-5xl font-semibold text-primary">
-          {formatArs(listPriceInArs)}
-        </p>
+      <section className="flex flex-col gap-5">
+        <div className="flex flex-col gap-1">
+          <span className="text-sm font-medium text-muted-foreground">Precio de venta</span>
+          {isEditingPrice ? (
+            <Input
+              id="listPriceInput"
+              type="number"
+              inputMode="numeric"
+              min={1}
+              autoFocus={hasSuggestion}
+              aria-label="Precio de venta"
+              className="numeric h-14 font-heading text-4xl font-semibold text-brand-deep"
+              value={listPriceInArs === 0 ? "" : listPriceInArs}
+              onChange={(event) => setListPriceInArs(Number(event.target.value))}
+              onBlur={() => setIsEditingPrice(listPriceInArs <= 0)}
+              required
+            />
+          ) : (
+            <button
+              type="button"
+              onClick={() => setIsEditingPrice(true)}
+              className="group flex w-fit items-center gap-3 rounded-lg text-left outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
+            >
+              <span className="numeric font-heading text-[3.25rem] leading-none font-semibold text-brand-deep">
+                {formatArs(listPriceInArs)}
+              </span>
+              <Pencil
+                className="size-5 text-muted-foreground opacity-60 transition-opacity group-hover:opacity-100"
+                aria-hidden="true"
+              />
+            </button>
+          )}
+        </div>
         {hasRange ? (
-          <div className="flex flex-col gap-2">
+          <div className="flex flex-col gap-3">
             <Slider
               min={minimum}
               max={maximum}
               step={Math.max(1, Math.round((maximum - minimum) / SLIDER_STEPS))}
               value={listPriceInArs}
               onValueChange={(value) => setListPriceInArs(roundToPriceStep(readSliderValue(value)))}
-              aria-label="precio de venta"
+              aria-label="Precio de venta"
             />
             <div className="flex justify-between text-sm text-muted-foreground">
-              <span>vender rápido</span>
-              <span>pedir más</span>
+              <span>Vender rápido</span>
+              <span>Pedir más</span>
             </div>
           </div>
-        ) : (
-          <Field>
-            <FieldLabel htmlFor="listPriceInput">precio de venta</FieldLabel>
-            <Input
-              id="listPriceInput"
-              type="number"
-              inputMode="numeric"
-              min={1}
-              value={listPriceInArs === 0 ? "" : listPriceInArs}
-              onChange={(event) => setListPriceInArs(Number(event.target.value))}
-              required
-            />
-            <FieldDescription>no encontramos precios parecidos, ponelo vos.</FieldDescription>
-          </Field>
+        ) : null}
+        {hasSuggestion ? null : (
+          <p className="text-sm text-muted-foreground">
+            No encontramos precios parecidos. Ponele el precio que te parezca.
+          </p>
         )}
-      </div>
-      <FieldGroup>
+      </section>
+      <FieldGroup className="gap-6">
         <Field>
-          <FieldLabel htmlFor="title">título</FieldLabel>
-          <Input id="title" name="title" defaultValue={product.title ?? ""} required />
-        </Field>
-        <Field>
-          <FieldLabel htmlFor="description">descripción</FieldLabel>
-          <Textarea
-            id="description"
-            name="description"
-            defaultValue={product.description ?? ""}
-            rows={6}
+          <FieldLabel htmlFor="title">Título</FieldLabel>
+          <Input
+            id="title"
+            name="title"
+            className="h-11"
+            defaultValue={product.title ?? ""}
             required
           />
         </Field>
         <Field>
-          <FieldLabel htmlFor="floorPriceInArs">precio mínimo</FieldLabel>
+          <FieldLabel htmlFor="description">Descripción</FieldLabel>
+          <Textarea
+            id="description"
+            name="description"
+            defaultValue={product.description ?? ""}
+            rows={7}
+            required
+          />
+        </Field>
+        <Field>
+          <FieldLabel htmlFor="floorPriceInArs">Precio mínimo</FieldLabel>
           <Input
             id="floorPriceInArs"
             name="floorPriceInArs"
             type="number"
             inputMode="numeric"
             min={1}
+            className="numeric h-11"
             defaultValue={product.floorPriceInArs ?? ""}
             required
           />
-          <FieldDescription>nadie lo ve. tu vendedora nunca baja de acá.</FieldDescription>
+          <FieldDescription>
+            Es secreto. Tu vendedora negocia, pero nunca baja de acá.
+          </FieldDescription>
         </Field>
         {needsWhatsapp ? (
           <Field>
-            <FieldLabel htmlFor="whatsappPhone">tu WhatsApp</FieldLabel>
+            <FieldLabel htmlFor="whatsappPhone">Tu WhatsApp</FieldLabel>
             <Input
               id="whatsappPhone"
               name="whatsappPhone"
               type="tel"
               inputMode="tel"
+              autoComplete="tel"
+              className="h-11"
               placeholder="11 2345 6789"
               required
             />
             <FieldDescription>
-              te escribimos ahí cuando aparezca un comprador en serio.
+              Te escribimos ahí cuando aparezca un comprador en serio.
             </FieldDescription>
           </Field>
         ) : null}
@@ -128,9 +162,9 @@ export function ReviewForm({ product }: ReviewFormProps) {
           <AlertDescription>{state.error}</AlertDescription>
         </Alert>
       ) : null}
-      <Button type="submit" size="lg" disabled={isPending || listPriceInArs <= 0}>
+      <Button type="submit" size="xl" disabled={isPending || listPriceInArs <= 0}>
         {isPending ? <Spinner data-icon="inline-start" /> : null}
-        publicar
+        {isPending ? "Publicando" : "Publicar"}
       </Button>
     </form>
   );

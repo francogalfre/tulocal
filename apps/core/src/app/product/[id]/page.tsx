@@ -1,3 +1,4 @@
+import { ArrowUpRight } from "lucide-react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
@@ -17,47 +18,64 @@ import type { OwnedProduct } from "@/features/product/find";
 import { requireCurrentSession } from "@/lib/session";
 import { buildStoreUrl } from "@/lib/url";
 
+const GENERATED_IMAGE_COUNT = 3;
+
 type ProductPageProps = PageProps<"/product/[id]">;
 
-function Processing({ product }: { product: OwnedProduct }) {
+type ProductViewProps = {
+  product: OwnedProduct;
+};
+
+function Processing({ product }: ProductViewProps) {
+  const pendingSlots = product.pipelineStage === "identifying" ? 0 : GENERATED_IMAGE_COUNT;
+
   return (
     <>
-      <Gallery images={product.images} />
-      <div className="flex flex-col gap-4">
-        <h1 className="text-2xl">armando la publicación</h1>
+      <Gallery images={product.images} pendingSlots={pendingSlots} />
+      <div className="flex flex-col gap-5">
+        <div className="flex flex-col gap-2">
+          <h1 className="text-3xl">Armando la publicación</h1>
+          <p className="text-muted-foreground">Tarda menos de un minuto. Podés quedarte acá.</p>
+        </div>
         <Stages currentStage={product.pipelineStage} />
-        <p className="text-sm text-muted-foreground">
-          tarda menos de un minuto. podés quedarte acá.
-        </p>
       </div>
     </>
   );
 }
 
-function Failed({ product }: { product: OwnedProduct }) {
+function Failed({ product }: ProductViewProps) {
   return (
     <>
       <Gallery images={product.images} />
-      <Alert variant="destructive">
-        <AlertTitle>no pudimos armar la publicación</AlertTitle>
-        <AlertDescription>{product.pipelineError}</AlertDescription>
-      </Alert>
-      <form action={retryPipeline} className="flex flex-col gap-3">
-        <input type="hidden" name="productId" value={product.id} />
-        <Button type="submit" size="lg">
-          probar de nuevo
-        </Button>
-        <Button size="lg" variant="outline" render={<Link href="/new" />} nativeButton={false}>
-          subir otras fotos
-        </Button>
-      </form>
+      <div className="flex flex-col gap-5">
+        <h1 className="text-3xl">No pudimos armar la publicación</h1>
+        <Alert variant="destructive">
+          <AlertTitle>Qué pasó</AlertTitle>
+          <AlertDescription>{product.pipelineError}</AlertDescription>
+        </Alert>
+        <form action={retryPipeline} className="flex flex-col gap-3">
+          <input type="hidden" name="productId" value={product.id} />
+          <Button type="submit" size="xl">
+            Probar de nuevo
+          </Button>
+          <Button size="xl" variant="outline" render={<Link href="/new" />} nativeButton={false}>
+            Subir otras fotos
+          </Button>
+        </form>
+      </div>
     </>
   );
 }
 
-function Review({ product }: { product: OwnedProduct }) {
+function Review({ product }: ProductViewProps) {
   return (
     <>
+      <div className="flex flex-col gap-2">
+        <h1 className="text-3xl">Revisá antes de publicar</h1>
+        <p className="text-muted-foreground">
+          Todo lo que ves lo podés cambiar. Nada se publica sin tu ok.
+        </p>
+      </div>
       <Gallery images={product.images} />
       <ReviewForm product={product} />
       <Comparables comparables={product.comparables} />
@@ -65,24 +83,36 @@ function Review({ product }: { product: OwnedProduct }) {
   );
 }
 
-function Published({ product }: { product: OwnedProduct }) {
+function Published({ product }: ProductViewProps) {
   const storeUrl = buildStoreUrl(product.store.handle);
 
   return (
     <>
       <div className="flex flex-col gap-3">
-        <Badge>publicado</Badge>
-        <h1 className="text-3xl">listo, ya está publicado</h1>
-        <a href={storeUrl} className="font-heading text-xl font-semibold text-primary">
-          tulocal/{product.store.handle}
-        </a>
-        <p className="text-muted-foreground">compartilo por WhatsApp, Instagram o con el QR.</p>
+        <Badge className="motion-safe:animate-in motion-safe:zoom-in-75 motion-safe:duration-300">
+          Publicado
+        </Badge>
+        <h1 className="text-3xl">Listo, ya está publicado</h1>
+        <p className="text-muted-foreground">
+          Compartí el link o imprimí el QR. Cuando alguien quiera comprar, te avisamos por WhatsApp.
+        </p>
       </div>
-      <Qr url={storeUrl} />
+      <Qr url={storeUrl} handle={product.store.handle} />
       <Share url={storeUrl} />
-      <Button size="lg" variant="ghost" render={<Link href="/new" />} nativeButton={false}>
-        subir otro producto
-      </Button>
+      <div className="flex flex-col gap-1">
+        <Button
+          size="xl"
+          variant="ghost"
+          render={<a href={storeUrl} target="_blank" rel="noreferrer" />}
+          nativeButton={false}
+        >
+          Ver mi tienda
+          <ArrowUpRight data-icon="inline-end" />
+        </Button>
+        <Button size="xl" variant="ghost" render={<Link href="/new" />} nativeButton={false}>
+          Subir otro producto
+        </Button>
+      </div>
     </>
   );
 }

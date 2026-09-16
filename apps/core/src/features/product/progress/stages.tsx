@@ -5,15 +5,16 @@ import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 
 import { Spinner } from "@/components/ui/spinner";
+import { cn } from "@/lib/utils";
 import type { OwnedProduct } from "@/features/product/find";
 
 const REFRESH_INTERVAL_IN_MILLISECONDS = 2000;
 
 const STAGES = [
-  { key: "identifying", label: "identificando el producto" },
-  { key: "imaging", label: "mejorando las fotos" },
-  { key: "writing", label: "escribiendo título y descripción" },
-  { key: "researching", label: "buscando precios parecidos" },
+  { key: "identifying", label: "Identificando el producto" },
+  { key: "imaging", label: "Mejorando las fotos" },
+  { key: "writing", label: "Escribiendo título y descripción" },
+  { key: "researching", label: "Buscando precios parecidos" },
 ] as const;
 
 type StagesProps = {
@@ -39,11 +40,16 @@ export function Stages({ currentStage }: StagesProps) {
         return (
           <li
             key={stage.key}
-            className={`flex items-center gap-3 ${isDone || isCurrent ? "text-foreground" : "text-muted-foreground"}`}
+            className={cn(
+              "flex items-center gap-3 transition-colors duration-300",
+              isDone || isCurrent ? "text-foreground" : "text-muted-foreground",
+            )}
           >
             <span className="flex size-5 items-center justify-center">
-              {isDone ? <Check className="size-4 text-primary" /> : null}
-              {isCurrent ? <Spinner /> : null}
+              {isDone ? (
+                <Check className="size-4 text-brand-deep motion-safe:animate-in motion-safe:zoom-in-50 motion-safe:duration-300" />
+              ) : null}
+              {isCurrent ? <Spinner className="text-brand-deep" /> : null}
             </span>
             {stage.label}
           </li>

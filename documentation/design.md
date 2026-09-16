@@ -10,7 +10,7 @@ Borrowed from Vercel: the ideas that are useful here, not the cold aesthetic.
 
 1. **Typography creates hierarchy, not boxes.** Before adding a border or a background to something, try a size or weight change first.
 2. **One surface per screen.** The background is flat (paper). A card never sits inside another card. A border or a different background is only earned when it communicates selection, state, or a real grouping.
-3. **Lowercase, sentence case, no ceremony.** No ALL CAPS labels or eyebrows above titles. Titles state what happened, not the component's genre ("your product is live", not "publication status").
+3. **Sentence case, no ceremony.** Normal capitalization: the first letter of a sentence or label is uppercase, the rest follows Spanish rules. No ALL CAPS labels or eyebrows above titles. Titles state what happened, not the component's genre ("Tu producto ya está publicado", not "Estado de publicación").
 4. **Never use an em dash (—).** Separate ideas with a period or a comma instead.
 5. **One primary action per screen.** If two buttons both look important, one of them is not.
 6. **The price is always the largest element on screen.** It is what people came to find out.
@@ -98,8 +98,8 @@ Usage: `space-2` to `space-4` inside a group (label to value). `space-6` to `spa
 ## Components
 
 - **Primary button:** `--color-accent-deep` background, white text, `border-radius: 10px`, no shadow.
-- **Status tag** (for example "publicado"): same `--color-accent-deep` background, white text, `border-radius: 999px`, `padding: 5px 12px`.
-- **Two CTAs, one primary.** A product page always shows "hablar con el dueño" (WhatsApp) and "hablar con [agent name]" (chat) side by side. The agent is the product's front door, so it gets the primary treatment: `--color-accent-deep` solid. WhatsApp is secondary: `1px solid var(--color-line)`, transparent background, `--color-ink` text. Never render both as solid buttons.
+- **Status tag** (for example "Publicado"): same `--color-accent-deep` background, white text, `border-radius: 999px`, `padding: 5px 12px`.
+- **Two CTAs, one primary.** A product page always shows "Hablar con el dueño" (WhatsApp) and "Hablar con [agent name]" (chat) side by side. The agent is the product's front door, so it gets the primary treatment: `--color-accent-deep` solid. WhatsApp is secondary: `1px solid var(--color-line)`, transparent background, `--color-ink` text. Never render both as solid buttons.
 - **Agent chat bubble:** the agent's messages sit on `--color-paper-2` (the one allowed secondary surface), the buyer's messages sit on plain `--color-paper` with just a border. No avatars, no colored chat tiles. The mascot only appears once, at the top of the chat.
 - **Borders:** `1px solid var(--color-line)`. Never use a shadow to fake depth.
 - **Radius:** 10px for buttons and inputs, 16–20px for large surfaces (product cards, modals). Do not mix more than two radius values on one screen.
@@ -107,7 +107,7 @@ Usage: `space-2` to `space-4` inside a group (label to value). `space-6` to `spa
 ## Logo
 
 - Icon: four rounded squares in a checkerboard, `--color-accent` and `--color-accent-deep`.
-- Wordmark: always lowercase, Outfit 600. The trailing dot from the previous brand direction is optional, not part of the name anymore.
+- Wordmark: always lowercase (the brand name is "tulocal"), Outfit 600. The trailing dot from the previous brand direction is optional, not part of the name anymore.
 - Minimum legible size: 18px. Below that, use the icon alone without the inner detail.
 
 ## Voice and tone
@@ -116,12 +116,12 @@ Usage: `space-2` to `space-4` inside a group (label to value). `space-6` to `spa
 
 | do                                   | don't                                |
 | ------------------------------------ | ------------------------------------ |
-| "listo, ya está publicado"           | "¡bienvenido a tu nueva plataforma!" |
-| "te llegó un comprador en serio"     | "optimizá tus ventas con IA"         |
-| "¿cuánto pedís por esto?"            | "asistente virtual inteligente"      |
-| "eso no lo sé, le pregunto al dueño" | "solución integral de e-commerce"    |
+| "Listo, ya está publicado"           | "¡Bienvenido a tu nueva plataforma!" |
+| "Te llegó un comprador en serio"     | "Optimizá tus ventas con IA"         |
+| "¿Cuánto pedís por esto?"            | "Asistente virtual inteligente"      |
+| "Eso no lo sé, le pregunto al dueño" | "Solución integral de e-commerce"    |
 
-Short sentences, active verbs, zero corporate language. A button that says "publicar" is followed by a message that says "publicado", never "¡tu producto fue enviado exitosamente!".
+Short sentences, active verbs, zero corporate language. A button that says "Publicar" is followed by a message that says "Publicado", never "¡Tu producto fue enviado exitosamente!".
 
 ## When something is not covered
 

@@ -1,14 +1,15 @@
 "use client";
 
-import { Camera } from "lucide-react";
-import { useActionState, useState } from "react";
-import type { ChangeEvent } from "react";
+import { Camera, ImagePlus } from "lucide-react";
+import { useActionState, useRef, useState } from "react";
+import type { ChangeEvent, DragEvent } from "react";
 
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
 import { createProduct } from "@/features/product/create";
 import type { CreateProductState } from "@/features/product/create";
+import { cn } from "@/lib/utils";
 
 const MAX_PHOTOS = 3;
 
@@ -17,23 +18,73 @@ const INITIAL_STATE: CreateProductState = { error: null };
 export function Dropzone() {
   const [state, submit, isPending] = useActionState(createProduct, INITIAL_STATE);
   const [previewUrls, setPreviewUrls] = useState<string[]>([]);
+  const [isDragging, setIsDragging] = useState(false);
+  const inputReference = useRef<HTMLInputElement>(null);
+  const hasPhotos = previewUrls.length > 0;
 
-  function handlePhotosChange(event: ChangeEvent<HTMLInputElement>): void {
-    const files = Array.from(event.target.files ?? []).slice(0, MAX_PHOTOS);
+  function acceptFiles(fileList: FileList | null): void {
+    const files = Array.from(fileList ?? [])
+      .filter((file) => file.type.startsWith("image/"))
+      .slice(0, MAX_PHOTOS);
+    const transfer = new DataTransfer();
+
+    for (const file of files) {
+      transfer.items.add(file);
+    }
+
+    if (inputReference.current !== null) {
+      inputReference.current.files = transfer.files;
+    }
 
     setPreviewUrls(files.map((file) => URL.createObjectURL(file)));
+  }
+
+  function handleChange(event: ChangeEvent<HTMLInputElement>): void {
+    acceptFiles(event.target.files);
+  }
+
+  function handleDrop(event: DragEvent<HTMLLabelElement>): void {
+    event.preventDefault();
+    setIsDragging(false);
+    acceptFiles(event.dataTransfer.files);
+  }
+
+  function handleDragOver(event: DragEvent<HTMLLabelElement>): void {
+    event.preventDefault();
+    setIsDragging(true);
   }
 
   return (
     <form action={submit} className="flex flex-col gap-4">
       <label
         htmlFor="photos"
-        className="flex min-h-48 cursor-pointer flex-col items-center justify-center gap-2 rounded-xl border border-dashed border-border p-6 text-center"
+        onDrop={handleDrop}
+        onDragOver={handleDragOver}
+        onDragLeave={() => setIsDragging(false)}
+        className={cn(
+          "flex min-h-56 cursor-pointer flex-col items-center justify-center gap-3 rounded-2xl border border-dashed p-6 text-center transition-[background-color,border-color,transform] duration-200 hover:border-brand-deep/60 hover:bg-muted/60 focus-within:border-ring focus-within:ring-3 focus-within:ring-ring/50",
+          isDragging ? "scale-[1.01] border-brand-deep bg-muted" : "border-border",
+          hasPhotos ? "min-h-0 py-5" : "",
+        )}
       >
-        <Camera className="text-muted-foreground" />
-        <span className="font-medium">sacá o subí hasta {MAX_PHOTOS} fotos</span>
-        <span className="text-sm text-muted-foreground">de tu primer producto</span>
+        {hasPhotos ? (
+          <span className="inline-flex items-center gap-2 text-sm font-medium">
+            <ImagePlus className="size-4" aria-hidden="true" />
+            Cambiar fotos
+          </span>
+        ) : (
+          <>
+            <Camera className="size-7 text-brand-deep" aria-hidden="true" />
+            <span className="flex flex-col gap-1">
+              <span className="font-medium">Sacá o subí hasta {MAX_PHOTOS} fotos</span>
+              <span className="text-sm text-muted-foreground">
+                Con luz natural y el producto entero en cuadro sale mejor.
+              </span>
+            </span>
+          </>
+        )}
         <input
+          ref={inputReference}
           id="photos"
           name="photos"
           type="file"
@@ -41,18 +92,18 @@ export function Dropzone() {
           multiple
           required
           className="sr-only"
-          onChange={handlePhotosChange}
+          onChange={handleChange}
         />
       </label>
-      {previewUrls.length > 0 ? (
+      {hasPhotos ? (
         <div className="grid grid-cols-3 gap-2">
-          {previewUrls.map((url) => (
-            <img
+          {previewUrls.map((url, index) => (
+            <div
               key={url}
-              src={url}
-              alt=""
-              className="aspect-square w-full rounded-lg object-cover"
-            />
+              className="relative aspect-square overflow-hidden rounded-xl bg-muted motion-safe:animate-in motion-safe:fade-in motion-safe:zoom-in-95 motion-safe:duration-300"
+            >
+              <img src={url} alt={`Foto ${index + 1}`} className="size-full object-cover" />
+            </div>
           ))}
         </div>
       ) : null}
@@ -61,9 +112,9 @@ export function Dropzone() {
           <AlertDescription>{state.error}</AlertDescription>
         </Alert>
       ) : null}
-      <Button type="submit" size="lg" disabled={isPending || previewUrls.length === 0}>
+      <Button type="submit" size="xl" disabled={isPending || !hasPhotos}>
         {isPending ? <Spinner data-icon="inline-start" /> : null}
-        {isPending ? "subiendo las fotos" : "subir fotos"}
+        {isPending ? "Subiendo las fotos" : "Armar la publicación"}
       </Button>
     </form>
   );
