@@ -67,6 +67,7 @@ export function Gallery({ images, pendingSlots = 0, ownerProductId }: GalleryPro
               src={image.url}
               alt=""
               fill
+              priority={index === 0}
               sizes="(max-width: 448px) 66vw, 300px"
               className="object-cover transition-transform duration-500 ease-out group-hover:scale-[1.03]"
             />

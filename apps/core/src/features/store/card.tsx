@@ -28,6 +28,8 @@ const CARD_START_OFFSET_IN_PIXELS = 16;
 
 const CARD_EXIT_SCALE = 0.96;
 
+const ABOVE_THE_FOLD_CARDS = 4;
+
 type ProductCardProps = {
   product: CatalogProduct;
   href: string;
@@ -71,6 +73,7 @@ export function ProductCard({ product, href, showStatus, position }: ProductCard
               src={product.coverUrl}
               alt={product.title ?? ""}
               fill
+              priority={position < ABOVE_THE_FOLD_CARDS}
               sizes="(max-width: 640px) 50vw, 320px"
               className="object-cover transition-transform duration-500 ease-out group-hover:scale-[1.03]"
             />

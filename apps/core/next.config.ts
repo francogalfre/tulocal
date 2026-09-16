@@ -11,6 +11,7 @@ const nextConfiguration: NextConfig = {
     "@tulocal/storage",
   ],
   images: {
+    formats: ["image/avif", "image/webp"],
     remotePatterns: [{ protocol: "https", hostname: "*.public.blob.vercel-storage.com" }],
     minimumCacheTTL: IMAGE_CACHE_TIME_TO_LIVE_IN_SECONDS,
   },

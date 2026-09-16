@@ -32,8 +32,9 @@ export function Sponsors() {
           <Image
             src="/landing/remolitoral.svg"
             alt=""
-            width={224}
-            height={224}
+            width={24}
+            height={24}
+            unoptimized
             className="h-6 w-6"
           />
           <span className="font-heading text-lg font-semibold whitespace-nowrap">Remo Litoral</span>

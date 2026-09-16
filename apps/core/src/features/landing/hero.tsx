@@ -64,6 +64,8 @@ export function Hero({ signedInStorePath }: HeroProps) {
         width={1200}
         height={630}
         priority
+        fetchPriority="high"
+        sizes="(max-width: 896px) 100vw, 896px"
         className="h-auto w-full object-cover object-center"
       />
     </section>
