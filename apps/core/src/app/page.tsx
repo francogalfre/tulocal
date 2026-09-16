@@ -14,7 +14,7 @@ import { findStoreEntry } from "@/features/store/find";
 import { findCurrentSession } from "@/lib/session";
 
 export const metadata: Metadata = {
-  title: { absolute: "tulocal" },
+  title: { absolute: "tuLocal · Vendé en un click" },
   description:
     "Una foto y ya estás vendiendo. Entrás con Google, subís la foto y la IA arma la publicación, la publica y negocia por vos.",
 };
