@@ -8,7 +8,7 @@ import { signInWithGoogle } from "@tulocal/authentication/client";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
 
-const AFTER_SIGN_IN_PATH = "/new";
+const AFTER_SIGN_IN_PATH = "/store";
 
 function GoogleMark() {
   return (
