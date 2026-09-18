@@ -40,6 +40,7 @@ Lefthook runs on every commit and is not to be bypassed with `--no-verify`.
 - Subject in lowercase, imperative, no trailing period.
 - Commit only when asked. Work on `main` goes on a branch first.
 - Never commit generated noise: formatter passes over docs, `.DS_Store`, `.env` files.
+- Don't write description and co-author in the commits, only one line.
 
 ## Tests
 
