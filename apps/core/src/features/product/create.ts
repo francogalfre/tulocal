@@ -10,14 +10,29 @@ import { images } from "@tulocal/database/schema/images";
 import { products } from "@tulocal/database/schema/products";
 import { uploadBlob } from "@tulocal/storage/blob";
 
+import { releaseProductCreation, reserveProductCreation } from "@/features/plan/limits/reserve";
+import { findProductCreationBlocker } from "@/features/plan/limits/usage";
 import { runPipeline } from "@/features/product/pipeline/run";
 import { describeInvalidPhotos } from "@/features/product/upload/limits";
 import { ensureStore } from "@/features/store/ensure";
 import { logEvent } from "@/lib/logger";
 import { requireCurrentSession } from "@/lib/session";
+import type { ProductCreationBlocker } from "@/features/plan/limits/usage";
 
 export type CreateProductState = {
   error: string | null;
+  isPlanLimitReached: boolean;
+};
+
+const BLOCKED_CREATION_STATES: Record<ProductCreationBlocker, CreateProductState> = {
+  "plan-limit": {
+    error: "Llegaste al límite de productos de tu plan.",
+    isPlanLimitReached: true,
+  },
+  "daily-limit": {
+    error: "Llegaste al máximo de productos por hoy. Probá mañana.",
+    isPlanLimitReached: false,
+  },
 };
 
 function buildPhotoExtension(mediaType: string): string {
@@ -30,11 +45,17 @@ export async function createProduct(
 ): Promise<CreateProductState> {
   const session = await requireCurrentSession();
   const store = await ensureStore(session.user);
+  const blocker = await findProductCreationBlocker(store.id);
+
+  if (blocker !== null) {
+    return BLOCKED_CREATION_STATES[blocker];
+  }
+
   const photos = formData.getAll("photos").filter((entry) => entry instanceof File);
   const invalidPhotosMessage = describeInvalidPhotos(photos);
 
   if (invalidPhotosMessage !== null) {
-    return { error: invalidPhotosMessage };
+    return { error: invalidPhotosMessage, isPlanLimitReached: false };
   }
 
   const uploaded = await Promise.all(
@@ -46,10 +67,17 @@ export async function createProduct(
       }),
     ),
   );
+  const reservationId = await reserveProductCreation(store.id);
+
+  if (reservationId === null) {
+    return BLOCKED_CREATION_STATES["plan-limit"];
+  }
+
   const [product] = await database.insert(products).values({ storeId: store.id }).returning();
 
   if (product === undefined) {
-    return { error: "No pudimos crear el producto. Probá de nuevo." };
+    await releaseProductCreation(reservationId);
+    return { error: "No pudimos crear el producto. Probá de nuevo.", isPlanLimitReached: false };
   }
 
   await database.insert(images).values(

@@ -6,6 +6,7 @@ import {
   pgEnum,
   pgTable,
   text,
+  timestamp,
   uniqueIndex,
 } from "drizzle-orm/pg-core";
 
@@ -60,6 +61,7 @@ export const stores = pgTable(
     subsequentConcessionPercent: integer("subsequent_concession_percent")
       .default(DEFAULT_SUBSEQUENT_CONCESSION_PERCENT)
       .notNull(),
+    suspendedAt: timestamp("suspended_at"),
   },
   (table) => [
     uniqueIndex("stores_owner_id_unique_index").on(table.ownerId),

@@ -30,6 +30,7 @@ const PUBLIC_STORE_COLUMNS = {
   agentName: true,
   agentSeed: true,
   agentVoice: true,
+  suspendedAt: true,
 } as const;
 
 const PUBLIC_IMAGE_COLUMNS = {
@@ -57,7 +58,11 @@ async function queryPublicProduct(productId: string) {
     },
   });
 
-  return product ?? null;
+  if (product === undefined || product.store.suspendedAt !== null) {
+    return null;
+  }
+
+  return product;
 }
 
 function readCachedPublicProduct(handle: string, productId: string): Promise<PublicProduct | null> {

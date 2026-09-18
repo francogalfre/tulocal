@@ -1,0 +1,23 @@
+{
+  "name": "@tulocal/payments",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    "./client": "./src/client.ts",
+    "./payment": "./src/payment.ts",
+    "./preapproval": "./src/preapproval.ts",
+    "./signature": "./src/signature.ts"
+  },
+  "scripts": {
+    "check:types": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@tulocal/environment": "workspace:*",
+    "mercadopago": "3.6.1",
+    "zod": "^4.5.4"
+  },
+  "devDependencies": {
+    "@tulocal/configuration": "workspace:*"
+  }
+}

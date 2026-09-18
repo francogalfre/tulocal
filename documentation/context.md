@@ -9,10 +9,10 @@ Read this before touching product code. For visual design see [design.md](./desi
 - Not a marketplace. No central catalog, no global search or discovery, no commission taken on sales.
 - Sellers bring their own buyers (Instagram, WhatsApp, word of mouth, ferias). The product does not generate demand.
 - Does not auto-publish to Mercado Libre or Facebook Marketplace. It can generate copy or links the seller pastes manually.
-- Does not process payments.
+- Does not process payments between buyers and sellers. The only money tulocal handles is the seller's own plan subscription, see "Plans" below.
 - Does not manage shipping or logistics.
 
-If you find yourself building catalog browsing, cross-shop search, or checkout and payments, stop and check. That is out of scope by design.
+If you find yourself building catalog browsing, cross-shop search, or checkout and payments for buyers, stop and check. That is out of scope by design.
 
 ## Who it is for
 
@@ -72,6 +72,25 @@ Behavior at a glance:
 - Negotiates gradually but under a **hard ceiling rule**: it must never concede below the floor price and must never reveal it. This is a hard constraint, not a soft preference. The exact mechanism is in [rules.md](./rules.md).
 - Detects real buying intent and triggers the seller-contact handoff (WhatsApp and/or email).
 - Detects known scam patterns.
+
+## Plans
+
+Decided on 2026-09-16. Every product runs the AI pipeline and every agent reply costs money, so usage is capped per plan. Prices are in ARS, charged monthly through Mercado Pago, cancellable any time.
+
+| | Gratis | Pro | Negocio |
+| --- | --- | --- | --- |
+| Price | $0 | $10.000 per month | $25.000 per month |
+| Products | 3 created, ever. Selling or deleting does not free a slot | up to 20 at a time | up to 100 at a time |
+| Agent replies | 100 per month | unlimited | unlimited |
+| AI scenes for Instagram | no, exports use the pipeline photos | yes | yes |
+| Verified badge next to the shop name | no | yes | yes |
+
+- "At a time" counts every product row of the shop, whatever its status. Deleting one frees the slot.
+- Paid plans also have a daily creation cap the seller only sees when reached (Pro 10, Negocio 30), so creating and deleting in a loop cannot burn AI credits.
+- Retrying a failed pipeline does not use a slot.
+- When a paid plan ends, existing products stay published. The free limit counts every product ever created, so the shop cannot add more until it subscribes again.
+- When a free shop runs out of agent replies for the month, buyers see the WhatsApp contact instead of the chat.
+- No "Hecho con tulocal" branding on any plan. No struck-through or invented "before" prices: the landing highlights Pro as the most chosen plan instead.
 
 ## Feature priority
 

@@ -20,6 +20,7 @@
     "@tulocal/authentication": "workspace:*",
     "@tulocal/database": "workspace:*",
     "@tulocal/environment": "workspace:*",
+    "@tulocal/payments": "workspace:*",
     "@tulocal/storage": "workspace:*",
     "@vercel/analytics": "^2.0.1",
     "@vis.gl/react-maplibre": "^8.1.3",

@@ -16,6 +16,7 @@ import {
   loadConversationMessages,
 } from "@/features/conversation/messages";
 import { ensureBuyerToken } from "@/features/conversation/token";
+import { isAgentMessageLimitReached } from "@/features/plan/limits/usage";
 import { logEvent } from "@/lib/logger";
 
 export const maxDuration = 60;
@@ -173,6 +174,11 @@ export async function POST(request: Request): Promise<Response> {
 
   if (context === null) {
     return Response.json({ error: "Producto no disponible" }, { status: 404 });
+  }
+
+  if (await isAgentMessageLimitReached(context.store.id)) {
+    logEvent({ event: "agent.limit.reached", storeId: context.store.id });
+    return Response.json({ error: "El agente no está disponible" }, { status: 429 });
   }
 
   const conversation =

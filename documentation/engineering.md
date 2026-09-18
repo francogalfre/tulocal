@@ -12,6 +12,7 @@ The repo was reset on 2026-09-15 to rebuild the MVP from a clean base. What exis
 - `packages/database`: Drizzle client on the Neon HTTP driver, schema, migrations, see below.
 - `packages/authentication`: Better Auth server instance, session helpers, request handlers, and the React client.
 - `packages/storage`: Redis client, typed cache on top of it, and the Vercel Blob wrapper, see below.
+- `packages/payments`: Mercado Pago subscriptions and webhook signature check, see the billing section.
 - `tools/oxlint/anti-slop`: a vendored Oxlint plugin with the anti-slop rules described in [code.md](./code.md).
 - Root tooling: Bun, Turborepo, Oxlint, Oxfmt, Lefthook, commitlint.
 
@@ -36,6 +37,7 @@ Bun-managed, Turborepo-orchestrated monorepo.
 | price research            | Tavily                                                       |
 | cache                     | Redis over `ioredis`, wrapped by `@tulocal/storage/cache`   |
 | file storage              | Vercel Blob, wrapped by `@tulocal/storage/blob`             |
+| payments                  | Mercado Pago subscriptions (`mercadopago` SDK), wrapped by `@tulocal/payments` |
 | lint / format             | Oxlint / Oxfmt, plus the vendored anti-slop plugin           |
 | git hooks                 | Lefthook, commitlint                                         |
 | deploy                    | Vercel, one project                                          |
@@ -51,6 +53,7 @@ packages/
   database/       Drizzle schema, Neon client, migrations
   authentication/ Better Auth server, session helpers, handlers, React client
   storage/        Redis client, typed cache, Vercel Blob wrapper
+  payments/       Mercado Pago subscriptions and webhook signature check
 tools/
   oxlint/         vendored lint plugins
 documentation/    this folder
@@ -64,7 +67,7 @@ Workspace package names are short technical nouns (`database`, `storage`, `authe
 
 ## Boundaries
 
-- **Infrastructure lives in `packages/*`** (environment, database, authentication, storage). Product logic lives in `apps/core/src/features`.
+- **Infrastructure lives in `packages/*`** (environment, database, authentication, storage, payments). Product logic lives in `apps/core/src/features`.
 - **UI primitives come from shadcn/ui** in `apps/core/src/components/ui`, added with `bunx --bun shadcn@latest add <component>`. Do not hand-write a button, input or field.
 - **Organize by feature, not by layer.** Inside a package or app, a feature's files sit together (a `products/` folder holding its schema, router, and logic) rather than in global `schemas/`, `routers/`, `services/` buckets. `lib/` and `utils/` folders are for genuinely shared, cross-feature helpers, not a dumping ground for feature-specific code.
 - **One place owns each concept.** The database schema for products lives in `packages/database`, its actions and pipeline in `apps/core/src/features/product`. Nothing is defined twice.
@@ -77,11 +80,11 @@ Workspace package names are short technical nouns (`database`, `storage`, `authe
 
 ## Database
 
-- Schema lives in `packages/database/src/schema`, one file per domain concept (`stores.ts`, `products.ts`, `conversations.ts`, `questions.ts`, `escalations.ts`).
+- Schema lives in `packages/database/src/schema`, one file per domain concept (`stores.ts`, `products.ts`, `conversations.ts`, `questions.ts`, `escalations.ts`, `subscriptions.ts`, `creations.ts`).
 - Product category (`product_category`, a fixed taxonomy) and condition (`product_condition`: `new`, `like_new`, `good`, `worn`) are Postgres enums. The Drizzle enum is the only owner of each value list: server code builds zod enums from `productCategory.enumValues` / `productCondition.enumValues`, and the Spanish labels live in `apps/core/src/features/product/category.ts` and `condition.ts` as a `Record` keyed by the enum type, so a missing or extra label fails to compile. Client components only `import type` from the schema.
 - The driver is `@neondatabase/serverless` over HTTP (`drizzle-orm/neon-http`): no connection pool to warm up, one fetch per query, the fastest option on Vercel Functions. It does not support interactive transactions (`database.transaction`); use `database.batch` for multi-statement atomic writes. Switch to `drizzle-orm/neon-serverless` (WebSocket pool) only if a feature genuinely needs an interactive transaction.
 - `@tulocal/database/client` exports `database`, created once at module load from `databaseEnvironment.DATABASE_URL`, and the `Database` type for passing it around. Use the pooled Neon endpoint (`-pooler` host) in `DATABASE_URL`.
-- Run `database:generate` after editing a schema and commit the generated migration. `database:migrate` applies pending migrations, `database:push` syncs the schema without a migration file (local experiments only), `database:studio` opens Drizzle Studio. All four run from the repo root; drizzle-kit does not load `.env` on its own, so the package scripts pass `apps/core/.env` through `bun --env-file`. `apps/core/.env` is a symlink to the root `.env`.
+- Run `database:generate` after editing a schema and commit the generated migration. `database:migrate` applies pending migrations, `database:push` syncs the schema without a migration file (local experiments only), `database:studio` opens Drizzle Studio. All four run from the repo root. If `database:migrate` fails with `pg.Pool is not a constructor`, drizzle-kit picked up a stray `pg` package in `node_modules` that is not node-postgres; migration `0012` was applied on 2026-09-17 with `drizzle-orm/neon-http/migrator` instead, which writes the same `drizzle.__drizzle_migrations` journal. drizzle-kit does not load `.env` on its own, so the package scripts pass `apps/core/.env` through `bun --env-file`. `apps/core/.env` is a symlink to the root `.env`.
 - Table and column names are English `snake_case`. TypeScript identifiers derived from them are `camelCase`.
 - Records the sales agent produces (price agreements, escalations, scam flags, pending and answered questions) are real tables, not JSON blobs inside a conversation row, because the dashboard queries them directly.
 
@@ -95,6 +98,22 @@ Workspace package names are short technical nouns (`database`, `storage`, `authe
 - `@tulocal/authentication/client` exports `authenticationClient`, `useSession`, `signInWithGoogle(callbackURL)`, and `signOut()` for React components.
 - The Better Auth tables (`users`, `sessions`, `accounts`, `verifications`, `rate_limits`) live in `packages/database/src/schema/authentication.ts` and are passed to the Drizzle adapter with `usePlural`.
 - Google OAuth needs `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET`, with `<BETTER_AUTH_URL>/api/auth/callback/google` registered as the authorized redirect URI in Google Cloud.
+
+## Billing
+
+Decided on 2026-09-16. The plans, their limits and prices are in [context.md](./context.md); `apps/core/src/features/plan/catalog.ts` is the only place in code that holds them. The feature is split into `plan/access` (which plan a store has), `plan/limits` (usage, slot reservation, Buenos Aires periods, the usage meter) and `plan/subscription` (checkout, cancel, sync, webhook processing and their UI).
+
+- **Payments turn on by configuration.** Both Mercado Pago variables are optional. `isPaymentsEnabled()` from `@tulocal/payments/client` is true only when `MERCADOPAGO_ACCESS_TOKEN` and `MERCADOPAGO_WEBHOOK_SECRET` are set. While it is false every shop is on Gratis, the paid cards on the landing and `/plans` show a disabled "Muy pronto", `startSubscription` and `cancelSubscription` do nothing, and the webhook answers 503. Setting both variables in Vercel and redeploying is the whole switch.
+- **Mercado Pago subscriptions without an associated plan, with pending payment.** `createPreapproval` in `@tulocal/payments/preapproval` sends POST `/preapproval` with `status: "pending"`, a monthly `auto_recurring` in ARS, `external_reference` set to our `subscriptions.id`, and `back_url` pointing at `/plans`. Mercado Pago returns an `init_point` and charges in its own checkout, so tulocal never touches card data. The plan-based variant (`preapproval_plan`) is not used because it requires creating the subscription with a `card_token_id` from our own card form.
+- **`payer_email` must be the email of the Mercado Pago account that pays**, otherwise the subscription fails with a vague error. The checkout dialog asks for it, prefilled with the Google email.
+- **The `init_point` bug.** Since 2026-09-02, the `init_point` carries `&activation=true`, which opens "Esta página no existe" (mercadopago/sdk-nodejs#480). `removeBrokenActivationParameter` strips it. Remove the function once Mercado Pago fixes it.
+- **The SDK is the official `mercadopago` package, imported only inside `packages/payments`.** Its response types are all optional, so every response is decoded with zod into `Preapproval`. SDK errors become `PreapprovalRejectedError`. `/authorized_payments/{id}` has no SDK client and is a typed `fetch` in `payment.ts`.
+- **Tables.** `subscriptions` holds one row per checkout attempt: plan, status (`pending`, `authorized`, `paused`, `cancelled`), the preapproval id, the checkout URL, the payer email, the amount and `access_ends_at`. `product_creations` gets one row per created product and is never deleted, because products are hard-deleted and the free limit counts every product ever created. Migration `0012` backfills it from existing products.
+- **Current plan.** `findCurrentPlan(storeId)` in `features/plan/access/current.ts` picks the highest plan whose subscription is `authorized`, or whose `access_ends_at` plus three days of grace is still ahead. A cancelled plan keeps working until the month the seller already paid runs out.
+- **Enforcement.** `createProduct` checks `findProductCreationBlocker` before uploading photos, then reserves a slot with `reserveProductCreation`, a single `insert ... select ... where <limit condition>` so two parallel submits cannot pass the cap. `requestScene` rejects free shops. `/api/chat` answers 429 and the chat shows the WhatsApp fallback once a free shop runs out of agent replies for the month (calendar month, Buenos Aires time).
+- **Webhook.** `app/api/mercadopago/route.ts` checks `x-signature` with the SDK's `WebhookSignatureValidator` (manifest `id:<data.id from the query>;request-id:<x-request-id>;ts:<ts>;`, HMAC-SHA256 with `MERCADOPAGO_WEBHOOK_SECRET`), answers 401 when it fails, and otherwise processes the notification synchronously so a failure returns 500 and Mercado Pago retries it. Register the URL with the `subscription_preapproval` and `subscription_authorized_payment` topics in the Mercado Pago panel. Test and production have separate URLs and secrets.
+- **State always comes from the API, never from the notification body.** `syncPreapproval` reads the preapproval, finds our row by `external_reference`, updates the status and, when authorized, sets `access_ends_at` to `next_payment_date`. It is idempotent. When a subscription is authorized, it cancels the store's other open subscriptions, which is how switching between Pro and Negocio works. `/plans` also syncs the preapproval in `after()` when Mercado Pago sends the seller back with `preapproval_id`, so the page does not wait for the webhook.
+- **Local testing.** `back_url` must be https, so point `NEXT_PUBLIC_APP_URL` at a tunnel or use a Vercel preview. Use Mercado Pago test users: the seller's test credentials in `MERCADOPAGO_ACCESS_TOKEN` and the test buyer's email in the checkout dialog.
 
 ## Storage
 
@@ -120,11 +139,15 @@ Route conventions that go with this: `app/not-found.tsx` and `app/error.tsx` ren
 ## Environment variables
 
 - Plain `.env` files, loaded natively by Bun (server) and Next.js (web). `packages/environment/.env.example` lists every variable with a placeholder.
-- `@tulocal/environment` is the only place that reads `process.env`. It validates with t3-env and zod at startup and exports four typed objects: `databaseEnvironment` from `@tulocal/environment/database` (only `DATABASE_URL`, validated as a postgres URL), `storageEnvironment` from `@tulocal/environment/storage` (`REDIS_URL` and `BLOB_READ_WRITE_TOKEN`), `serverEnvironment` from `@tulocal/environment/server` (extends the database and storage ones with every other server variable), and `webEnvironment` from `@tulocal/environment/web`. Nothing else touches `process.env`. A module imports the narrowest object that covers what it reads: the database client and `drizzle.config.ts` import `databaseEnvironment`, so migrations run with only `DATABASE_URL` set.
+- `@tulocal/environment` is the only place that reads `process.env`. It validates with t3-env and zod at startup and exports five typed objects: `databaseEnvironment` from `@tulocal/environment/database` (only `DATABASE_URL`, validated as a postgres URL), `storageEnvironment` from `@tulocal/environment/storage` (`REDIS_URL` and `BLOB_READ_WRITE_TOKEN`), `paymentsEnvironment` from `@tulocal/environment/payments` (`MERCADOPAGO_ACCESS_TOKEN` and `MERCADOPAGO_WEBHOOK_SECRET`, both optional until payments are turned on), `serverEnvironment` from `@tulocal/environment/server` (extends the database and storage ones with every other server variable; it does not extend the payments one, so the app boots without Mercado Pago keys and only `/plans` and the webhook need them), and `webEnvironment` from `@tulocal/environment/web`. Nothing else touches `process.env`. A module imports the narrowest object that covers what it reads: the database client and `drizzle.config.ts` import `databaseEnvironment`, so migrations run with only `DATABASE_URL` set.
 - Set `SKIP_ENVIRONMENT_VALIDATION=true` only for lint or build steps that run without secrets, never in a running app.
 - Real secrets stay in ignored `.env` files or in Vercel.
 
-The single app reads every variable: `DATABASE_URL`, `REDIS_URL`, `BLOB_READ_WRITE_TOKEN`, `BETTER_AUTH_SECRET`, `BETTER_AUTH_URL`, `CORS_ORIGIN`, `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `OPENROUTER_API_KEY`, `TAVILY_API_KEY`, `NEXT_PUBLIC_SERVER_URL` and `NEXT_PUBLIC_APP_URL`. Locally all URLs point at `http://localhost:3000`.
+The single app reads every variable: `DATABASE_URL`, `REDIS_URL`, `BLOB_READ_WRITE_TOKEN`, `BETTER_AUTH_SECRET`, `BETTER_AUTH_URL`, `CORS_ORIGIN`, `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `OPENROUTER_API_KEY`, `TAVILY_API_KEY`, `MERCADOPAGO_ACCESS_TOKEN`, `MERCADOPAGO_WEBHOOK_SECRET`, `SUPERADMIN_EMAILS`, `NEXT_PUBLIC_SERVER_URL` and `NEXT_PUBLIC_APP_URL`. Locally all URLs point at `http://localhost:3000`.
+
+## Superadmin
+
+Decided on 2026-09-18. `apps/core/src/app/admin` is a Next.js route group gated by `requireSuperadminSession` in `@/lib/admin`, which redirects to `/` unless the signed-in user's email is in `SUPERADMIN_EMAILS` (comma-separated, required, no default). Every Server Action in `features/admin/actions.ts` calls the same guard itself, because Server Actions do not go through the route layout. The panel lists every store with its plan and usage, and lets a superadmin grant a plan manually or suspend a store (`stores.suspended_at`), for support and manual sales before Mercado Pago is live.
 
 ## Locked decisions
 

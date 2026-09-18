@@ -13,6 +13,7 @@
   --color-network-tiktok: var(--network-tiktok);
   --color-network-facebook: var(--network-facebook);
   --color-network-x: var(--network-x);
+  --color-verified: var(--verified);
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
@@ -79,6 +80,7 @@
   --network-tiktok: #010101;
   --network-facebook: #1877f2;
   --network-x: #14231a;
+  --verified: #1d9bf0;
   --border: rgba(20, 35, 26, 0.12);
   --input: rgba(20, 35, 26, 0.12);
   --ring: #22c55e;

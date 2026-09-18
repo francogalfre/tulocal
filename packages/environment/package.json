@@ -5,6 +5,7 @@
   "type": "module",
   "exports": {
     "./database": "./src/database.ts",
+    "./payments": "./src/payments.ts",
     "./storage": "./src/storage.ts",
     "./server": "./src/server.ts",
     "./web": "./src/web.ts"

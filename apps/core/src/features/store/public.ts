@@ -1,4 +1,4 @@
-import { asc, eq } from "drizzle-orm";
+import { and, asc, eq, isNull } from "drizzle-orm";
 import { unstable_cache } from "next/cache";
 import { cache } from "react";
 
@@ -70,7 +70,7 @@ export type PublicStore = QueriedPublicStore;
 
 async function queryPublicStore(handle: string) {
   return database.query.stores.findFirst({
-    where: eq(stores.handle, handle),
+    where: and(eq(stores.handle, handle), isNull(stores.suspendedAt)),
     columns: PUBLIC_STORE_COLUMNS,
     with: {
       products: {

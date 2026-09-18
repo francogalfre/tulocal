@@ -117,6 +117,7 @@ export async function loadAgentContext(productId: string): Promise<AgentContext 
           maxCounterOffers: true,
           firstConcessionPercent: true,
           subsequentConcessionPercent: true,
+          suspendedAt: true,
         },
       },
       images: { columns: { url: true, kind: true }, orderBy: [asc(images.sortOrder)] },
@@ -133,7 +134,8 @@ export async function loadAgentContext(productId: string): Promise<AgentContext 
     product.status !== "published" ||
     product.title === null ||
     product.listPriceInArs === null ||
-    product.floorPriceInArs === null
+    product.floorPriceInArs === null ||
+    product.store.suspendedAt !== null
   ) {
     return null;
   }

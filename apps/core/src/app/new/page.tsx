@@ -1,14 +1,21 @@
+import Link from "next/link";
 import type { Metadata } from "next";
 
 import { tulocalIcons } from "@/components/icons";
 import { Reveal } from "@/components/motion/reveal";
 import { Screen } from "@/components/screen";
+import { Button } from "@/components/ui/button";
+import { findCurrentPlan } from "@/features/plan/access/current";
+import { PLANS } from "@/features/plan/catalog";
+import { Meter } from "@/features/plan/limits/meter";
+import { findProductCreationBlocker, findProductUsage } from "@/features/plan/limits/usage";
 import { Dropzone } from "@/features/product/upload/dropzone";
 import { ensureStore } from "@/features/store/ensure";
 import { findStoreEntry } from "@/features/store/find";
 import { StoreLink } from "@/features/store/link";
 import { requireCurrentSession } from "@/lib/session";
 import { buildStoreUrl } from "@/lib/url";
+import type { Plan } from "@/features/plan/catalog";
 
 export const metadata: Metadata = {
   title: "Subí un producto",
@@ -50,17 +57,53 @@ function Intro({ handle, isFirstProduct }: IntroProps) {
   );
 }
 
+type PlanLimitReachedProps = {
+  currentPlan: Plan;
+};
+
+function describeUpgrade(currentPlan: Plan): string {
+  if (currentPlan === "free") {
+    return `Con ${PLANS.pro.name} tenés hasta ${PLANS.pro.productLimit} productos a la vez y tu agente atiende sin límite de mensajes.`;
+  }
+
+  if (currentPlan === "pro") {
+    return `Con ${PLANS.business.name} tenés hasta ${PLANS.business.productLimit} productos a la vez. También podés borrar uno que ya vendiste para liberar lugar.`;
+  }
+
+  return "Borrá uno que ya vendiste para liberar lugar.";
+}
+
+function PlanLimitReached({ currentPlan }: PlanLimitReachedProps) {
+  return (
+    <div className="flex flex-col gap-4 rounded-2xl bg-secondary p-6">
+      <div className="flex flex-col gap-1">
+        <h2 className="text-xl">Llegaste al límite de tu plan</h2>
+        <p className="text-muted-foreground">{describeUpgrade(currentPlan)}</p>
+      </div>
+      <Button size="xl" render={<Link href="/plans" />} nativeButton={false}>
+        Ver planes
+      </Button>
+    </div>
+  );
+}
+
 export default async function NewProductPage() {
   const session = await requireCurrentSession();
   const store = await ensureStore(session.user);
   const entry = await findStoreEntry(session.user.id);
   const isFirstProduct = entry === null || !entry.hasProducts;
+  const [{ plan: currentPlan }, usage, blocker] = await Promise.all([
+    findCurrentPlan(store.id),
+    findProductUsage(store.id),
+    findProductCreationBlocker(store.id),
+  ]);
 
   return (
     <Screen aside={<StoreLink handle={store.handle} />}>
       <Reveal className="flex flex-col gap-8">
         <Intro handle={store.handle} isFirstProduct={isFirstProduct} />
-        <Dropzone />
+        <Meter usage={usage} showsPlansLink={blocker === null} />
+        {blocker === "plan-limit" ? <PlanLimitReached currentPlan={currentPlan} /> : <Dropzone />}
       </Reveal>
     </Screen>
   );

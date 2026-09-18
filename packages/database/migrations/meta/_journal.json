@@ -85,6 +85,20 @@
       "when": 1789571141347,
       "tag": "0011_mean_lady_mastermind",
       "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "7",
+      "when": 1789613249825,
+      "tag": "0012_certain_lenny_balinger",
+      "breakpoints": true
+    },
+    {
+      "idx": 13,
+      "version": "7",
+      "when": 1789616381938,
+      "tag": "0013_fair_thunderball",
+      "breakpoints": true
     }
   ]
 }

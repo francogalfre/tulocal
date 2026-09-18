@@ -12,6 +12,7 @@ import type { AgentVoice } from "@/features/agent/voice";
 import { Closing } from "@/features/chat/closing";
 import { Composer } from "@/features/chat/composer";
 import { renderEntry } from "@/features/chat/entry";
+import { Paused } from "@/features/chat/paused";
 import { Price } from "@/features/chat/price";
 import { readMessageText, readOfferedPriceInArs } from "@/features/chat/read";
 import { Thinking } from "@/features/chat/thinking";
@@ -30,6 +31,7 @@ type ChatProps = {
   whatsappPhone: string | null;
   initialMessages: AgentUIMessage[];
   initialClosing: ConversationClosing;
+  isAgentAvailable: boolean;
   isFullHeight?: boolean;
 };
 
@@ -92,9 +94,10 @@ export function Chat({
   whatsappPhone,
   initialMessages,
   initialClosing,
+  isAgentAvailable,
   isFullHeight = false,
 }: ChatProps) {
-  const { messages, sendMessage, status } = useChat<AgentUIMessage>({
+  const { messages, sendMessage, status, error } = useChat<AgentUIMessage>({
     id: productId,
     messages: initialMessages,
     transport: new DefaultChatTransport({
@@ -111,6 +114,7 @@ export function Chat({
   const canCloseOnWhatsapp = closing.hasBuyIntent && whatsappPhone !== null;
   const canAcceptOffer = status === "ready" && !closing.hasBuyIntent;
   const isReplyStreaming = status === "submitted" || status === "streaming";
+  const isAgentPaused = !isAgentAvailable || error !== undefined;
   const agent = { name: agentName, seed: agentSeed, voice: agentVoice };
   const offeredPriceInArs = readOfferedPriceInArs(
     messages,
@@ -222,7 +226,16 @@ export function Chat({
           />
         ) : null}
       </AnimatePresence>
-      <Composer isReady={status === "ready"} onSend={send} />
+      {isAgentPaused ? (
+        <Paused
+          productId={productId}
+          agentName={agentName}
+          productTitle={productTitle}
+          whatsappPhone={whatsappPhone}
+        />
+      ) : (
+        <Composer isReady={status === "ready"} onSend={send} />
+      )}
     </section>
   );
 }

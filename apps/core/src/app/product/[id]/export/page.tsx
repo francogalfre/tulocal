@@ -5,6 +5,7 @@ import type { Metadata } from "next";
 import { Reveal } from "@/components/motion/reveal";
 import { Screen } from "@/components/screen";
 import { Skeleton } from "@/components/ui/skeleton";
+import { findCurrentPlan } from "@/features/plan/access/current";
 import { Caption } from "@/features/product/export/caption";
 import { isExportableProduct } from "@/features/product/export/exportable";
 import { Exporter } from "@/features/product/export/exporter";
@@ -32,6 +33,8 @@ export default async function ProductExportPage({ params }: ProductExportPagePro
     redirect(`/product/${id}`);
   }
 
+  const { details } = await findCurrentPlan(product.store.id);
+
   return (
     <Screen aside={<StoreLink handle={product.store.handle} />}>
       <Reveal className="flex flex-col gap-10">
@@ -41,7 +44,11 @@ export default async function ProductExportPage({ params }: ProductExportPagePro
             Elegí el formato, descargá la imagen y subila desde la app de Instagram.
           </p>
         </div>
-        <Exporter productId={product.id} scenes={product.scenes} />
+        <Exporter
+          productId={product.id}
+          scenes={product.scenes}
+          canGenerateScenes={details.canGenerateScenes}
+        />
         <Suspense fallback={<Skeleton className="h-32 w-full rounded-xl" />}>
           <Caption product={product} />
         </Suspense>

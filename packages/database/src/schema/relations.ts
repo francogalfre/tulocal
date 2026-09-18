@@ -3,6 +3,7 @@ import { relations } from "drizzle-orm";
 import { users } from "@tulocal/database/schema/authentication";
 import { comparables } from "@tulocal/database/schema/comparables";
 import { conversations } from "@tulocal/database/schema/conversations";
+import { productCreations } from "@tulocal/database/schema/creations";
 import { escalations } from "@tulocal/database/schema/escalations";
 import { images } from "@tulocal/database/schema/images";
 import { messages } from "@tulocal/database/schema/messages";
@@ -10,6 +11,7 @@ import { products } from "@tulocal/database/schema/products";
 import { questions } from "@tulocal/database/schema/questions";
 import { scenes } from "@tulocal/database/schema/scenes";
 import { stores } from "@tulocal/database/schema/stores";
+import { subscriptions } from "@tulocal/database/schema/subscriptions";
 import { visits } from "@tulocal/database/schema/visits";
 
 export const usersRelations = relations(users, ({ one }) => ({
@@ -22,6 +24,8 @@ export const storesRelations = relations(stores, ({ one, many }) => ({
   conversations: many(conversations),
   escalations: many(escalations),
   visits: many(visits),
+  subscriptions: many(subscriptions),
+  productCreations: many(productCreations),
 }));
 
 export const productsRelations = relations(products, ({ one, many }) => ({
@@ -82,4 +86,12 @@ export const escalationsRelations = relations(escalations, ({ one }) => ({
   }),
   product: one(products, { fields: [escalations.productId], references: [products.id] }),
   store: one(stores, { fields: [escalations.storeId], references: [stores.id] }),
+}));
+
+export const subscriptionsRelations = relations(subscriptions, ({ one }) => ({
+  store: one(stores, { fields: [subscriptions.storeId], references: [stores.id] }),
+}));
+
+export const productCreationsRelations = relations(productCreations, ({ one }) => ({
+  store: one(stores, { fields: [productCreations.storeId], references: [stores.id] }),
 }));

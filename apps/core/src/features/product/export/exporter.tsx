@@ -22,6 +22,7 @@ const SOURCE_LABELS: Record<ExportSource, string> = {
 type ExporterProps = {
   productId: string;
   scenes: ExportableProduct["scenes"];
+  canGenerateScenes: boolean;
 };
 
 type PieceDescription = {
@@ -75,7 +76,7 @@ function describePieces(input: DescribePiecesInput): PieceDescription[] {
   }));
 }
 
-export function Exporter({ productId, scenes }: ExporterProps) {
+export function Exporter({ productId, scenes, canGenerateScenes }: ExporterProps) {
   const [format, setFormat] = useState<SceneFormat>("story");
   const [source, setSource] = useState<ExportSource>("photo");
   const scene = scenes.find((candidate) => candidate.format === format) ?? null;
@@ -137,7 +138,12 @@ export function Exporter({ productId, scenes }: ExporterProps) {
         </div>
       </div>
       {source === "generated" ? (
-        <Generation productId={productId} format={format} scene={scene} />
+        <Generation
+          productId={productId}
+          format={format}
+          scene={scene}
+          canGenerateScenes={canGenerateScenes}
+        />
       ) : null}
       {isShowingPieces ? (
         <div className={format === "story" ? "max-w-xs" : "grid gap-4 sm:grid-cols-3"}>

@@ -1,6 +1,7 @@
 "use client";
 
 import { AnimatePresence, motion } from "motion/react";
+import Link from "next/link";
 import { useActionState, useEffect, useRef, useState } from "react";
 import type { ChangeEvent, DragEvent } from "react";
 
@@ -25,7 +26,7 @@ import { cn } from "@/lib/utils";
 import type { CreateProductState } from "@/features/product/create";
 import type { SelectedPhoto } from "@/features/product/upload/selection";
 
-const INITIAL_STATE: CreateProductState = { error: null };
+const INITIAL_STATE: CreateProductState = { error: null, isPlanLimitReached: false };
 
 const CELL_CLASSES = ["col-span-2 row-span-2", "aspect-square", "aspect-square"] as const;
 
@@ -158,7 +159,12 @@ export function Dropzone() {
       {visibleError !== null ? (
         <Alert variant="destructive">
           <tulocalIcons.close aria-hidden="true" />
-          <AlertDescription>{visibleError}</AlertDescription>
+          <AlertDescription>
+            {visibleError}{" "}
+            {rejectedMessage === null && state.isPlanLimitReached ? (
+              <Link href="/plans">Mirá los planes</Link>
+            ) : null}
+          </AlertDescription>
         </Alert>
       ) : null}
       <AnimatePresence initial={false}>

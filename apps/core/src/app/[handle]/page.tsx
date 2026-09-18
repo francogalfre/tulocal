@@ -11,6 +11,7 @@ import { Empty, EmptyDescription, EmptyHeader, EmptyTitle } from "@/components/u
 import { Logo } from "@/components/logo";
 import { InView } from "@/components/motion/inview";
 import { recordStoreVisit } from "@/features/metrics/record";
+import { findCurrentPlan } from "@/features/plan/access/current";
 import {
   arrangeCatalog,
   parseCatalogFilters,
@@ -134,6 +135,7 @@ export default async function StorePage({ params, searchParams }: StorePageProps
   }
 
   const { store, products, isOwner } = view;
+  const { details: storePlan } = await findCurrentPlan(store.id);
 
   if (!isOwner) {
     after(() => recordStoreVisit(store.id));
@@ -183,6 +185,7 @@ export default async function StorePage({ params, searchParams }: StorePageProps
         <StoreHeader
           store={store}
           productCount={products.length}
+          verifiedPlanName={storePlan.isVerified ? storePlan.name : null}
           actions={
             isOwner ? (
               <>

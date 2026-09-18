@@ -8,7 +8,7 @@ import { signInWithGoogle } from "@tulocal/authentication/client";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
 
-const AFTER_SIGN_IN_PATH = "/store";
+const DEFAULT_AFTER_SIGN_IN_PATH = "/store";
 
 function GoogleMark() {
   return (
@@ -35,12 +35,14 @@ function GoogleMark() {
 
 type GoogleSignInProps = VariantProps<typeof buttonVariants> & {
   label: string;
+  afterSignInPath?: string;
   showsGoogleMark?: boolean;
   className?: string;
 };
 
 export function GoogleSignIn({
   label,
+  afterSignInPath = DEFAULT_AFTER_SIGN_IN_PATH,
   showsGoogleMark = true,
   variant,
   size,
@@ -50,7 +52,7 @@ export function GoogleSignIn({
 
   function handleClick(): void {
     setIsRedirecting(true);
-    void signInWithGoogle(AFTER_SIGN_IN_PATH);
+    void signInWithGoogle(afterSignInPath);
   }
 
   return (

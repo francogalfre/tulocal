@@ -14,6 +14,9 @@ import { truncateForPreview } from "@/features/opengraph/truncate";
 import { Chat } from "@/features/chat/panel";
 import { resumeConversation } from "@/features/conversation/resume";
 import { recordProductVisit } from "@/features/metrics/record";
+import { findCurrentPlan } from "@/features/plan/access/current";
+import { Verified } from "@/features/plan/access/verified";
+import { isAgentMessageLimitReached } from "@/features/plan/limits/usage";
 import { CATEGORY_LABELS } from "@/features/product/category";
 import { CONDITION_LABELS } from "@/features/product/condition";
 import { Gallery } from "@/features/product/gallery/grid";
@@ -71,6 +74,10 @@ export default async function PublicProductPage({ params }: PublicProductPagePro
   }
 
   const title = product.title ?? "Producto";
+  const [isAgentLimitReached, { details: storePlan }] = await Promise.all([
+    isAgentMessageLimitReached(product.store.id),
+    findCurrentPlan(product.store.id),
+  ]);
 
   if (session?.user.id !== product.store.ownerId) {
     after(() => recordProductVisit(product.store.id, product.id));
@@ -88,6 +95,7 @@ export default async function PublicProductPage({ params }: PublicProductPagePro
         >
           <tulocalIcons.arrowLeft data-icon="inline-start" />
           {product.store.name}
+          {storePlan.isVerified ? <Verified planName={storePlan.name} className="size-4" /> : null}
         </Button>
       </header>
       <InView>
@@ -127,6 +135,7 @@ export default async function PublicProductPage({ params }: PublicProductPagePro
           whatsappPhone={product.store.whatsappPhone}
           initialMessages={conversation.messages}
           initialClosing={conversation.closing}
+          isAgentAvailable={!isAgentLimitReached}
           isFullHeight
         />
         <Button

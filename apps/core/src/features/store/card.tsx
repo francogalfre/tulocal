@@ -26,9 +26,7 @@ const STATUS_LABELS = {
 } as const;
 
 const CARD_START_OFFSET_IN_PIXELS = 16;
-
 const CARD_EXIT_SCALE = 0.96;
-
 const ABOVE_THE_FOLD_CARDS = 4;
 
 type ProductCardProps = {

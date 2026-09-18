@@ -8,6 +8,7 @@ import { Features } from "@/features/landing/features";
 import { Footer } from "@/features/landing/footer";
 import { GoogleSignIn } from "@/features/landing/google";
 import { Hero } from "@/features/landing/hero";
+import { Pricing } from "@/features/landing/pricing";
 import { SmoothScroll } from "@/features/landing/scroll";
 import { Sponsors } from "@/features/landing/sponsors";
 import { findStoreEntry } from "@/features/store/find";
@@ -63,6 +64,7 @@ export default async function LandingPage() {
               <Hero signedInStorePath={signedInStorePath} />
             </InView>
             <Features />
+            <Pricing signedInStorePath={signedInStorePath} />
             <Sponsors />
           </div>
         </main>

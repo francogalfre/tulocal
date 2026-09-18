@@ -7,6 +7,7 @@ import { tulocalIcons } from "@/components/icons";
 import { Logo } from "@/components/logo";
 import { Chat } from "@/features/chat/panel";
 import { resumeConversation } from "@/features/conversation/resume";
+import { isAgentMessageLimitReached } from "@/features/plan/limits/usage";
 import { findPublicProduct } from "@/features/product/public";
 
 type ChatPageProps = PageProps<"/[handle]/[productId]/chat">;
@@ -40,6 +41,7 @@ export default async function ChatPage({ params }: ChatPageProps) {
   }
 
   const title = product.title ?? "Producto";
+  const isAgentLimitReached = await isAgentMessageLimitReached(product.store.id);
 
   return (
     <main className="mx-auto flex h-(--visual-viewport-height) w-full max-w-2xl flex-col gap-6 px-5 pt-6 pb-6">
@@ -65,6 +67,7 @@ export default async function ChatPage({ params }: ChatPageProps) {
         whatsappPhone={product.store.whatsappPhone}
         initialMessages={conversation.messages}
         initialClosing={conversation.closing}
+        isAgentAvailable={!isAgentLimitReached}
         isFullHeight
       />
     </main>

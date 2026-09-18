@@ -42,7 +42,7 @@ export function CatalogToolbar({ filters, categories, showStatus }: CatalogToolb
         showStatus={showStatus}
         onApply={navigate}
       />
-      {categories.length > 0 ? <Separator orientation="vertical" className="h-6 shrink-0" /> : null}
+      {categories.length > 0 ? <Separator orientation="vertical" className="h-9 shrink-0" /> : null}
       {categories.map((category) => (
         <Toggle
           key={category.name}

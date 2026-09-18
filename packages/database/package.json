@@ -9,6 +9,7 @@
     "./schema/columns": "./src/schema/columns.ts",
     "./schema/comparables": "./src/schema/comparables.ts",
     "./schema/conversations": "./src/schema/conversations.ts",
+    "./schema/creations": "./src/schema/creations.ts",
     "./schema/escalations": "./src/schema/escalations.ts",
     "./schema/images": "./src/schema/images.ts",
     "./schema/messages": "./src/schema/messages.ts",
@@ -17,6 +18,7 @@
     "./schema/relations": "./src/schema/relations.ts",
     "./schema/scenes": "./src/schema/scenes.ts",
     "./schema/stores": "./src/schema/stores.ts",
+    "./schema/subscriptions": "./src/schema/subscriptions.ts",
     "./schema/visits": "./src/schema/visits.ts"
   },
   "scripts": {

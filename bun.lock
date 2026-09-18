@@ -33,6 +33,7 @@
         "@tulocal/authentication": "workspace:*",
         "@tulocal/database": "workspace:*",
         "@tulocal/environment": "workspace:*",
+        "@tulocal/payments": "workspace:*",
         "@tulocal/storage": "workspace:*",
         "@vercel/analytics": "^2.0.1",
         "@vis.gl/react-maplibre": "^8.1.3",
@@ -107,6 +108,18 @@
       "dependencies": {
         "@t3-oss/env-core": "^0.13.11",
         "@t3-oss/env-nextjs": "^0.13.11",
+        "zod": "^4.5.4",
+      },
+      "devDependencies": {
+        "@tulocal/configuration": "workspace:*",
+      },
+    },
+    "packages/payments": {
+      "name": "@tulocal/payments",
+      "version": "0.0.0",
+      "dependencies": {
+        "@tulocal/environment": "workspace:*",
+        "mercadopago": "3.6.1",
         "zod": "^4.5.4",
       },
       "devDependencies": {
@@ -630,6 +643,8 @@
     "@tulocal/database": ["@tulocal/database@workspace:packages/database"],
 
     "@tulocal/environment": ["@tulocal/environment@workspace:packages/environment"],
+
+    "@tulocal/payments": ["@tulocal/payments@workspace:packages/payments"],
 
     "@tulocal/storage": ["@tulocal/storage@workspace:packages/storage"],
 
@@ -1164,6 +1179,8 @@
     "math-intrinsics": ["math-intrinsics@1.1.0", "", {}, "sha512-/IXtbwEk5HTPyEwyKX6hGkYXxM9nbj64B+ilVJnC/R6B0pH5G4V3b0pVbL7DBj4tkhBAppbQUlf6F6Xl9LHu1g=="],
 
     "media-typer": ["media-typer@1.1.1", "", {}, "sha512-yz3xRaG20c6/BOzvYoDaGtPmGscs7YivItZEEqe6GbwNfHuxu9YNmvnEkMzKldAGY4/80pRcQRZSEnhquk9XuQ=="],
+
+    "mercadopago": ["mercadopago@3.6.1", "", {}, "sha512-JFgKCSRHMxkS1p12VMIcpI/Zki739J+5lbpl7PB0O8WHaFl4SFKQnm9paX/gqBQeh211Ozc498D49Fbe3U1jEw=="],
 
     "merge-descriptors": ["merge-descriptors@2.0.0", "", {}, "sha512-Snk314V5ayFLhp3fkUREub6WtjBfPdCPY1Ln8/8munuLuiYhsABgBVWsozAG+MWMbVEvcdcpbi9R7ww22l9Q3g=="],
 

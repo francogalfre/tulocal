@@ -16,6 +16,7 @@ export const serverEnvironment = createEnv({
     GOOGLE_CLIENT_SECRET: z.string().min(1),
     OPENROUTER_API_KEY: z.string().min(1),
     TAVILY_API_KEY: z.string().min(1),
+    SUPERADMIN_EMAILS: z.string().min(1),
   },
   runtimeEnv: process.env,
   emptyStringAsUndefined: true,

@@ -18,7 +18,7 @@ Borrowed from Vercel: the ideas that are useful here, not the cold aesthetic.
 
 ## Palette
 
-One accent (green), one warm neutral base. No extra colors without a functional reason (success and warning are the only exception).
+One accent (green), one warm neutral base. No extra colors without a functional reason (success, warning, and the verified blue are the only exceptions).
 
 ```css
 :root {
@@ -47,6 +47,7 @@ One accent (green), one warm neutral base. No extra colors without a functional 
 | `--color-line`         | borders, always subtle                                            |
 | `--color-warning`      | scam alerts, floor price, invalid borders                         |
 | `--color-warning-deep` | warning text at small sizes (4.7:1 on paper)                      |
+| `--verified` (`#1d9bf0`) | the verified badge of paid shops, and nothing else              |
 
 Usage rule: `--color-accent` for anything the user can act on or that is happening right now (published, price). `--color-accent-deep` for text on light surfaces and solid buttons. Everything else lives in `ink`, `muted`, and `paper`.
 

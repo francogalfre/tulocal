@@ -1,5 +1,7 @@
 "use client";
 
+import Link from "next/link";
+
 import { tulocalIcons } from "@/components/icons";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
@@ -19,9 +21,29 @@ type GenerationProps = {
   productId: string;
   format: SceneFormat;
   scene: Scene | null;
+  canGenerateScenes: boolean;
 };
 
-export function Generation({ productId, format, scene }: GenerationProps) {
+function LockedGeneration() {
+  return (
+    <div className="flex flex-col gap-3">
+      <Button size="xl" className="w-full" render={<Link href="/plans" />} nativeButton={false}>
+        <tulocalIcons.imageAdd data-icon="inline-start" />
+        Pasate a Pro para generar escenas
+      </Button>
+      <p className="text-sm text-muted-foreground">
+        Con Pro la IA pone tu producto en una escena lista para historias y carruseles. Con tus
+        fotos podés exportar gratis.
+      </p>
+    </div>
+  );
+}
+
+export function Generation({ productId, format, scene, canGenerateScenes }: GenerationProps) {
+  if (!canGenerateScenes) {
+    return <LockedGeneration />;
+  }
+
   if (scene !== null && scene.status === "pending") {
     return <Pending />;
   }
