@@ -55,8 +55,8 @@ export const PLANS: Record<Plan, PlanDetails> = {
       "Agente sin límite de mensajes",
       "Posteos con IA para Instagram",
       "Tienda verificada",
-      "Vendés o borrás y liberás lugar",
-      "Cancelás cuando quieras",
+      "Aparecés primero en el directorio de tiendas",
+      "Tus productos, arriba en las búsquedas",
     ],
   },
   business: {
@@ -75,7 +75,7 @@ export const PLANS: Record<Plan, PlanDetails> = {
       "Agente sin límite para todo tu catálogo",
       "Posteos con IA para cada producto",
       "Ideal para locales y marcas",
-      "Cancelás cuando quieras",
+      "Arriba de todo en el directorio de tiendas",
     ],
   },
 };

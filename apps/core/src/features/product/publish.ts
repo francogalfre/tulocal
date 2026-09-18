@@ -1,7 +1,6 @@
 "use server";
 
 import { eq } from "drizzle-orm";
-import { updateTag } from "next/cache";
 import { redirect } from "next/navigation";
 
 import { database } from "@tulocal/database/client";
@@ -13,7 +12,7 @@ import { PRODUCT_DETAILS_ERROR, readProductDetails } from "@/features/product/sc
 import { logEvent } from "@/lib/logger";
 import { argentinePhoneSchema } from "@/lib/phone/schema";
 import { requireCurrentSession } from "@/lib/session";
-import { buildStoreTag } from "@/lib/tags";
+import { refreshPublicStore } from "@/lib/tags";
 
 export type PublishProductState = {
   error: string | null;
@@ -73,6 +72,6 @@ export async function publishProduct(
     database.update(stores).set({ whatsappPhone }).where(eq(stores.id, product.store.id)),
   ]);
   logEvent({ event: "product.published", productId: product.id, storeId: product.store.id });
-  updateTag(buildStoreTag(product.store.handle));
+  refreshPublicStore(product.store.handle);
   redirect(`/product/${product.id}?celebrate=1`);
 }

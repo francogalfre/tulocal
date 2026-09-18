@@ -1,7 +1,6 @@
 "use server";
 
 import { eq } from "drizzle-orm";
-import { updateTag } from "next/cache";
 import { redirect } from "next/navigation";
 
 import { database } from "@tulocal/database/client";
@@ -11,7 +10,7 @@ import { findOwnedProduct } from "@/features/product/find";
 import { PRODUCT_DETAILS_ERROR, readProductDetails } from "@/features/product/schema";
 import { logEvent } from "@/lib/logger";
 import { requireCurrentSession } from "@/lib/session";
-import { buildStoreTag } from "@/lib/tags";
+import { refreshPublicStore } from "@/lib/tags";
 
 export type UpdateProductState = {
   error: string | null;
@@ -52,6 +51,6 @@ export async function updateProduct(
     })
     .where(eq(products.id, product.id));
   logEvent({ event: "product.updated", productId: product.id, storeId: product.store.id });
-  updateTag(buildStoreTag(product.store.handle));
+  refreshPublicStore(product.store.handle);
   redirect(`/product/${product.id}`);
 }

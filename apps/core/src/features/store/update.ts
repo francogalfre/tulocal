@@ -3,7 +3,6 @@
 import { randomUUID } from "node:crypto";
 
 import { eq } from "drizzle-orm";
-import { updateTag } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 
@@ -18,7 +17,7 @@ import { socialHandleSchema } from "@/features/store/social/handle";
 import { logEvent } from "@/lib/logger";
 import { argentinePhoneSchema } from "@/lib/phone/schema";
 import { requireCurrentSession } from "@/lib/session";
-import { buildStoreTag } from "@/lib/tags";
+import { refreshPublicStore } from "@/lib/tags";
 
 const NAME_MAX_LENGTH = 60;
 
@@ -168,6 +167,6 @@ export async function updateStore(
     })
     .where(eq(stores.id, store.id));
   logEvent({ event: "store.updated", storeId: store.id });
-  updateTag(buildStoreTag(store.handle));
+  refreshPublicStore(store.handle);
   redirect(`/${store.handle}`);
 }

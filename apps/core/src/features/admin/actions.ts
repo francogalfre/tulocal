@@ -1,7 +1,7 @@
 "use server";
 
 import { and, eq, inArray } from "drizzle-orm";
-import { revalidatePath, updateTag } from "next/cache";
+import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 
@@ -14,7 +14,7 @@ import { cancelPreapproval } from "@tulocal/payments/preapproval";
 
 import { requireSuperadminSession } from "@/lib/admin";
 import { logEvent } from "@/lib/logger";
-import { buildStoreTag } from "@/lib/tags";
+import { refreshDirectory, refreshPublicStore } from "@/lib/tags";
 
 const NAME_MAX_LENGTH = 60;
 
@@ -54,7 +54,7 @@ function parseStoreId(formData: FormData): string | null {
 }
 
 function invalidateStore(handle: string): void {
-  updateTag(buildStoreTag(handle));
+  refreshPublicStore(handle);
 }
 
 export async function suspendStore(formData: FormData): Promise<void> {
@@ -142,6 +142,7 @@ export async function grantPro(formData: FormData): Promise<void> {
     amountInArs: 0,
   });
   logEvent({ event: "admin.store.granted.pro", storeId });
+  refreshDirectory();
   revalidatePath(`/admin/stores/${storeId}`);
   redirect(`/admin/stores/${storeId}`);
 }
@@ -182,6 +183,7 @@ export async function revokePlan(formData: FormData): Promise<void> {
       ),
     );
   logEvent({ event: "admin.store.revoked.plan", storeId });
+  refreshDirectory();
   revalidatePath(`/admin/stores/${storeId}`);
   redirect(`/admin/stores/${storeId}`);
 }

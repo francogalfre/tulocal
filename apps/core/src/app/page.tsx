@@ -42,23 +42,34 @@ export default async function LandingPage() {
         <main className="flex flex-1 flex-col pt-6">
           <header className="flex h-9 items-center justify-between px-6 mb-6">
             <Logo />
-            {signedInStorePath !== null ? (
+            <div className="flex items-center gap-2">
               <Button
+                variant="ghost"
                 size="lg"
-                className="px-4"
-                render={<Link href={signedInStorePath} />}
+                className="px-3"
+                render={<Link href="/stores" />}
                 nativeButton={false}
               >
-                Mi local
+                Ver tiendas
               </Button>
-            ) : (
-              <GoogleSignIn
-                label="Entrar con Google"
-                variant="outline"
-                size="lg"
-                className="px-4"
-              />
-            )}
+              {signedInStorePath !== null ? (
+                <Button
+                  size="lg"
+                  className="px-4"
+                  render={<Link href={signedInStorePath} />}
+                  nativeButton={false}
+                >
+                  Mi local
+                </Button>
+              ) : (
+                <GoogleSignIn
+                  label="Entrar con Google"
+                  variant="outline"
+                  size="lg"
+                  className="px-4"
+                />
+              )}
+            </div>
           </header>
 
           <div className="flex flex-1 flex-col">

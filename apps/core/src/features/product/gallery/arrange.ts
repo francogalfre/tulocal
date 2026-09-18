@@ -1,7 +1,7 @@
 "use server";
 
 import { and, eq } from "drizzle-orm";
-import { revalidatePath, updateTag } from "next/cache";
+import { revalidatePath } from "next/cache";
 import { z } from "zod";
 
 import { database } from "@tulocal/database/client";
@@ -10,7 +10,7 @@ import { images } from "@tulocal/database/schema/images";
 import { findOwnedProduct } from "@/features/product/find";
 import { logEvent } from "@/lib/logger";
 import { requireCurrentSession } from "@/lib/session";
-import { buildStoreTag } from "@/lib/tags";
+import { refreshPublicStore } from "@/lib/tags";
 
 const arrangeImagesSchema = z.object({
   productId: z.uuid(),
@@ -49,6 +49,6 @@ export async function arrangeImages(input: ArrangeImagesInput): Promise<void> {
     ),
   ]);
   logEvent({ event: "product.images.arranged", productId, storeId: product.store.id });
-  updateTag(buildStoreTag(product.store.handle));
+  refreshPublicStore(product.store.handle);
   revalidatePath(`/product/${productId}`);
 }

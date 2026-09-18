@@ -1,3 +1,5 @@
+import Link from "next/link";
+
 import { tulocalIcons } from "@/components/icons";
 import { InView } from "@/components/motion/inview";
 
@@ -15,6 +17,9 @@ export function Footer() {
       <div className="flex flex-col gap-1">
         <span className="font-heading text-base font-semibold text-foreground">tulocal</span>
         <span>La tienda que se vende sola.</span>
+        <Link href="/stores" className="w-fit transition-colors hover:text-foreground">
+          Ver todas las tiendas
+        </Link>
       </div>
       <p className="flex flex-wrap items-center gap-x-1.5 gap-y-1 sm:justify-end">
         <span>Hecho en Argentina por</span>

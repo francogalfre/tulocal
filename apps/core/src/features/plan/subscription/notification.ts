@@ -2,6 +2,7 @@ import { findAuthorizedPaymentPreapprovalId } from "@tulocal/payments/payment";
 
 import { syncPreapproval } from "@/features/plan/subscription/sync";
 import { logEvent } from "@/lib/logger";
+import { markDirectoryStale } from "@/lib/tags";
 
 const PREAPPROVAL_NOTIFICATION_TYPE = "subscription_preapproval";
 
@@ -15,11 +16,13 @@ export type PaymentNotification = {
 export async function processPaymentNotification(notification: PaymentNotification): Promise<void> {
   if (notification.type === PREAPPROVAL_NOTIFICATION_TYPE) {
     await syncPreapproval(notification.resourceId);
+    markDirectoryStale();
     return;
   }
 
   if (notification.type === AUTHORIZED_PAYMENT_NOTIFICATION_TYPE) {
     await syncPreapproval(await findAuthorizedPaymentPreapprovalId(notification.resourceId));
+    markDirectoryStale();
     return;
   }
 

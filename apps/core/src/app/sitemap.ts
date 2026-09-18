@@ -10,6 +10,10 @@ function buildHomeEntry(): MetadataRoute.Sitemap[number] {
   return { url: appOrigin, changeFrequency: "weekly", priority: 1 };
 }
 
+function buildDirectoryEntry(): MetadataRoute.Sitemap[number] {
+  return { url: `${appOrigin}/stores`, changeFrequency: "daily", priority: 0.8 };
+}
+
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const stores = await findPublicSitemapStores();
 
@@ -29,5 +33,5 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     })),
   );
 
-  return [buildHomeEntry(), ...storeEntries, ...productEntries];
+  return [buildHomeEntry(), buildDirectoryEntry(), ...storeEntries, ...productEntries];
 }
