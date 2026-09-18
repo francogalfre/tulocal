@@ -23,6 +23,7 @@ type ExporterProps = {
   productId: string;
   scenes: ExportableProduct["scenes"];
   canGenerateScenes: boolean;
+  remainingScenes: number;
 };
 
 type PieceDescription = {
@@ -76,7 +77,7 @@ function describePieces(input: DescribePiecesInput): PieceDescription[] {
   }));
 }
 
-export function Exporter({ productId, scenes, canGenerateScenes }: ExporterProps) {
+export function Exporter({ productId, scenes, canGenerateScenes, remainingScenes }: ExporterProps) {
   const [format, setFormat] = useState<SceneFormat>("story");
   const [source, setSource] = useState<ExportSource>("photo");
   const scene = scenes.find((candidate) => candidate.format === format) ?? null;
@@ -143,6 +144,7 @@ export function Exporter({ productId, scenes, canGenerateScenes }: ExporterProps
           format={format}
           scene={scene}
           canGenerateScenes={canGenerateScenes}
+          remainingScenes={remainingScenes}
         />
       ) : null}
       {isShowingPieces ? (

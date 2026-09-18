@@ -1,6 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 
+import { Rise } from "@/components/motion/rise";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { tulocalIcons } from "@/components/icons";
 import type { DirectoryStore } from "@/features/directory/listing";
@@ -19,7 +20,7 @@ function describeProductCount(productCount: number): string {
 
 export function StoreCard({ store, position }: StoreCardProps) {
   return (
-    <li className="group">
+    <Rise as="li" className="group">
       <Link
         href={`/${store.handle}`}
         className="flex h-full flex-col overflow-hidden rounded-2xl border border-border bg-background outline-none transition-colors hover:border-foreground/20 focus-visible:ring-3 focus-visible:ring-ring/50"
@@ -65,6 +66,6 @@ export function StoreCard({ store, position }: StoreCardProps) {
           ) : null}
         </div>
       </Link>
-    </li>
+    </Rise>
   );
 }

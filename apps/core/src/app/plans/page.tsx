@@ -12,7 +12,9 @@ import { findCurrentPlan } from "@/features/plan/access/current";
 import { PlanCards } from "@/features/plan/cards";
 import { HIGHLIGHTED_PLAN, PLANS } from "@/features/plan/catalog";
 import { Meter } from "@/features/plan/limits/meter";
-import { findProductUsage } from "@/features/plan/limits/usage";
+import { MonthlyUsage } from "@/features/plan/limits/monthly";
+import { findSceneUsage } from "@/features/plan/limits/scenes";
+import { findMonthlyCreationUsage, findProductUsage } from "@/features/plan/limits/usage";
 import { Confirming } from "@/features/plan/subscription/confirming";
 import { findSubscriptionOverview } from "@/features/plan/subscription/overview";
 import { Subscribe } from "@/features/plan/subscription/subscribe";
@@ -107,8 +109,10 @@ export default async function PlansPage({ searchParams }: PlansPageProps) {
   const session = await requireCurrentSession();
   const store = await ensureStore(session.user);
   const { plan: currentPlan } = await findCurrentPlan(store.id);
-  const [usage, overview] = await Promise.all([
+  const [usage, creationUsage, sceneUsage, overview] = await Promise.all([
     findProductUsage(store.id),
+    findMonthlyCreationUsage(store.id),
+    findSceneUsage(store.id),
     findSubscriptionOverview(store.id, currentPlan),
   ]);
   const arePaymentsEnabled = isPaymentsEnabled();
@@ -132,6 +136,7 @@ export default async function PlansPage({ searchParams }: PlansPageProps) {
           <p className="text-muted-foreground">{describeCurrentPlan(currentPlan, overview)}</p>
         </div>
         <Meter usage={usage} showsPlansLink={false} />
+        <MonthlyUsage creationUsage={creationUsage} sceneUsage={sceneUsage} />
         {isConfirmingPayment ? <Confirming /> : null}
         <PlanCards
           currentPlan={currentPlan}

@@ -7,15 +7,20 @@ import { messages } from "@tulocal/database/schema/messages";
 import { products } from "@tulocal/database/schema/products";
 
 import { findCurrentPlan } from "@/features/plan/access/current";
-import { findArgentineDayStart, findArgentineMonthStart } from "@/features/plan/limits/period";
+import { findArgentineMonthStart } from "@/features/plan/limits/period";
 import type { PlanDetails } from "@/features/plan/catalog";
 
-export type ProductCreationBlocker = "plan-limit" | "daily-limit";
+export type ProductCreationBlocker = "plan-limit" | "monthly-limit";
 
 export type ProductUsage = {
   usedProducts: number;
   productLimit: number;
   isProductLimitLifetime: boolean;
+};
+
+export type MonthlyCreationUsage = {
+  createdThisMonth: number;
+  monthlyCreationLimit: number;
 };
 
 async function countProductsTowardsLimit(storeId: string, details: PlanDetails): Promise<number> {
@@ -26,12 +31,12 @@ async function countProductsTowardsLimit(storeId: string, details: PlanDetails):
   return database.$count(products, eq(products.storeId, storeId));
 }
 
-async function countProductCreationsToday(storeId: string): Promise<number> {
+async function countProductCreationsThisMonth(storeId: string): Promise<number> {
   return database.$count(
     productCreations,
     and(
       eq(productCreations.storeId, storeId),
-      gte(productCreations.createdAt, findArgentineDayStart(new Date())),
+      gte(productCreations.createdAt, findArgentineMonthStart(new Date())),
     ),
   );
 }
@@ -72,13 +77,28 @@ export async function findProductCreationBlocker(
     return "plan-limit";
   }
 
-  if (details.dailyCreationLimit === null) {
+  if (details.monthlyCreationLimit === null) {
     return null;
   }
 
-  const creationsToday = await countProductCreationsToday(storeId);
+  const creationsThisMonth = await countProductCreationsThisMonth(storeId);
 
-  return creationsToday >= details.dailyCreationLimit ? "daily-limit" : null;
+  return creationsThisMonth >= details.monthlyCreationLimit ? "monthly-limit" : null;
+}
+
+export async function findMonthlyCreationUsage(
+  storeId: string,
+): Promise<MonthlyCreationUsage | null> {
+  const { details } = await findCurrentPlan(storeId);
+
+  if (details.monthlyCreationLimit === null) {
+    return null;
+  }
+
+  return {
+    createdThisMonth: await countProductCreationsThisMonth(storeId),
+    monthlyCreationLimit: details.monthlyCreationLimit,
+  };
 }
 
 export async function isAgentMessageLimitReached(storeId: string): Promise<boolean> {

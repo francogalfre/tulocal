@@ -71,7 +71,12 @@ function PlanCard({ plan, currentPlan, action }: PlanCardProps) {
           </div>
           <p className="text-sm leading-relaxed text-muted-foreground">{details.tagline}</p>
         </div>
-        <p className="flex items-baseline gap-1">
+        <p className="flex flex-wrap items-baseline gap-x-2 gap-y-1">
+          {details.regularPriceInArs !== null ? (
+            <s className="numeric font-heading text-xl text-muted-foreground">
+              {formatArs(details.regularPriceInArs)}
+            </s>
+          ) : null}
           <span className="numeric font-heading text-4xl font-semibold text-brand-deep">
             {formatArs(details.priceInArs)}
           </span>

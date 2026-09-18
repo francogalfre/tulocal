@@ -6,7 +6,7 @@ import { after } from "next/server";
 import { database } from "@tulocal/database/client";
 import { scenes } from "@tulocal/database/schema/scenes";
 
-import { findCurrentPlan } from "@/features/plan/access/current";
+import { reserveSceneGeneration } from "@/features/plan/limits/scenes";
 import { isExportableProduct } from "@/features/product/export/exportable";
 import { runSceneGeneration } from "@/features/product/export/run";
 import { sceneFormatSchema } from "@/features/product/export/schema";
@@ -28,9 +28,10 @@ export async function requestScene(formData: FormData): Promise<void> {
     return;
   }
 
-  const { details } = await findCurrentPlan(product.store.id);
+  const isSceneReserved = await reserveSceneGeneration(product.store.id);
 
-  if (!details.canGenerateScenes) {
+  if (!isSceneReserved) {
+    logEvent({ event: "export.scene.limit", productId: product.id, detail: format.data });
     return;
   }
 

@@ -16,6 +16,7 @@ import { StoreLink } from "@/features/store/link";
 import { requireCurrentSession } from "@/lib/session";
 import { buildStoreUrl } from "@/lib/url";
 import type { Plan } from "@/features/plan/catalog";
+import type { ProductCreationBlocker } from "@/features/plan/limits/usage";
 
 export const metadata: Metadata = {
   title: "Subí un producto",
@@ -59,9 +60,18 @@ function Intro({ handle, isFirstProduct }: IntroProps) {
 
 type PlanLimitReachedProps = {
   currentPlan: Plan;
+  blocker: ProductCreationBlocker;
 };
 
-function describeUpgrade(currentPlan: Plan): string {
+function describeUpgrade(currentPlan: Plan, blocker: ProductCreationBlocker): string {
+  if (blocker === "monthly-limit" && currentPlan === "pro") {
+    return `El cupo se renueva el 1. Con ${PLANS.business.name} publicás hasta ${PLANS.business.monthlyCreationLimit} productos nuevos por mes.`;
+  }
+
+  if (blocker === "monthly-limit") {
+    return "El cupo de productos nuevos se renueva el 1 de cada mes.";
+  }
+
   if (currentPlan === "free") {
     return `Con ${PLANS.pro.name} tenés hasta ${PLANS.pro.productLimit} productos a la vez y tu agente atiende sin límite de mensajes.`;
   }
@@ -73,12 +83,16 @@ function describeUpgrade(currentPlan: Plan): string {
   return "Borrá uno que ya vendiste para liberar lugar.";
 }
 
-function PlanLimitReached({ currentPlan }: PlanLimitReachedProps) {
+function PlanLimitReached({ currentPlan, blocker }: PlanLimitReachedProps) {
   return (
     <div className="flex flex-col gap-4 rounded-2xl bg-secondary p-6">
       <div className="flex flex-col gap-1">
-        <h2 className="text-xl">Llegaste al límite de tu plan</h2>
-        <p className="text-muted-foreground">{describeUpgrade(currentPlan)}</p>
+        <h2 className="text-xl">
+          {blocker === "monthly-limit"
+            ? "Llegaste a los productos nuevos de este mes"
+            : "Llegaste al límite de tu plan"}
+        </h2>
+        <p className="text-muted-foreground">{describeUpgrade(currentPlan, blocker)}</p>
       </div>
       <Button size="xl" render={<Link href="/plans" />} nativeButton={false}>
         Ver planes
@@ -103,7 +117,11 @@ export default async function NewProductPage() {
       <Reveal className="flex flex-col gap-8">
         <Intro handle={store.handle} isFirstProduct={isFirstProduct} />
         <Meter usage={usage} showsPlansLink={blocker === null} />
-        {blocker === "plan-limit" ? <PlanLimitReached currentPlan={currentPlan} /> : <Dropzone />}
+        {blocker !== null ? (
+          <PlanLimitReached currentPlan={currentPlan} blocker={blocker} />
+        ) : (
+          <Dropzone />
+        )}
       </Reveal>
     </Screen>
   );

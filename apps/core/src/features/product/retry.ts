@@ -12,7 +12,7 @@ export async function retryPipeline(formData: FormData): Promise<void> {
   const productId = String(formData.get("productId"));
   const product = await findOwnedProduct(productId, session.user.id);
 
-  if (product === null) {
+  if (product === null || product.status !== "failed") {
     return;
   }
 

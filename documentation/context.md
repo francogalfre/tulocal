@@ -79,18 +79,19 @@ Decided on 2026-09-16. Every product runs the AI pipeline and every agent reply 
 
 | | Gratis | Pro | Negocio |
 | --- | --- | --- | --- |
-| Price | $0 | $10.000 per month | $25.000 per month |
-| Products | 3 created, ever. Selling or deleting does not free a slot | up to 20 at a time | up to 100 at a time |
+| Price | $0 | $10.000 per month (launch, $15.000 struck through) | $25.000 per month |
+| Products | 3 created, ever. Selling or deleting does not free a slot | up to 20 at a time, 40 new per month | up to 100 at a time, 150 new per month |
 | Agent replies | 100 per month | unlimited | unlimited |
-| AI scenes for Instagram | no, exports use the pipeline photos | yes | yes |
+| AI scenes for Instagram | no, exports use the pipeline photos | 30 per month | 100 per month |
 | Verified badge next to the shop name | no | yes | yes |
+| Placement in the store directory and search | after paid shops | before free shops | first |
 
 - "At a time" counts every product row of the shop, whatever its status. Deleting one frees the slot.
-- Paid plans also have a daily creation cap the seller only sees when reached (Pro 10, Negocio 30), so creating and deleting in a loop cannot burn AI credits.
-- Retrying a failed pipeline does not use a slot.
+- New products and AI scenes are capped per calendar month (Buenos Aires time), decided on 2026-09-18 because every product generates three AI images and every scene one more. The caps reset on the 1st and `/plans` shows how much is left. Creating and deleting in a loop cannot burn AI credits.
+- Retrying a pipeline is allowed only when it failed, and does not use a slot.
 - When a paid plan ends, existing products stay published. The free limit counts every product ever created, so the shop cannot add more until it subscribes again.
 - When a free shop runs out of agent replies for the month, buyers see the WhatsApp contact instead of the chat.
-- No "Hecho con tulocal" branding on any plan. No struck-through or invented "before" prices: the landing highlights Pro as the most chosen plan instead.
+- No "Hecho con tulocal" branding on any plan. Decided on 2026-09-18: the Pro card shows $15.000 struck through next to the $10.000 launch price. $15.000 is the regular price Pro moves to after the launch, so the struck price must become a real price: raise it for new subscriptions only, never touching existing preapprovals, and remove the struck price if the launch price becomes permanent. Plan cards keep four short benefits each; monthly caps for new products (Pro 40, Negocio 150) are shown in `/plans` and when reached.
 
 ## Feature priority
 

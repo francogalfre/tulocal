@@ -7,7 +7,7 @@ import { productCreations } from "@tulocal/database/schema/creations";
 import { products } from "@tulocal/database/schema/products";
 
 import { findCurrentPlan } from "@/features/plan/access/current";
-import { findArgentineDayStart } from "@/features/plan/limits/period";
+import { findArgentineMonthStart } from "@/features/plan/limits/period";
 import type { PlanDetails } from "@/features/plan/catalog";
 
 const reservedRowsSchema = z.array(z.object({ id: z.uuid() }));
@@ -18,16 +18,16 @@ function buildCreationAllowedCondition(storeId: string, details: PlanDetails): S
     : database.$count(products, eq(products.storeId, storeId));
   const conditions = [sql`${productsTowardsLimit} < ${details.productLimit}`];
 
-  if (details.dailyCreationLimit !== null) {
-    const creationsToday = database.$count(
+  if (details.monthlyCreationLimit !== null) {
+    const creationsThisMonth = database.$count(
       productCreations,
       and(
         eq(productCreations.storeId, storeId),
-        gte(productCreations.createdAt, findArgentineDayStart(new Date())),
+        gte(productCreations.createdAt, findArgentineMonthStart(new Date())),
       ),
     );
 
-    conditions.push(sql`${creationsToday} < ${details.dailyCreationLimit}`);
+    conditions.push(sql`${creationsThisMonth} < ${details.monthlyCreationLimit}`);
   }
 
   return sql.join(conditions, sql` and `);

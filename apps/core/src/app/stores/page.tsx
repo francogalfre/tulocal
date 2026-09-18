@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Empty, EmptyDescription, EmptyHeader, EmptyTitle } from "@/components/ui/empty";
 import { Logo } from "@/components/logo";
 import { InView } from "@/components/motion/inview";
+import { Stagger } from "@/components/motion/stagger";
 import { findDirectory } from "@/features/directory/listing";
 import { parseDirectoryQuery, searchDirectory } from "@/features/directory/match";
 import { DirectoryProductCard } from "@/features/directory/product";
@@ -74,22 +75,26 @@ export default async function StoresPage({ searchParams }: StoresPageProps) {
         {results.stores.length > 0 ? (
           <section className="flex flex-col gap-4">
             {isSearching ? <h2 className="text-2xl">Tiendas</h2> : null}
-            <ul className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <Stagger key={query} as="ul" className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               {results.stores.map((store, position) => (
                 <StoreCard key={store.id} store={store} position={position} />
               ))}
-            </ul>
+            </Stagger>
           </section>
         ) : null}
 
         {results.products.length > 0 ? (
           <section className="flex flex-col gap-4">
             <h2 className="text-2xl">Productos</h2>
-            <ul className="grid grid-cols-2 gap-x-4 gap-y-8 sm:grid-cols-3 sm:gap-x-6">
+            <Stagger
+              key={query}
+              as="ul"
+              className="grid grid-cols-2 gap-x-4 gap-y-8 sm:grid-cols-3 sm:gap-x-6"
+            >
               {results.products.map((product) => (
                 <DirectoryProductCard key={product.id} product={product} />
               ))}
-            </ul>
+            </Stagger>
           </section>
         ) : null}
       </main>

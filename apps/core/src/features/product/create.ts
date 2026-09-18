@@ -29,9 +29,9 @@ const BLOCKED_CREATION_STATES: Record<ProductCreationBlocker, CreateProductState
     error: "Llegaste al límite de productos de tu plan.",
     isPlanLimitReached: true,
   },
-  "daily-limit": {
-    error: "Llegaste al máximo de productos por hoy. Probá mañana.",
-    isPlanLimitReached: false,
+  "monthly-limit": {
+    error: "Llegaste a los productos nuevos de este mes. El cupo se renueva el 1.",
+    isPlanLimitReached: true,
   },
 };
 

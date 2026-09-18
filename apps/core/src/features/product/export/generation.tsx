@@ -22,6 +22,7 @@ type GenerationProps = {
   format: SceneFormat;
   scene: Scene | null;
   canGenerateScenes: boolean;
+  remainingScenes: number;
 };
 
 function LockedGeneration() {
@@ -39,7 +40,34 @@ function LockedGeneration() {
   );
 }
 
-export function Generation({ productId, format, scene, canGenerateScenes }: GenerationProps) {
+function ExhaustedGeneration() {
+  return (
+    <div className="flex flex-col gap-3">
+      <Button size="xl" className="w-full" render={<Link href="/plans" />} nativeButton={false}>
+        <tulocalIcons.imageAdd data-icon="inline-start" />
+        Ver planes
+      </Button>
+      <p className="text-sm text-muted-foreground">
+        Usaste todas las escenas con IA de este mes. El cupo se renueva el 1. Mientras tanto podés
+        exportar con tus fotos.
+      </p>
+    </div>
+  );
+}
+
+function describeRemainingScenes(remainingScenes: number): string {
+  return remainingScenes === 1
+    ? "Te queda 1 escena este mes."
+    : `Te quedan ${remainingScenes} escenas este mes.`;
+}
+
+export function Generation({
+  productId,
+  format,
+  scene,
+  canGenerateScenes,
+  remainingScenes,
+}: GenerationProps) {
   if (!canGenerateScenes) {
     return <LockedGeneration />;
   }
@@ -49,6 +77,10 @@ export function Generation({ productId, format, scene, canGenerateScenes }: Gene
   }
 
   const isReady = scene !== null && scene.status === "ready";
+
+  if (remainingScenes === 0) {
+    return <ExhaustedGeneration />;
+  }
 
   return (
     <div className="flex flex-col gap-3">
@@ -66,7 +98,8 @@ export function Generation({ productId, format, scene, canGenerateScenes }: Gene
         </Button>
       </form>
       <p className="text-sm text-muted-foreground">
-        La escena la genera la IA con tu foto. El producto no cambia, solo el fondo.
+        La escena la genera la IA con tu foto. El producto no cambia, solo el fondo.{" "}
+        {describeRemainingScenes(remainingScenes)}
       </p>
     </div>
   );

@@ -5,7 +5,7 @@ import type { Metadata } from "next";
 import { Reveal } from "@/components/motion/reveal";
 import { Screen } from "@/components/screen";
 import { Skeleton } from "@/components/ui/skeleton";
-import { findCurrentPlan } from "@/features/plan/access/current";
+import { findSceneUsage } from "@/features/plan/limits/scenes";
 import { Caption } from "@/features/product/export/caption";
 import { isExportableProduct } from "@/features/product/export/exportable";
 import { Exporter } from "@/features/product/export/exporter";
@@ -33,7 +33,7 @@ export default async function ProductExportPage({ params }: ProductExportPagePro
     redirect(`/product/${id}`);
   }
 
-  const { details } = await findCurrentPlan(product.store.id);
+  const sceneUsage = await findSceneUsage(product.store.id);
 
   return (
     <Screen aside={<StoreLink handle={product.store.handle} />}>
@@ -47,7 +47,11 @@ export default async function ProductExportPage({ params }: ProductExportPagePro
         <Exporter
           productId={product.id}
           scenes={product.scenes}
-          canGenerateScenes={details.canGenerateScenes}
+          canGenerateScenes={sceneUsage.monthlySceneLimit > 0}
+          remainingScenes={Math.max(
+            sceneUsage.monthlySceneLimit - sceneUsage.generatedThisMonth,
+            0,
+          )}
         />
         <Suspense fallback={<Skeleton className="h-32 w-full rounded-xl" />}>
           <Caption product={product} />

@@ -8,11 +8,12 @@ export type PlanDetails = {
   name: string;
   tagline: string;
   priceInArs: number;
+  regularPriceInArs: number | null;
   productLimit: number;
   isProductLimitLifetime: boolean;
-  dailyCreationLimit: number | null;
+  monthlyCreationLimit: number | null;
   monthlyAgentMessageLimit: number | null;
-  canGenerateScenes: boolean;
+  monthlySceneLimit: number;
   isVerified: boolean;
   benefits: string[];
 };
@@ -24,58 +25,54 @@ export const PLANS: Record<Plan, PlanDetails> = {
     name: "Gratis",
     tagline: "Para probar sin pagar.",
     priceInArs: 0,
+    regularPriceInArs: null,
     productLimit: 3,
     isProductLimitLifetime: true,
-    dailyCreationLimit: null,
+    monthlyCreationLimit: null,
     monthlyAgentMessageLimit: 100,
-    canGenerateScenes: false,
+    monthlySceneLimit: 0,
     isVerified: false,
     benefits: [
       "3 productos",
       "Tu local con link y QR",
-      "La IA arma la publicación",
-      "Precio sugerido con datos reales",
+      "La IA arma cada publicación",
       "Agente con 100 mensajes por mes",
-      "Piezas para Instagram con tus fotos",
     ],
   },
   pro: {
     name: "Pro",
     tagline: "Para emprendedores que venden seguido.",
     priceInArs: 10_000,
+    regularPriceInArs: 15_000,
     productLimit: 20,
     isProductLimitLifetime: false,
-    dailyCreationLimit: 10,
+    monthlyCreationLimit: 40,
     monthlyAgentMessageLimit: null,
-    canGenerateScenes: true,
+    monthlySceneLimit: 30,
     isVerified: true,
     benefits: [
-      "Todo lo de Gratis",
-      "Hasta 20 productos a la vez",
+      "20 productos a la vez",
       "Agente sin límite de mensajes",
-      "Posteos con IA para Instagram",
-      "Tienda verificada",
-      "Aparecés primero en el directorio de tiendas",
-      "Tus productos, arriba en las búsquedas",
+      "30 posteos con IA por mes",
+      "Verificada y primero en las búsquedas",
     ],
   },
   business: {
     name: "Negocio",
     tagline: "Para locales con catálogo grande.",
     priceInArs: 25_000,
+    regularPriceInArs: null,
     productLimit: 100,
     isProductLimitLifetime: false,
-    dailyCreationLimit: 30,
+    monthlyCreationLimit: 150,
     monthlyAgentMessageLimit: null,
-    canGenerateScenes: true,
+    monthlySceneLimit: 100,
     isVerified: true,
     benefits: [
       "Todo lo de Pro",
-      "Hasta 100 productos a la vez",
-      "Agente sin límite para todo tu catálogo",
-      "Posteos con IA para cada producto",
-      "Ideal para locales y marcas",
-      "Arriba de todo en el directorio de tiendas",
+      "100 productos a la vez",
+      "100 posteos con IA por mes",
+      "Arriba de todo en el directorio",
     ],
   },
 };

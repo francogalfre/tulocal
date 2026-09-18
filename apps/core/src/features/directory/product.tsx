@@ -1,6 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 
+import { Rise } from "@/components/motion/rise";
 import { Amount } from "@/components/amount";
 import type { DirectoryProduct } from "@/features/directory/listing";
 
@@ -10,7 +11,7 @@ type DirectoryProductCardProps = {
 
 export function DirectoryProductCard({ product }: DirectoryProductCardProps) {
   return (
-    <li className="group">
+    <Rise as="li" className="group">
       <Link
         href={`/${product.storeHandle}/${product.id}`}
         className="flex flex-col gap-3 rounded-2xl outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
@@ -39,6 +40,6 @@ export function DirectoryProductCard({ product }: DirectoryProductCardProps) {
           <p className="truncate text-sm text-muted-foreground">{product.storeName}</p>
         </div>
       </Link>
-    </li>
+    </Rise>
   );
 }
