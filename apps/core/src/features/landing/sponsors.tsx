@@ -19,7 +19,7 @@ function V0Logo() {
 
 export function Sponsors() {
   return (
-    <InView as="section" className="flex flex-col gap-6 border-t px-6 py-12">
+    <InView as="section" className="flex flex-col gap-6 border-t px-6 py-6 bg-[#FBF3E9]">
       <p className="text-center text-sm text-muted-foreground">Con el apoyo de</p>
       <Marquee
         aria-hidden="true"

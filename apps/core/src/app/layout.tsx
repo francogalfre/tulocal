@@ -5,6 +5,7 @@ import type { Metadata } from "next";
 import { Analytics } from "@vercel/analytics/next";
 
 import { MotionProvider } from "@/components/motion/provider";
+import { OrganizationSchema } from "@/components/schema/organization";
 import { appOrigin } from "@/lib/origin";
 import { fontBody, fontDisplay } from "@/styles/fonts";
 
@@ -33,6 +34,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       className={`${fontDisplay.variable} ${fontBody.variable} h-full antialiased`}
     >
       <body className="flex min-h-full flex-col">
+        <OrganizationSchema />
         <MotionProvider>{children}</MotionProvider>
         <Analytics />
       </body>

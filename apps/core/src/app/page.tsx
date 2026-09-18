@@ -4,6 +4,7 @@ import type { Metadata } from "next";
 import { Logo } from "@/components/logo";
 import { Button } from "@/components/ui/button";
 import { InView } from "@/components/motion/inview";
+import { Faq } from "@/features/landing/faq";
 import { Features } from "@/features/landing/features";
 import { Footer } from "@/features/landing/footer";
 import { GoogleSignIn } from "@/features/landing/google";
@@ -15,9 +16,10 @@ import { findStoreEntry } from "@/features/store/find";
 import { findCurrentSession } from "@/lib/session";
 
 export const metadata: Metadata = {
-  title: { absolute: "tuLocal · Vendé en un click" },
+  title: { absolute: "tulocal · Tu tienda online gratis, vendé en un click" },
   description:
-    "Una foto y ya estás vendiendo. Entrás con Google, subís la foto y la IA arma la publicación, la publica y negocia por vos.",
+    "Creá tu tienda online gratis con una sola foto: la IA arma la publicación, sugiere el precio y un agente negocia con tus compradores por vos.",
+  alternates: { canonical: "/" },
 };
 
 async function findSignedInStorePath(ownerId: string): Promise<string> {
@@ -63,9 +65,10 @@ export default async function LandingPage() {
             <InView>
               <Hero signedInStorePath={signedInStorePath} />
             </InView>
+            <Sponsors />
             <Features />
             <Pricing signedInStorePath={signedInStorePath} />
-            <Sponsors />
+            <Faq />
           </div>
         </main>
 
